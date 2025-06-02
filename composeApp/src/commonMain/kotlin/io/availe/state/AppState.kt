@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import io.availe.config.HttpClientProvider
+import io.availe.config.NetworkConfig
 import io.availe.repositories.KtorChatRepository
 import io.availe.util.getScreenWidthDp
 import io.availe.viewmodels.ChatViewModel
@@ -60,7 +61,7 @@ data class AppState(
     }
     val isCompactScreen = screenWidth < AppDimensions.COMPACT_WIDTH
     var textContent by mutableStateOf("")
-    var targetUrl by mutableStateOf("http://localhost:8080/nlip")
+    var targetUrl by mutableStateOf("${NetworkConfig.serverUrl}/nlip/")
     var uploadedFiles by mutableStateOf(listOf<PlatformFile>())
     var isSidebarOpen by mutableStateOf(true)
     val chatRepository = KtorChatRepository(httpClient)

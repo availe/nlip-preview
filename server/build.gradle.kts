@@ -1,22 +1,25 @@
 import nu.studer.gradle.jooq.JooqEdition
 import org.jooq.meta.jaxb.Logging
 
-
 /** ------------- Load .env ------------- */
 
-fun loadEnv(fileName: String = ".env"): Map<String, String> =
-    file(fileName).takeIf { it.exists() }?.readLines()
-        ?.filter { it.isNotBlank() && !it.startsWith("#") && "=" in it }
-        ?.associate {
-            val (key, value) = it.split("=", limit = 2)
-            key.trim() to value.trim()
-        }.orEmpty()
+@Suppress("UNCHECKED_CAST")
+val secrets = rootProject.extra["secrets"] as Map<String, String>
 
-val env = loadEnv()
-val dbUrl = env["DB_URL"] ?: error("Missing DB_URL in .env")
-val dbUser = env["DB_USER"] ?: error("Missing DB_USER in .env")
-val dbPass = env["DB_PASS"] ?: error("Missing DB_PASS in .env")
-val dbSchema = env["DB_SCHEMA"] ?: "public"
+fun requireSecret(key: String): String =
+    secrets[key] ?: error("Missing required secret: $key")
+
+val dbUrl = requireSecret("DB_URL")
+val dbUser = requireSecret("DB_USER")
+val dbPass = requireSecret("DB_PASS")
+val dbSchema = requireSecret("DB_SCHEMA")
+
+tasks.withType<Test>().configureEach {
+    environment("DB_URL", dbUrl)
+    environment("DB_USER", dbUser)
+    environment("DB_PASS", dbPass)
+    environment("DB_SCHEMA", dbSchema)
+}
 
 /** ------------- Buildscript class‑path for Flyway ------------- */
 buildscript {

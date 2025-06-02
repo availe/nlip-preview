@@ -1,3 +1,19 @@
+fun loadSecrets(fileName: String = ".env"): Map<String, String> =
+    rootProject.file(fileName).let { f ->
+        if (!f.exists()) error("$fileName missing")
+        f.readLines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() && !it.startsWith("#") && "=" in it }
+            .associate { line ->
+                val (k, v) = line.split("=", limit = 2)
+                k.trim() to v.trim()
+            }
+    }
+
+val secrets = loadSecrets()
+extra["secrets"] = secrets
+subprojects { extra["secrets"] = secrets }
+
 plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader

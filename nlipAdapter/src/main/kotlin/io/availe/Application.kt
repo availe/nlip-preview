@@ -1,6 +1,7 @@
 package io.availe
 
 import io.availe.config.HttpClientProvider
+import io.availe.config.NetworkConfig
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.server.application.*
@@ -12,7 +13,7 @@ import io.ktor.server.routing.*
 
 
 fun main() {
-    embeddedServer(CIO, port = SELF_PORT + 1, host = "0.0.0.0", module = Application::module)
+    embeddedServer(CIO, port = NetworkConfig.SELF_PORT + 1, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 

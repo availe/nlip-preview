@@ -1,9 +1,8 @@
 package io.availe.routes
 
-import io.availe.SELF_HOSTS
-import io.availe.SELF_PORT
 import io.availe.client.NLIPClient
 import io.availe.client.OllamaClient
+import io.availe.config.NetworkConfig
 import io.availe.models.BranchId
 import io.availe.models.InternalMessage
 import io.availe.models.OutboundMessage
@@ -29,7 +28,7 @@ fun Route.chatProxyRoutes(internalChat: OllamaClient, httpClient: HttpClient) =
             )
             val text = outbound.internalMessage.nlipMessage.content
             val target = Url(outbound.targetUri)
-            val replyText = if (target.host in SELF_HOSTS && target.port == SELF_PORT) {
+            val replyText = if (target.host in NetworkConfig.SELF_HOSTS && target.port == NetworkConfig.SELF_PORT) {
                 internalChat.generate(text)
             } else {
                 NLIPClient(httpClient, target).ask(text).content

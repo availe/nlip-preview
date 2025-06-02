@@ -4,12 +4,42 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+@Suppress("UNCHECKED_CAST")
+val secrets = rootProject.extra["secrets"] as Map<String, String>
+
+fun requireSecret(key: String): String =
+    secrets[key] ?: error("Missing required secret: $key")
+
+val baseUrl = requireSecret("BASE_URL")
+val devBaseUrl = requireSecret("DEV_BASE_URL")
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.openapi.generator)
+    alias(libs.plugins.buildKonfig)
 }
+
+buildkonfig {
+    packageName = "io.availe.config"
+    exposeObjectWithName = "SharedBuildConfig"
+    defaultConfigs {
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "BASE_URL",
+            baseUrl
+        )
+    }
+    defaultConfigs("dev") {
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "BASE_URL",
+            devBaseUrl
+        )
+    }
+}
+
 
 kotlin {
     jvmToolchain(21)
@@ -101,4 +131,5 @@ openApiGenerate {
 
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn(tasks.named("openApiGenerate"))
+    dependsOn(tasks.named("generateBuildKonfig"))
 }

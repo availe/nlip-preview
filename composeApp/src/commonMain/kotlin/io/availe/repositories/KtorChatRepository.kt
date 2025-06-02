@@ -3,7 +3,7 @@ package io.availe.repositories
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.right
-import io.availe.SELF_PORT
+import io.availe.config.NetworkConfig
 import io.availe.models.InternalMessage
 import io.availe.models.OutboundMessage
 import io.availe.models.Session
@@ -11,7 +11,6 @@ import io.availe.openapi.model.NLIPRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.request.delete
 import io.ktor.http.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +24,7 @@ import kotlin.uuid.Uuid
 
 class KtorChatRepository(private val client: HttpClient) {
 
-    private val sessionsUrl = "http://localhost:$SELF_PORT/api/chat/sessions"
+    private val sessionsUrl = "${NetworkConfig.serverUrl}/api/chat/sessions"
     private val _currentSessionId = MutableStateFlow<String?>(null)
     val currentSessionId: StateFlow<String?> = _currentSessionId.asStateFlow()
 

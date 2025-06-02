@@ -3,6 +3,7 @@ package io.availe
 import io.availe.client.NLIPClient
 import io.availe.client.OllamaClient
 import io.availe.config.HttpClientProvider
+import io.availe.config.NetworkConfig
 import io.availe.routes.chatProxyRoutes
 import io.availe.routes.chatServiceRoutes
 import io.availe.routes.healthRoutes
@@ -20,7 +21,12 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
 fun main() {
-    embeddedServer(CIO, port = SELF_PORT, host = "0.0.0.0", module = Application::module).start(wait = true)
+    embeddedServer(
+        CIO,
+        port = NetworkConfig.SELF_PORT,
+        host = "0.0.0.0",
+        module = Application::module
+    ).start(wait = true)
 }
 
 fun Application.module() {
