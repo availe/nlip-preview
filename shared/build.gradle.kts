@@ -88,8 +88,12 @@ kotlin {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.kotlinx.rpc.core)
                 implementation(libs.arrow.core)
+
+                implementation(libs.kotlinx.rpc.core)
+                implementation(libs.kotlinx.rpc.krpc.client)
+                implementation(libs.kotlinx.rpc.krpc.serialization.json)
+                implementation(libs.kotlinx.rpc.krpc.ktor.client)
             }
         }
         jvmMain.dependencies {

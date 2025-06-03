@@ -50,7 +50,7 @@ fun Application.module() {
             )
         }
     }
-    val httpClient = HttpClientProvider.client
+    val httpClient = HttpClientProvider.httpClient
     val internalChat = OllamaClient(httpClient)
     val externalChat = NLIPClient(httpClient, Url("http://localhost:8004"))
     routing {

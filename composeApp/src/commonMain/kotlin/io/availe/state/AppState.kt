@@ -28,7 +28,7 @@ fun rememberAppState(): AppState {
             .components { addPlatformFileSupport() }
             .build()
     }
-    val httpClient = HttpClientProvider.client
+    val httpClient = HttpClientProvider.httpClient
     val listState = rememberLazyListState()
     val screenWidth = getScreenWidthDp()
     val snackbarHostState = remember { SnackbarHostState() }

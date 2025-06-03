@@ -18,7 +18,7 @@ fun main() {
 }
 
 fun Application.module() {
-    val httpClient = HttpClientProvider.client
+    val httpClient = HttpClientProvider.httpClient
 
     routing {
         post("/compileSpec") {
