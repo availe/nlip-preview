@@ -4,6 +4,6 @@ import io.availe.services.ApiError
 import kotlinx.rpc.annotations.Rpc
 
 @Rpc
-interface IChatRpc {
+interface IChatService {
     suspend fun getAllSessions(request: Unit): Either<ApiError, List<Session>>
 }
