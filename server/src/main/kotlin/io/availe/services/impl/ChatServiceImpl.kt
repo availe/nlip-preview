@@ -9,9 +9,10 @@ import io.availe.services.ChatError
 import io.availe.services.ChatStore
 import io.availe.services.toApiError
 import kotlinx.coroutines.Dispatchers
+import kotlinx.rpc.annotations.Rpc
 import kotlin.coroutines.CoroutineContext
 
-
+@Rpc
 object ChatServiceImpl : IChatService {
     override suspend fun getAllSessions(request: Unit): Either<ApiError, List<Session>> = either {
         val sessionIds: List<String> = ChatStore.getAllSessionIdentifiers()

@@ -73,6 +73,7 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+
 kotlinx-rpc-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-core", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-client = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-krpc-client", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-server = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-krpc-server", version.ref = "kotlinx-rpc" }

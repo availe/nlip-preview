@@ -8,6 +8,7 @@ import io.availe.routes.chatProxyRoutes
 import io.availe.routes.chatServiceRoutes
 import io.availe.routes.healthRoutes
 import io.availe.routes.staticRoutes
+import io.availe.services.impl.ChatServiceImpl
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -18,6 +19,10 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.rpc.krpc.ktor.server.Krpc
+import kotlinx.rpc.krpc.ktor.server.rpc
+import kotlinx.rpc.krpc.rpcServerConfig
+import kotlinx.rpc.krpc.serialization.json.json
 import kotlinx.serialization.json.Json
 
 fun main() {
@@ -50,10 +55,17 @@ fun Application.module() {
             )
         }
     }
+
+    install(Krpc)
+
     val httpClient = HttpClientProvider.httpClient
     val internalChat = OllamaClient(httpClient)
     val externalChat = NLIPClient(httpClient, Url("http://localhost:8004"))
     routing {
+        rpcServerConfig { serialization { json(Json { prettyPrint = true }) } }
+        rpc("/krpc/chat") {
+            registerService<ChatServiceImpl> { _ -> ChatServiceImpl }
+        }
         staticRoutes()
         healthRoutes(externalChat)
         chatServiceRoutes()

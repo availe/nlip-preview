@@ -82,8 +82,8 @@ dependencies {
     implementation(libs.ktor.server.status.pages.jvm)
 
     implementation(libs.kotlinx.rpc.krpc.server)
+    implementation(libs.kotlinx.rpc.krpc.ktor.server)
     implementation(libs.kotlinx.rpc.krpc.serialization.json)
-    implementation(libs.kotlinx.rpc.krpc.ktor.client)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
