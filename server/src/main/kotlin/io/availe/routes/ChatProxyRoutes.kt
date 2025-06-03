@@ -6,7 +6,7 @@ import io.availe.config.NetworkConfig
 import io.availe.models.BranchId
 import io.availe.models.InternalMessage
 import io.availe.models.OutboundMessage
-import io.availe.services.ChatService
+import io.availe.services.ChatStore
 import io.availe.services.toApiError
 import io.ktor.client.*
 import io.ktor.http.*
@@ -22,7 +22,7 @@ fun Route.chatProxyRoutes(internalChat: OllamaClient, httpClient: HttpClient) =
         post {
             val sessionId = call.parameters["sessionId"]!!
             val outbound = call.receive<OutboundMessage>()
-            ChatService.sendMessage(sessionId, BranchId.root, outbound.internalMessage).fold(
+            ChatStore.sendMessage(sessionId, BranchId.root, outbound.internalMessage).fold(
                 { err -> return@post call.respond(HttpStatusCode.BadRequest, err.toApiError()) },
                 {}
             )
@@ -43,7 +43,7 @@ fun Route.chatProxyRoutes(internalChat: OllamaClient, httpClient: HttpClient) =
                 timeStamp = System.currentTimeMillis(),
                 status = InternalMessage.Status.SENT
             )
-            ChatService.sendMessage(sessionId, BranchId.root, reply).fold(
+            ChatStore.sendMessage(sessionId, BranchId.root, reply).fold(
                 { err -> return@post call.respond(HttpStatusCode.BadRequest, err.toApiError()) },
                 {}
             )

@@ -5,7 +5,7 @@ import io.availe.models.BranchId
 import io.availe.models.InternalMessage
 import io.availe.models.Session
 
-object ChatService {
+object ChatStore {
     private val sessionStore = InMemorySessionStore()
 
     suspend fun getSession(sessionIdentifier: String): Either<ChatError, Session> =

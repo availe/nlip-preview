@@ -4,7 +4,7 @@ import io.availe.models.BranchId
 import io.availe.models.InternalMessage
 import io.availe.models.Session
 import io.availe.services.ChatError
-import io.availe.services.ChatService
+import io.availe.services.ChatStore
 import io.availe.services.toApiError
 import io.availe.services.toStatusCode
 import io.ktor.http.*
@@ -48,13 +48,13 @@ data class UpdateSessionTitleRequest(val title: String)
 fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
 
     get {
-        val ids = ChatService.getAllSessionIdentifiers()
+        val ids = ChatStore.getAllSessionIdentifiers()
         call.respond(SessionListResponse(ids))
     }
 
     post {
         val req = call.receive<CreateSessionRequest>()
-        ChatService.createSession(req.session).fold(
+        ChatStore.createSession(req.session).fold(
             { err -> call.respond(err.toStatusCode(), err.toApiError()) },
             { call.respond(HttpStatusCode.Created, mapOf("message" to "Session created")) }
         )
@@ -63,7 +63,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
     route("/{sessionId}") {
         get {
             val id = call.parameters["sessionId"]!!
-            ChatService.getSession(id).fold(
+            ChatStore.getSession(id).fold(
                 { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                 { call.respond(it) }
             )
@@ -71,7 +71,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
 
         delete {
             val id = call.parameters["sessionId"]!!
-            ChatService.deleteSession(id).fold(
+            ChatStore.deleteSession(id).fold(
                 { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                 { call.respond(HttpStatusCode.NoContent) }
             )
@@ -81,7 +81,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
         put("/title") {
             val id = call.parameters["sessionId"]!!
             val req = call.receive<UpdateSessionTitleRequest>()
-            ChatService.updateSessionTitle(id, req.title).fold(
+            ChatStore.updateSessionTitle(id, req.title).fold(
                 { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                 { call.respond(HttpStatusCode.OK, mapOf("message" to "Session title updated")) }
             )
@@ -90,7 +90,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
         route("/messages") {
             get {
                 val id = call.parameters["sessionId"]!!
-                ChatService.getBranchSnapshot(id).fold(
+                ChatStore.getBranchSnapshot(id).fold(
                     { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                     { branches ->
                         call.respond(
@@ -103,7 +103,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
             put {
                 val id = call.parameters["sessionId"]!!
                 val req = call.receive<EditMessageRequest>()
-                ChatService.editMessage(id, BranchId(req.branchId), req.message, req.forkBranch).fold(
+                ChatStore.editMessage(id, BranchId(req.branchId), req.message, req.forkBranch).fold(
                     { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                     { newBranchId -> call.respond(EditMessageResponse(branchId = newBranchId.value)) }
                 )
@@ -112,7 +112,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
             delete {
                 val id = call.parameters["sessionId"]!!
                 val req = call.receive<DeleteMessageRequest>()
-                ChatService.deleteMessage(id, BranchId(req.branchId), req.messageId, req.updateTimestamp).fold(
+                ChatStore.deleteMessage(id, BranchId(req.branchId), req.messageId, req.updateTimestamp).fold(
                     { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                     { call.respond(HttpStatusCode.NoContent) }
                 )
@@ -123,7 +123,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
             get {
                 val id = call.parameters["sessionId"]!!
                 val branch = call.parameters["branchId"]!!
-                ChatService.getBranchSnapshot(id).fold(
+                ChatStore.getBranchSnapshot(id).fold(
                     { err -> call.respond(err.toStatusCode(), err.toApiError()) },
                     { snap ->
                         snap[BranchId(branch)]
