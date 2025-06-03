@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.reload.ComposeHotRun
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -10,6 +11,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlinx.rpc.plugin)
 }
 
 kotlin {
@@ -80,6 +82,10 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.arrow.core)
             implementation(libs.arrow.fx.coroutines)
+
+            implementation(libs.kotlinx.rpc.krpc.client)
+            implementation(libs.kotlinx.rpc.krpc.serialization.json)
+            implementation(libs.kotlinx.rpc.krpc.ktor.client)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

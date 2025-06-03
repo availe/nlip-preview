@@ -39,6 +39,7 @@ plugins {
     alias(libs.plugins.jooq)
     alias(libs.plugins.flyway)
     alias(libs.plugins.shadow)
+    alias(libs.plugins.kotlinx.rpc.plugin)
     id("org.jetbrains.kotlin.kapt")
     application
 }
@@ -79,6 +80,10 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.ktor.server.cors.jvm)
     implementation(libs.ktor.server.status.pages.jvm)
+
+    implementation(libs.kotlinx.rpc.krpc.server)
+    implementation(libs.kotlinx.rpc.krpc.serialization.json)
+    implementation(libs.kotlinx.rpc.krpc.ktor.client)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)

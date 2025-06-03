@@ -19,6 +19,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.openapi.generator)
     alias(libs.plugins.buildKonfig)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinx.rpc.plugin)
 }
 
 buildkonfig {
@@ -86,6 +88,7 @@ kotlin {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.kotlinx.rpc.core)
             }
         }
         jvmMain.dependencies {
