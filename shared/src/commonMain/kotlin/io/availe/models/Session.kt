@@ -13,9 +13,16 @@ data class Session(
     val title: String,
     @Contextual val createdAt: Instant,
     @Contextual val lastActivityAt: Instant,
-    val participantIds: Set<Sender>,
+    val participants: Participants,
     val status: Status
 ) {
     @Serializable
     enum class Status { ACTIVE, ARCHIVED, LOCAL, TEMPORARY }
+
+    @Serializable
+    data class Participants(
+        val users: Set<UserSender>,
+        val agents: Set<AgentSender>,
+        val systems: Set<SystemSender>
+    )
 }
