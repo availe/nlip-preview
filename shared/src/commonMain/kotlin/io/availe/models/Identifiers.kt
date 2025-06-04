@@ -15,10 +15,10 @@ data class MessageId(val value: Uuid) {
 }
 
 @Serializable
-data class SessionId(val value: Uuid) {
-    companion object {
-        fun from(uuid: Uuid) = SessionId(uuid)
-        fun generate() = SessionId(Uuid.random())
+data class ConversationId(val value: Uuid) {
+    companion object Companion {
+        fun from(uuid: Uuid) = ConversationId(uuid)
+        fun generate() = ConversationId(Uuid.random())
     }
 }
 

@@ -9,7 +9,7 @@ import kotlin.time.Instant
 
 @Serializable
 data class Conversation(
-    val id: SessionId,
+    val id: ConversationId,
     val title: String,
     @Contextual val createdAt: Instant,
     @Contextual val lastActivityAt: Instant,
