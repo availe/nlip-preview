@@ -12,7 +12,6 @@ data class Conversation(
     val createdAt: CreatedAt,
     val updatedAt: UpdatedAt,
     val owner: UserId,
-    val participants: List<Sender>,
     val status: Status,
     val version: ConversationVersion
 ) {

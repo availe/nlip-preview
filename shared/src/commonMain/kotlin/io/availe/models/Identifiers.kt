@@ -46,21 +46,25 @@ value class ConversationVersion(val value: Int)
 value class UserAccountVersion(val value: Int)
 
 @Serializable
-sealed interface Sender {
-    val uuid: Uuid
-}
+sealed class Sender {
+    @Serializable
+    data class User(val id: UserId) : Sender() {
+        companion object {
+            fun create(uuid: Uuid) = User(UserId(uuid))
+        }
+    }
 
-@Serializable
-value class UserSender(val userId: UserId) : Sender {
-    override val uuid: Uuid get() = userId.id
-}
+    @Serializable
+    data class Agent(val id: AgentId) : Sender() {
+        companion object {
+            fun create(uuid: Uuid) = Agent(AgentId(uuid))
+        }
+    }
 
-@Serializable
-value class AgentSender(val agentId: AgentId) : Sender {
-    override val uuid: Uuid get() = agentId.id
-}
-
-@Serializable
-value class SystemSender(val systemId: SystemId) : Sender {
-    override val uuid: Uuid get() = systemId.id
+    @Serializable
+    data class System(val id: SystemId) : Sender() {
+        companion object {
+            fun create(uuid: Uuid) = System(SystemId(uuid))
+        }
+    }
 }
