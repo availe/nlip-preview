@@ -1,8 +1,6 @@
 import nu.studer.gradle.jooq.JooqEdition
 import org.jooq.meta.jaxb.Logging
 
-/** ------------- Load .env ------------- */
-
 @Suppress("UNCHECKED_CAST")
 val secrets = rootProject.extra["secrets"] as Map<String, String>
 
@@ -21,7 +19,6 @@ tasks.withType<Test>().configureEach {
     environment("DB_SCHEMA", dbSchema)
 }
 
-/** ------------- Buildscript class-path for Flyway ------------- */
 buildscript {
     repositories { mavenCentral() }
     dependencies {
@@ -29,8 +26,6 @@ buildscript {
         classpath(libs.postgresql)
     }
 }
-
-/** ------------- Load plugins ------------- */
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -44,15 +39,14 @@ plugins {
     application
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
-/** ------------- Add a dedicated source set for jOOQ strategy ------------- */
 sourceSets {
     create("jooq") {
         kotlin.srcDir("src/jooq/kotlin")
     }
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 group = "io.availe"
@@ -91,13 +85,12 @@ dependencies {
     compileOnly(libs.jooq.codegen)
     compileOnly(libs.jooq.meta)
 
-    // jOOQ codegen APIs for the "jooq" source set
     add("jooqImplementation", libs.jooq.meta)
     add("jooqImplementation", libs.jooq.codegen)
 
-    // JDBC driver for codegen and our custom strategy class
-    jooqGenerator(libs.postgresql)
+    jooqGenerator(kotlin("stdlib"))
     jooqGenerator(sourceSets["jooq"].output)
+    jooqGenerator(libs.postgresql)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
@@ -108,8 +101,6 @@ dependencies {
     testImplementation(platform(libs.jackson.bom))
     testImplementation(libs.jackson.databind)
 }
-
-/** ------------- jOOQ config ------------- */
 
 jooq {
     edition.set(JooqEdition.OSS)
@@ -128,6 +119,9 @@ jooq {
                 }
 
                 generator.apply {
+                    strategy.apply {
+                        name = "io.availe.jooq.CustomGeneratorStrategy"
+                    }
                     database.apply {
                         name = "org.jooq.meta.postgres.PostgresDatabase"
                         inputSchema = dbSchema
@@ -154,8 +148,6 @@ sourceSets["main"].java.srcDir(
     layout.buildDirectory.dir("generated-src/jooq/main")
 )
 
-/** ------------- Flyway config ------------- */
-
 flyway {
     url = dbUrl
     user = dbUser
@@ -165,26 +157,20 @@ flyway {
     cleanDisabled = false
 }
 
-/** ------------- Build hooks & helper tasks ------------- */
-
-// Always run Flyway before compiling Kotlin and generating jOOQ classes
 tasks.named("compileKotlin") {
-    dependsOn("flywayMigrate")
+    dependsOn("flywayMigrate", "generateJooq")
 }
 
-// Always run Flyway before starting the server
 tasks.named<JavaExec>("run") {
     dependsOn("flywayMigrate")
 }
 
-// Drop all objects from DB
 tasks.register("clearDb") {
     group = "database"
     description = "Drops all objects"
     dependsOn("flywayClean")
 }
 
-// produce bundled jvm app for docker
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("server")
     archiveClassifier.set("all")
@@ -194,4 +180,9 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn(project(":shared").tasks.named("openApiGenerate"))
+}
+
+tasks.named("generateJooq") {
+    dependsOn("compileJooqKotlin")
+    dependsOn("flywayMigrate")
 }
