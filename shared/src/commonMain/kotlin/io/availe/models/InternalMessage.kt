@@ -13,15 +13,11 @@ data class InternalMessage(
     val id: MessageId,
     val sessionId: SessionId,
     val sender: Sender,
-    val senderRole: Role,
     val nlipMessage: NLIPRequest,
     @Contextual val timeStamp: Instant,
     val status: Status,
-    val parentMessageId: MessageId?
+    val parentMessageId: MessageId? = null
 ) {
-    @Serializable
-    enum class Role { USER, AGENT, SYSTEM, AUDITOR, OTHER }
-
     @Serializable
     enum class Status { PENDING, SENT, RECEIVED, ERROR }
 }

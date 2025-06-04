@@ -8,14 +8,11 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @Serializable
-data class Session(
-    val id: SessionId,
-    val title: String,
+data class UserAccount(
+    val id: UserId,
+    val username: String,
+    val email: String,
     @Contextual val createdAt: Instant,
-    @Contextual val lastActivityAt: Instant,
-    val participantIds: Set<Sender>,
-    val status: Status
-) {
-    @Serializable
-    enum class Status { ACTIVE, ARCHIVED, LOCAL, TEMPORARY }
-}
+    @Contextual val lastLoginAt: Instant,
+    val isActive: Boolean = true
+)

@@ -23,29 +23,37 @@ data class SessionId(val value: Uuid) {
 }
 
 @Serializable
-data class ParticipantId(val value: Uuid) {
+data class UserId(val value: Uuid) {
     companion object {
-        fun from(uuid: Uuid) = ParticipantId(uuid)
-        fun generate() = ParticipantId(Uuid.random())
+        fun from(uuid: Uuid) = UserId(uuid)
+        fun generate() = UserId(Uuid.random())
     }
 }
 
 @Serializable
-sealed interface Sender {
-    val id: ParticipantId
+data class AgentId(val value: Uuid) {
+    companion object {
+        fun from(uuid: Uuid) = AgentId(uuid)
+        fun generate() = AgentId(Uuid.random())
+    }
 }
 
 @Serializable
-data class UserSender(override val id: ParticipantId) : Sender
+data class SystemId(val value: Uuid) {
+    companion object {
+        fun from(uuid: Uuid) = SystemId(uuid)
+        fun generate() = SystemId(Uuid.random())
+    }
+}
 
 @Serializable
-data class AgentSender(override val id: ParticipantId) : Sender
+sealed interface Sender
 
 @Serializable
-data class SystemSender(override val id: ParticipantId) : Sender
+data class UserSender(val id: UserId) : Sender
 
 @Serializable
-data class AuditorSender(override val id: ParticipantId) : Sender
+data class AgentSender(val id: AgentId) : Sender
 
 @Serializable
-data class OtherSender(override val id: ParticipantId) : Sender
+data class SystemSender(val id: SystemId) : Sender
