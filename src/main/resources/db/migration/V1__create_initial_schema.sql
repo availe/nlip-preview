@@ -1,14 +1,14 @@
 CREATE TYPE conversation_status AS ENUM (
-    'ACTIVE',
-    'ARCHIVED',
-    'LOCAL',
-    'TEMPORARY'
+    'active',
+    'archived',
+    'local',
+    'temporary'
 );
 
 CREATE TYPE sender_type AS ENUM (
-    'USER',
-    'AGENT',
-    'SYSTEM'
+    'user',
+    'agent',
+    'system'
 );
 
 CREATE TABLE user_account
