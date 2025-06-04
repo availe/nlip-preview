@@ -1,23 +1,23 @@
 package io.availe.services.impl
 
 import arrow.core.Either
-import arrow.core.raise.either
-import io.availe.models.Session
-import io.availe.services.*
+import io.availe.services.ApiError
+import io.availe.services.ApiErrorType
+import io.availe.services.ChatStore
+import io.availe.services.IChatService
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 
 object ChatServiceImpl : IChatService {
-    override suspend fun getAllSessions(request: Unit): Either<ApiError, List<Session>> = either {
-        val sessionIds: List<String> = ChatStore.getAllSessionIdentifiers()
-
-        sessionIds.map { sessionId ->
-            ChatStore
-                .getSession(sessionId)
-                .mapLeft { chatError: ChatError -> chatError.toApiError() }
-                .bind()
+    override suspend fun getAllSessionIds(request: Unit): Either<ApiError, List<String>> =
+        Either.catch {
+            ChatStore.getAllSessionIdentifiers()
+        }.mapLeft { e ->
+            ApiError(
+                type = ApiErrorType.SESSION_NOT_FOUND,
+                message = e.message
+            )
         }
-    }
 
     override val coroutineContext: CoroutineContext = Dispatchers.Default
 }

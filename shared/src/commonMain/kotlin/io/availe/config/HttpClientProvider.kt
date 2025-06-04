@@ -1,6 +1,7 @@
 package io.availe.config
 
 import io.availe.services.IChatService
+import io.availe.util.SuspendLazy
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -29,18 +30,18 @@ object HttpClientProvider {
         }
     }
 
-    suspend fun createChatService(): IChatService {
+    private val chatServiceLazy = SuspendLazy {
         val wsUrl = URLBuilder(
-            protocol = when (NetworkConfig.serverUrl.protocol.name) {
-                "https" -> URLProtocol.WSS
-                else -> URLProtocol.WS
-            },
+            protocol = if (NetworkConfig.serverUrl.protocol.name == "https") URLProtocol.WSS else URLProtocol.WS,
             host = NetworkConfig.serverUrl.host,
             port = NetworkConfig.serverUrl.port
         ).apply {
             encodedPath = "/krpc/chat"
         }.buildString()
-        val rawRpc = krpcClient.rpc(wsUrl) { }
-        return rawRpc.withService<IChatService>()
+
+        val rawRpc = krpcClient.rpc(wsUrl) {}
+        rawRpc.withService<IChatService>()
     }
+
+    suspend fun createChatService(): IChatService = chatServiceLazy.get()
 }

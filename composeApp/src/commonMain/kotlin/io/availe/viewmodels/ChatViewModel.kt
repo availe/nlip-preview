@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.raise.either
 import io.availe.models.InternalMessage
-import io.availe.repositories.KtorChatRepository
+import io.availe.repositories.ChatRepository
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class ChatViewModel(
-    private val repository: KtorChatRepository
+    private val repository: ChatRepository
 ) {
     private val _messages = MutableStateFlow<List<InternalMessage>>(emptyList())
     val messages: StateFlow<List<InternalMessage>> = _messages.asStateFlow()

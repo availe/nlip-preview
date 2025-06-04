@@ -13,7 +13,7 @@ import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import io.availe.config.HttpClientProvider
 import io.availe.config.NetworkConfig
-import io.availe.repositories.KtorChatRepository
+import io.availe.repositories.ChatRepository
 import io.availe.util.getScreenWidthDp
 import io.availe.viewmodels.ChatViewModel
 import io.github.vinceglb.filekit.PlatformFile
@@ -73,7 +73,7 @@ data class AppState(
     var targetUrl by mutableStateOf("${NetworkConfig.serverUrl}/nlip/")
     var uploadedFiles by mutableStateOf(listOf<PlatformFile>())
     var isSidebarOpen by mutableStateOf(true)
-    val chatRepository = KtorChatRepository(httpClient, chatService)
+    val chatRepository = ChatRepository(httpClient, chatService)
     val chatViewModel = ChatViewModel(chatRepository)
 }
 

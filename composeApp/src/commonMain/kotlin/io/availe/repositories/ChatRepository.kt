@@ -3,11 +3,13 @@ package io.availe.repositories
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.right
+import io.availe.config.HttpClientProvider
 import io.availe.config.NetworkConfig
 import io.availe.models.InternalMessage
 import io.availe.models.OutboundMessage
 import io.availe.models.Session
 import io.availe.openapi.model.NLIPRequest
+import io.availe.services.ApiError
 import io.availe.services.IChatService
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -16,17 +18,16 @@ import io.ktor.http.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class KtorChatRepository(
+class ChatRepository(
     private val client: HttpClient,
     private val chatService: IChatService
-) {
+) : IChatService by chatService {
 
     private val sessionsUrl = "${NetworkConfig.serverUrl}/api/chat/sessions"
     private val _currentSessionId = MutableStateFlow<String?>(null)
@@ -43,9 +44,9 @@ class KtorChatRepository(
 
     init {
         // Initialize with default session if available
-        println("KtorChatRepository: Initializing with default session")
+        println("ChatRepository: Initializing with default session")
         _currentSessionId.value = "default"
-        println("KtorChatRepository: Current session ID set to: ${_currentSessionId.value}")
+        println("ChatRepository: Current session ID set to: ${_currentSessionId.value}")
     }
 
     /**
@@ -54,17 +55,16 @@ class KtorChatRepository(
      */
     suspend fun getAllSessions(): Either<Throwable, List<String>> =
         Either.catch {
-            val result = chatService.getAllSessions(Unit)
+            val result = chatService.getAllSessionIds(Unit)
             result.fold(
                 { apiError -> throw RuntimeException("Failed to fetch sessions: $apiError") },
-                { sessions ->
-                    val sessionIds = sessions.map { it.id }
+                { sessionIds ->
                     println("Received sessions from server (RPC): $sessionIds")
                     sessionIds
                 }
             )
         }.map { serverSessions ->
-            _availableSessions.update { serverSessions }
+            _availableSessions.value = serverSessions
             serverSessions
         }
 
@@ -120,7 +120,7 @@ class KtorChatRepository(
     @OptIn(ExperimentalTime::class)
     suspend fun createSession(sessionId: String = "default"): Either<Throwable, Unit> =
         Either.catch {
-            println("KtorChatRepository: Creating session with ID: $sessionId")
+            println("ChatRepository: Creating session with ID: $sessionId")
             val now = Clock.System.now().toEpochMilliseconds()
             val session = Session(
                 id = sessionId,
@@ -136,18 +136,18 @@ class KtorChatRepository(
             }
 
             if (!response.status.isSuccess()) {
-                println("KtorChatRepository: Failed to create session: ${response.status}")
+                println("ChatRepository: Failed to create session: ${response.status}")
                 throw RuntimeException("Failed to create session: ${response.status}")
             }
-            println("KtorChatRepository: Session created successfully")
+            println("ChatRepository: Session created successfully")
         }.flatMap {
             // Update available sessions
-            println("KtorChatRepository: Updating available sessions after creating session")
+            println("ChatRepository: Updating available sessions after creating session")
             getAllSessions().map { }
         }.map {
             // Set as current if no current session
             if (_currentSessionId.value == null) {
-                println("KtorChatRepository: Setting current session to: $sessionId")
+                println("ChatRepository: Setting current session to: $sessionId")
                 _currentSessionId.value = sessionId
             }
         }
@@ -247,4 +247,12 @@ class KtorChatRepository(
             // Update available sessions to reflect any changes
             getAllSessions().map { }
         }
+
+    companion object {
+        suspend fun create(): ChatRepository {
+            val httpClient = HttpClientProvider.httpClient
+            val chatService = HttpClientProvider.createChatService()
+            return ChatRepository(httpClient, chatService)
+        }
+    }
 }
