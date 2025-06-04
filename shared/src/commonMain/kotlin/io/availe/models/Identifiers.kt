@@ -12,23 +12,63 @@ import kotlin.uuid.Uuid
 
 @Serializable
 @JvmInline
-value class MessageId(val id: Uuid)
+value class MessageId private constructor(val id: Uuid) {
+    init {
+        require(id != Uuid.Nil)
+    }
+
+    companion object {
+        fun from(uuid: Uuid): MessageId = MessageId(uuid)
+    }
+}
 
 @Serializable
 @JvmInline
-value class ConversationId(val id: Uuid)
+value class ConversationId private constructor(val id: Uuid) {
+    init {
+        require(id != Uuid.Nil)
+    }
+
+    companion object {
+        fun from(uuid: Uuid): ConversationId = ConversationId(uuid)
+    }
+}
 
 @Serializable
 @JvmInline
-value class UserId(val id: Uuid)
+value class UserId private constructor(val id: Uuid) {
+    init {
+        require(id != Uuid.Nil)
+    }
+
+    companion object {
+        fun from(uuid: Uuid): UserId = UserId(uuid)
+    }
+}
 
 @Serializable
 @JvmInline
-value class AgentId(val id: Uuid)
+value class AgentId private constructor(val id: Uuid) {
+    init {
+        require(id != Uuid.Nil)
+    }
+
+    companion object {
+        fun from(uuid: Uuid): AgentId = AgentId(uuid)
+    }
+}
 
 @Serializable
 @JvmInline
-value class SystemId(val id: Uuid)
+value class SystemId private constructor(val id: Uuid) {
+    init {
+        require(id != Uuid.Nil)
+    }
+
+    companion object {
+        fun from(uuid: Uuid): SystemId = SystemId(uuid)
+    }
+}
 
 @Serializable
 @JvmInline
@@ -40,57 +80,86 @@ value class UpdatedAt(@Contextual val instant: Instant)
 
 @Serializable
 @JvmInline
-value class ConversationTitle(val title: String)
+value class ConversationTitle(val title: String) {
+    init {
+        require(title.isNotBlank())
+        require(title.length <= 100)
+    }
+}
 
 @Serializable
 @JvmInline
-value class InternalMessageVersion(val value: Int)
+value class InternalMessageVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}
 
 @Serializable
 @JvmInline
-value class OutboundMessageVersion(val value: Int)
+value class OutboundMessageVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}
 
 @Serializable
 @JvmInline
-value class ConversationVersion(val value: Int)
+value class ConversationVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}
 
 @Serializable
 @JvmInline
-value class UserAccountVersion(val value: Int)
+value class UserAccountVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}
 
 @Serializable
 sealed class Sender {
     @Serializable
     data class User(val id: UserId) : Sender() {
         companion object {
-            fun fromId(uuid: Uuid) = User(UserId(uuid))
+            fun fromId(uuid: Uuid) = User(UserId.from(uuid))
         }
     }
 
     @Serializable
     data class Agent(val id: AgentId) : Sender() {
         companion object {
-            fun fromId(uuid: Uuid) = Agent(AgentId(uuid))
+            fun fromId(uuid: Uuid) = Agent(AgentId.from(uuid))
         }
     }
 
     @Serializable
     data class System(val id: SystemId) : Sender() {
         companion object {
-            fun fromId(uuid: Uuid) = System(SystemId(uuid))
+            fun fromId(uuid: Uuid) = System(SystemId.from(uuid))
         }
     }
 }
 
-//** ------------- User value types ------------- */
+@Serializable
+@JvmInline
+value class Username(val value: String) {
+    init {
+        require(value.isNotBlank())
+        require(value.length in 3..30)
+        require(Regex("^[A-Za-z0-9._-]+$").matches(value))
+    }
+}
 
 @Serializable
 @JvmInline
-value class Username(val value: String)
-
-@Serializable
-@JvmInline
-value class EmailAddress(val value: String)
+value class EmailAddress(val value: String) {
+    init {
+        require(Regex("^[A-Za-z0-9+_.%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$").matches(value))
+    }
+}
 
 @Serializable
 @JvmInline
@@ -98,8 +167,18 @@ value class AccountIsActive(val value: Boolean)
 
 @Serializable
 @JvmInline
-value class Role(val value: String)
+value class Role(val value: String) {
+    init {
+        require(value.isNotBlank())
+        require(value.length <= 50)
+    }
+}
 
 @Serializable
 @JvmInline
-value class Roles(val value: List<Role>)
+value class Roles(val value: List<Role>) {
+    init {
+        require(value.isNotEmpty())
+        require(value.distinct().size == value.size)
+    }
+}
