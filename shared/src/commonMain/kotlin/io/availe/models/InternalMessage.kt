@@ -17,7 +17,7 @@ data class InternalMessage @OptIn(ExperimentalUuidApi::class, ExperimentalTime::
     val nlipMessage: NLIPRequest,
     @Contextual val timeStamp: Instant,
     val status: Status,
-    val parentMessageId: Uuid? = null
+    val parentMessageId: Uuid?
 ) {
     @Serializable
     enum class Role { USER, AGENT, SYSTEM, AUDITOR, OTHER }
