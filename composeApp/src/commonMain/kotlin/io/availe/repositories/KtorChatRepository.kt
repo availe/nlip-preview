@@ -8,6 +8,7 @@ import io.availe.models.InternalMessage
 import io.availe.models.OutboundMessage
 import io.availe.models.Session
 import io.availe.openapi.model.NLIPRequest
+import io.availe.services.IChatService
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -22,7 +23,10 @@ import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class KtorChatRepository(private val client: HttpClient) {
+class KtorChatRepository(
+    private val client: HttpClient,
+    private val chatService: IChatService
+) {
 
     private val sessionsUrl = "${NetworkConfig.serverUrl}/api/chat/sessions"
     private val _currentSessionId = MutableStateFlow<String?>(null)
@@ -50,20 +54,16 @@ class KtorChatRepository(private val client: HttpClient) {
      */
     suspend fun getAllSessions(): Either<Throwable, List<String>> =
         Either.catch {
-            val response = client.get(sessionsUrl)
-            if (!response.status.isSuccess()) {
-                throw RuntimeException("Failed to fetch sessions: ${response.status}")
-            }
-
-            // The server returns a SessionListResponse with a sessionIds field
-            @Serializable
-            data class SessionListResponse(val sessionIds: List<String>)
-
-            val sessionListResponse = response.body<SessionListResponse>()
-            println("Received sessions from server: ${sessionListResponse.sessionIds}")
-            sessionListResponse.sessionIds
+            val result = chatService.getAllSessions(Unit)
+            result.fold(
+                { apiError -> throw RuntimeException("Failed to fetch sessions: $apiError") },
+                { sessions ->
+                    val sessionIds = sessions.map { it.id }
+                    println("Received sessions from server (RPC): $sessionIds")
+                    sessionIds
+                }
+            )
         }.map { serverSessions ->
-            // Update the local state with the server data
             _availableSessions.update { serverSessions }
             serverSessions
         }

@@ -38,6 +38,15 @@ import kotlin.math.roundToInt
 @Preview
 fun App() {
     val appState = rememberAppState()
+    if (appState == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
     val focusManager = LocalFocusManager.current
     MaterialTheme(colorScheme = lightColorScheme()) {
         Scaffold { innerPadding ->

@@ -4,6 +4,7 @@ import io.availe.services.IChatService
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.rpc.krpc.ktor.client.installKrpc
 import kotlinx.rpc.krpc.ktor.client.rpc
@@ -29,8 +30,17 @@ object HttpClientProvider {
     }
 
     suspend fun createChatService(): IChatService {
-        val rawRpc = krpcClient.rpc("${NetworkConfig.serverUrl}/krpc/chat") {
-        }
+        val wsUrl = URLBuilder(
+            protocol = when (NetworkConfig.serverUrl.protocol.name) {
+                "https" -> URLProtocol.WSS
+                else -> URLProtocol.WS
+            },
+            host = NetworkConfig.serverUrl.host,
+            port = NetworkConfig.serverUrl.port
+        ).apply {
+            encodedPath = "/krpc/chat"
+        }.buildString()
+        val rawRpc = krpcClient.rpc(wsUrl) { }
         return rawRpc.withService<IChatService>()
     }
 }

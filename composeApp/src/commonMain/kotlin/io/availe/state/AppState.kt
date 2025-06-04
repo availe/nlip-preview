@@ -22,7 +22,7 @@ import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun rememberAppState(): AppState {
+fun rememberAppState(): AppState? {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
             .components { addPlatformFileSupport() }
@@ -34,14 +34,22 @@ fun rememberAppState(): AppState {
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    return remember(httpClient, listState, screenWidth, snackbarHostState, drawerState, scope) {
+    var chatService by remember { mutableStateOf<io.availe.services.IChatService?>(null) }
+    LaunchedEffect(Unit) {
+        chatService = HttpClientProvider.createChatService()
+    }
+    if (chatService == null) {
+        return null
+    }
+    return remember(httpClient, listState, screenWidth, snackbarHostState, drawerState, scope, chatService) {
         AppState(
             httpClient = httpClient,
             listState = listState,
             screenWidth = screenWidth,
             snackbarHostState = snackbarHostState,
             drawerState = drawerState,
-            scope = scope
+            scope = scope,
+            chatService = chatService!!
         )
     }
 }
@@ -52,7 +60,8 @@ data class AppState(
     val screenWidth: Dp,
     val snackbarHostState: SnackbarHostState,
     val drawerState: DrawerState,
-    val scope: CoroutineScope
+    val scope: CoroutineScope,
+    val chatService: io.availe.services.IChatService
 ) {
     val responsiveWidth: Float = when {
         screenWidth < AppDimensions.COMPACT_WIDTH -> 0.9f
@@ -64,7 +73,7 @@ data class AppState(
     var targetUrl by mutableStateOf("${NetworkConfig.serverUrl}/nlip/")
     var uploadedFiles by mutableStateOf(listOf<PlatformFile>())
     var isSidebarOpen by mutableStateOf(true)
-    val chatRepository = KtorChatRepository(httpClient)
+    val chatRepository = KtorChatRepository(httpClient, chatService)
     val chatViewModel = ChatViewModel(chatRepository)
 }
 
