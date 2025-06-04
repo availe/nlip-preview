@@ -12,7 +12,7 @@ interface IChatService : RemoteService {
     // Sessions
     suspend fun getAllSessionIds(): Either<ApiError, List<String>>
     suspend fun getSession(sessionId: String): Either<ApiError, Session>
-    suspend fun createSession(session: Session): Either<ApiError, Unit>
+    suspend fun createSession(): Either<ApiError, Session>
     suspend fun deleteSession(sessionId: String): Either<ApiError, Unit>
     suspend fun updateSessionTitle(sessionId: String, title: String): Either<ApiError, Unit>
 
