@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OutboundMessage(
-    val targetUri: Url,
+    val targetUrl: Url,
     val internalMessage: InternalMessage,
 )

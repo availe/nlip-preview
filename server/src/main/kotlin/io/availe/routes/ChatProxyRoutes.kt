@@ -27,7 +27,7 @@ fun Route.chatProxyRoutes(internalChat: OllamaClient, httpClient: HttpClient) =
                 {}
             )
             val text = outbound.internalMessage.nlipMessage.content
-            val target = Url(outbound.targetUri)
+            val target = Url(outbound.targetUrl)
             val replyText = if (target.host in NetworkConfig.SELF_HOSTS && target.port == NetworkConfig.SELF_PORT) {
                 internalChat.generate(text)
             } else {
