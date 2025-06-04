@@ -1,10 +1,11 @@
-@file:OptIn(ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
 
 package io.availe.models
 
 import de.mkammerer.argon2.Argon2Factory
 import java.net.InetAddress
-import java.time.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
