@@ -84,7 +84,6 @@ sealed class Sender {
 
 //** ------------- User value types ------------- */
 
-// Authentication and Identity
 @Serializable
 @JvmInline
 value class Username(val value: String)
@@ -95,78 +94,8 @@ value class EmailAddress(val value: String)
 
 @Serializable
 @JvmInline
-value class PasswordHash(val value: String)
-
-// Two-Factor Authentication
-@Serializable
-@JvmInline
-value class TwoFactorEnabled(val value: Boolean)
-
-@Serializable
-@JvmInline
-value class TwoFactorSecret(val value: String)
-
-// Account Status and Ban
-@Serializable
-@JvmInline
 value class AccountIsActive(val value: Boolean)
 
-@Serializable
-@JvmInline
-value class BanTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class BanReason(val value: String)
-
-// Lockout Protection
-@Serializable
-@JvmInline
-value class FailedLoginAttemptCount(val value: Int)
-
-@Serializable
-@JvmInline
-value class LastFailedLoginTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class AccountLockedUntilTimestamp(@Contextual val value: Instant)
-
-// Audit and Presence
-@Serializable
-@JvmInline
-value class AccountCreationTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class LastPasswordChangeTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class LastLoginTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class LastSeenTimestamp(@Contextual val value: Instant)
-
-// IP and Device Tracking
-@Serializable
-@JvmInline
-value class RegistrationIpAddress(val value: String)
-
-@Serializable
-@JvmInline
-value class LastLoginIpAddress(val value: String)
-
-@Serializable
-@JvmInline
-value class PreviousLoginIpAddresses(val value: List<String>)
-
-@Serializable
-@JvmInline
-value class KnownDeviceTokens(val value: List<String>)
-
-// Role and Audit Metadata
 @Serializable
 @JvmInline
 value class Role(val value: String)
@@ -174,7 +103,3 @@ value class Role(val value: String)
 @Serializable
 @JvmInline
 value class Roles(val value: List<Role>)
-
-@Serializable
-@JvmInline
-value class LastModifiedTimestamp(@Contextual val value: Instant)
