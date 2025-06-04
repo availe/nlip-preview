@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package io.availe.models
 
 import de.mkammerer.argon2.Argon2Factory
@@ -6,7 +8,6 @@ import java.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @JvmInline
 value class PasswordHash private constructor(val value: String) {
     companion object {
@@ -115,7 +116,6 @@ value class PreviousLoginIpAddresses(val value: List<InetAddress>) {
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @JvmInline
 value class DeviceToken private constructor(val uuid: Uuid) {
     companion object {
@@ -127,7 +127,6 @@ value class DeviceToken private constructor(val uuid: Uuid) {
     override fun toString(): String = uuid.toString()
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @JvmInline
 value class KnownDeviceTokens(val value: List<Uuid>)
 
