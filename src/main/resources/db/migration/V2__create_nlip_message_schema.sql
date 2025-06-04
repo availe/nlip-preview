@@ -1,15 +1,15 @@
 CREATE TYPE allowed_format AS ENUM (
-  'text',
-  'token',
-  'structured',
-  'binary',
-  'location',
-  'generic'
-);
+    'text',
+    'token',
+    'structured',
+    'binary',
+    'location',
+    'generic'
+    );
 
 CREATE TYPE message_type AS ENUM (
-  'control'
-);
+    'control'
+    );
 
 CREATE TABLE nlip_message
 (

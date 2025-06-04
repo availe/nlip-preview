@@ -4,11 +4,6 @@ import io.availe.client.NLIPClient
 import io.availe.client.OllamaClient
 import io.availe.config.HttpClientProvider
 import io.availe.config.NetworkConfig
-import io.availe.routes.chatProxyRoutes
-import io.availe.routes.chatServiceRoutes
-import io.availe.routes.healthRoutes
-import io.availe.routes.staticRoutes
-import io.availe.services.IChatService
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -64,11 +59,6 @@ fun Application.module() {
     routing {
         rpcServerConfig { serialization { json(Json { prettyPrint = true }) } }
         rpc("/krpc/chat") {
-            registerService<IChatService> { _ -> ChatServiceImpl }
         }
-        staticRoutes()
-        healthRoutes(externalChat)
-        chatServiceRoutes()
-        chatProxyRoutes(internalChat, httpClient)
     }
 }

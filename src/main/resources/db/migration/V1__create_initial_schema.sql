@@ -45,8 +45,12 @@ CREATE TABLE internal_message
     nlip_message      JSONB       NOT NULL,
     created_at        TIMESTAMPTZ NOT NULL,
     updated_at        TIMESTAMPTZ NOT NULL,
-    parent_message_id UUID        REFERENCES internal_message (id) ON DELETE SET NULL,
-    version           INT         NOT NULL
+    parent_message_id UUID,
+    version           INT         NOT NULL,
+    CONSTRAINT fk_internal_message_parent
+        FOREIGN KEY (parent_message_id)
+            REFERENCES internal_message (id)
+            ON DELETE SET NULL
 );
 
 CREATE INDEX idx_internal_message_conversation_id ON internal_message (conversation_id);

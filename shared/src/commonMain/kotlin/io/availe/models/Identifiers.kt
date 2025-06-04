@@ -4,45 +4,58 @@ package io.availe.models
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
+@JvmInline
 value class MessageId(val id: Uuid)
 
 @Serializable
+@JvmInline
 value class ConversationId(val id: Uuid)
 
 @Serializable
+@JvmInline
 value class UserId(val id: Uuid)
 
 @Serializable
+@JvmInline
 value class AgentId(val id: Uuid)
 
 @Serializable
+@JvmInline
 value class SystemId(val id: Uuid)
 
 @Serializable
+@JvmInline
 value class CreatedAt(@Contextual val instant: Instant)
 
 @Serializable
+@JvmInline
 value class UpdatedAt(@Contextual val instant: Instant)
 
 @Serializable
+@JvmInline
 value class ConversationTitle(val title: String)
 
 @Serializable
+@JvmInline
 value class InternalMessageVersion(val value: Int)
 
 @Serializable
+@JvmInline
 value class OutboundMessageVersion(val value: Int)
 
 @Serializable
+@JvmInline
 value class ConversationVersion(val value: Int)
 
 @Serializable
+@JvmInline
 value class UserAccountVersion(val value: Int)
 
 @Serializable
