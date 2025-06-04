@@ -1,6 +1,7 @@
+package io.availe.services
+
 import arrow.core.Either
 import io.availe.models.Session
-import io.availe.services.ApiError
 import kotlinx.rpc.RemoteService
 import kotlinx.rpc.annotations.Rpc
 

@@ -1,6 +1,6 @@
 package io.availe.config
 
-import IChatService
+import io.availe.services.IChatService
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.contentnegotiation.*

@@ -8,6 +8,7 @@ import io.availe.routes.chatProxyRoutes
 import io.availe.routes.chatServiceRoutes
 import io.availe.routes.healthRoutes
 import io.availe.routes.staticRoutes
+import io.availe.services.IChatService
 import io.availe.services.impl.ChatServiceImpl
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -64,7 +65,7 @@ fun Application.module() {
     routing {
         rpcServerConfig { serialization { json(Json { prettyPrint = true }) } }
         rpc("/krpc/chat") {
-            registerService<ChatServiceImpl> { _ -> ChatServiceImpl }
+            registerService<IChatService> { _ -> ChatServiceImpl }
         }
         staticRoutes()
         healthRoutes(externalChat)
