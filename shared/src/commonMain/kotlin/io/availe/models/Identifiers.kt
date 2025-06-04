@@ -47,13 +47,21 @@ data class SystemId(val value: Uuid) {
 }
 
 @Serializable
-sealed interface Sender
+sealed class Sender {
+    abstract val id: Uuid
+}
 
 @Serializable
-data class UserSender(val id: UserId) : Sender
+data class UserSender(val userId: UserId) : Sender() {
+    override val id: Uuid get() = userId.value
+}
 
 @Serializable
-data class AgentSender(val id: AgentId) : Sender
+data class AgentSender(val agentId: AgentId) : Sender() {
+    override val id: Uuid get() = agentId.value
+}
 
 @Serializable
-data class SystemSender(val id: SystemId) : Sender
+data class SystemSender(val systemId: SystemId) : Sender() {
+    override val id: Uuid get() = systemId.value
+}
