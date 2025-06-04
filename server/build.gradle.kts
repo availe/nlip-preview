@@ -21,7 +21,7 @@ tasks.withType<Test>().configureEach {
     environment("DB_SCHEMA", dbSchema)
 }
 
-/** ------------- Buildscript class‑path for Flyway ------------- */
+/** ------------- Buildscript class-path for Flyway ------------- */
 buildscript {
     repositories { mavenCentral() }
     dependencies {
@@ -48,6 +48,13 @@ kotlin {
     jvmToolchain(21)
 }
 
+/** ------------- Add a dedicated source set for jOOQ strategy ------------- */
+sourceSets {
+    create("jooq") {
+        kotlin.srcDir("src/jooq/kotlin")
+    }
+}
+
 group = "io.availe"
 version = "1.0.0"
 application {
@@ -60,8 +67,6 @@ dependencies {
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
 
-    jooqGenerator(libs.postgresql)
-
     implementation(libs.mapstruct)
     kapt(libs.mapstruct.processor)
 
@@ -71,9 +76,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.logback)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.arrow.core)
@@ -84,6 +86,18 @@ dependencies {
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)
     implementation(libs.kotlinx.rpc.krpc.serialization.json)
+
+    implementation(libs.jooq)
+    compileOnly(libs.jooq.codegen)
+    compileOnly(libs.jooq.meta)
+
+    // jOOQ codegen APIs for the "jooq" source set
+    add("jooqImplementation", libs.jooq.meta)
+    add("jooqImplementation", libs.jooq.codegen)
+
+    // JDBC driver for codegen and our custom strategy class
+    jooqGenerator(libs.postgresql)
+    jooqGenerator(sourceSets["jooq"].output)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
@@ -101,7 +115,6 @@ jooq {
     edition.set(JooqEdition.OSS)
     configurations {
         create("main") {
-            // run before compileKotlin
             generateSchemaSourceOnCompilation.set(true)
 
             jooqConfiguration.apply {
