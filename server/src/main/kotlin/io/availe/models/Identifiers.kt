@@ -21,7 +21,6 @@ value class PasswordHash private constructor(val value: String) {
         }
 
         fun fromStored(stored: String): PasswordHash {
-            require(stored.startsWith("\$argon2"))
             return PasswordHash(stored)
         }
     }
