@@ -14,10 +14,10 @@ CREATE TYPE message_type AS ENUM (
 CREATE TABLE nlip_message
 (
     id              UUID PRIMARY KEY        DEFAULT gen_random_uuid(),
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT now(),
     conversation_id UUID           NOT NULL REFERENCES conversation (id) ON DELETE CASCADE,
     ordinal         INTEGER        NOT NULL,
-    messagetype     message_type,
+    message_type    message_type,
     format          allowed_format NOT NULL,
     subformat       TEXT           NOT NULL,
     content         TEXT           NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE nlip_message
 );
 
 ALTER TABLE nlip_message
-    ADD CONSTRAINT uniq_conv_ordinal UNIQUE (conversation_id, ordinal);
+    ADD CONSTRAINT uniq_conversation_ordinal UNIQUE (conversation_id, ordinal);
 
 CREATE TABLE nlip_submessage
 (
@@ -38,5 +38,5 @@ CREATE TABLE nlip_submessage
 );
 
 CREATE INDEX idx_nlip_message_format ON nlip_message (format);
-CREATE INDEX idx_nlip_message_conv_ord ON nlip_message (conversation_id, ordinal);
+CREATE INDEX idx_nlip_message_conversation_ordinal ON nlip_message (conversation_id, ordinal);
 CREATE INDEX idx_nlip_submessage_message_id ON nlip_submessage (message_id);
