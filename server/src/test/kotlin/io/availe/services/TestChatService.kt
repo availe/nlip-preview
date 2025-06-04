@@ -1,7 +1,6 @@
 package io.availe.services
 
 import arrow.core.Either
-import io.availe.models.BranchId
 import io.availe.models.Conversation
 import io.availe.models.InternalMessage
 

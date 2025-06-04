@@ -9,7 +9,6 @@ import io.availe.routes.chatServiceRoutes
 import io.availe.routes.healthRoutes
 import io.availe.routes.staticRoutes
 import io.availe.services.IChatService
-import io.availe.services.impl.ChatServiceImpl
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
