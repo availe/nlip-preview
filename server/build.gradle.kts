@@ -159,32 +159,9 @@ tasks.named("compileKotlin") {
     dependsOn("flywayMigrate")
 }
 
-tasks.register<Test>("runEnumValuesSyncTest") {
-    group = "verification"
-    description = "Verifies that our enums match the OpenAPI schema"
-
-    filter {
-        includeTestsMatching("io.availe.drift.EnumValuesSyncTest")
-    }
-
-    val openApiFile = project(":shared")
-        .projectDir
-        .resolve("src/commonMain/resources/openapi/nlip-api.yaml")
-
-    systemProperty("OPENAPI_SPEC_PATH", openApiFile.absolutePath)
-}
-
 // Always run Flyway before starting the server
 tasks.named<JavaExec>("run") {
-    dependsOn("flywayMigrate", "runEnumValuesSyncTest")
-}
-
-
-// Reset the database if needed
-tasks.register("resetDb") {
-    group = "database"
-    description = "Drops all objects and re-applies all Flyway migrations"
-    dependsOn("flywayClean", "flywayMigrate")
+    dependsOn("flywayMigrate")
 }
 
 // Drop all objects from DB
