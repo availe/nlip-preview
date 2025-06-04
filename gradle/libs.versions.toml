@@ -32,7 +32,7 @@ jackson = "2.19.0"
 kotlin-test-junit = "2.1.21"
 buildKonfig = "0.17.1"
 kotlinx-rpc = "0.7.0"
-ksp = "2.2.0-RC-2.0.1"
+ksp = "2.1.21-2.0.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
