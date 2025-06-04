@@ -3,8 +3,10 @@ package io.availe.models
 import de.mkammerer.argon2.Argon2Factory
 import java.net.InetAddress
 import java.time.Instant
-import java.util.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 @JvmInline
 value class PasswordHash private constructor(val value: String) {
     companion object {
@@ -113,18 +115,21 @@ value class PreviousLoginIpAddresses(val value: List<InetAddress>) {
     }
 }
 
+@OptIn(ExperimentalUuidApi::class)
 @JvmInline
-value class DeviceToken private constructor(val uuid: UUID) {
+value class DeviceToken private constructor(val uuid: Uuid) {
     companion object {
-        fun fromUuid(uuid: UUID): DeviceToken = DeviceToken(uuid)
-        fun fromString(raw: String): DeviceToken = DeviceToken(UUID.fromString(raw))
+        fun fromUuid(uuid: Uuid): DeviceToken = DeviceToken(uuid)
+        fun fromString(raw: String): DeviceToken = DeviceToken(Uuid.parse(raw))
+        fun random(): DeviceToken = DeviceToken(Uuid.random())
     }
 
     override fun toString(): String = uuid.toString()
 }
 
+@OptIn(ExperimentalUuidApi::class)
 @JvmInline
-value class KnownDeviceTokens(val value: List<DeviceToken>)
+value class KnownDeviceTokens(val value: List<Uuid>)
 
 @JvmInline
 value class UserAccountVersion(val value: Int) {
