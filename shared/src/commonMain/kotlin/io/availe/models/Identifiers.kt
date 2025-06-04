@@ -13,10 +13,6 @@ import kotlin.uuid.Uuid
 @Serializable
 @JvmInline
 value class MessageId private constructor(val id: Uuid) {
-    init {
-        require(id != Uuid.Nil)
-    }
-
     companion object {
         fun from(uuid: Uuid): MessageId = MessageId(uuid)
     }
@@ -25,10 +21,6 @@ value class MessageId private constructor(val id: Uuid) {
 @Serializable
 @JvmInline
 value class ConversationId private constructor(val id: Uuid) {
-    init {
-        require(id != Uuid.Nil)
-    }
-
     companion object {
         fun from(uuid: Uuid): ConversationId = ConversationId(uuid)
     }
@@ -37,10 +29,6 @@ value class ConversationId private constructor(val id: Uuid) {
 @Serializable
 @JvmInline
 value class UserId private constructor(val id: Uuid) {
-    init {
-        require(id != Uuid.Nil)
-    }
-
     companion object {
         fun from(uuid: Uuid): UserId = UserId(uuid)
     }
@@ -49,10 +37,6 @@ value class UserId private constructor(val id: Uuid) {
 @Serializable
 @JvmInline
 value class AgentId private constructor(val id: Uuid) {
-    init {
-        require(id != Uuid.Nil)
-    }
-
     companion object {
         fun from(uuid: Uuid): AgentId = AgentId(uuid)
     }
@@ -61,10 +45,6 @@ value class AgentId private constructor(val id: Uuid) {
 @Serializable
 @JvmInline
 value class SystemId private constructor(val id: Uuid) {
-    init {
-        require(id != Uuid.Nil)
-    }
-
     companion object {
         fun from(uuid: Uuid): SystemId = SystemId(uuid)
     }
