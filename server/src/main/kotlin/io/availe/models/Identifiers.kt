@@ -1,82 +1,135 @@
 package io.availe.models
 
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import de.mkammerer.argon2.Argon2Factory
 import java.net.InetAddress
 import java.time.Instant
+import java.util.*
 
-@Serializable
 @JvmInline
-value class PasswordHash(val value: String)
+value class PasswordHash private constructor(val value: String) {
+    companion object {
+        fun hashRaw(rawPassword: String): PasswordHash {
+            require(rawPassword.isNotBlank())
+            require(rawPassword.length >= 8)
+            val argon2 = Argon2Factory.create()
+            val iterations = 3
+            val memory = 65536
+            val parallelism = 1
+            val hash = argon2.hash(iterations, memory, parallelism, rawPassword.toCharArray())
+            argon2.wipeArray(rawPassword.toCharArray())
+            return PasswordHash(hash)
+        }
 
-@Serializable
+        fun fromStored(stored: String): PasswordHash {
+            require(stored.startsWith("\$argon2"))
+            return PasswordHash(stored)
+        }
+    }
+
+    fun matches(rawPassword: String): Boolean {
+        val argon2 = Argon2Factory.create()
+        return argon2.verify(value, rawPassword.toCharArray())
+    }
+}
+
 @JvmInline
 value class TwoFactorEnabled(val value: Boolean)
 
-@Serializable
 @JvmInline
-value class TwoFactorSecret(val value: String)
+value class TwoFactorSecret private constructor(val value: String) {
+    companion object {
+        private val BASE32_REGEX = Regex("^[A-Z2-7]{16,64}$")
+        fun fromBase32(raw: String): TwoFactorSecret {
+            val upper = raw.trim().uppercase()
+            require(upper.matches(BASE32_REGEX))
+            return TwoFactorSecret(upper)
+        }
+    }
+}
 
-@Serializable
 @JvmInline
-value class BanTimestamp(@Contextual val value: Instant)
+value class BanTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class BanReason(val value: String)
+value class LastFailedLoginTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class FailedLoginAttemptCount(val value: Int)
+value class AccountLockedUntilTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class LastFailedLoginTimestamp(@Contextual val value: Instant)
+value class AccountCreationTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class AccountLockedUntilTimestamp(@Contextual val value: Instant)
+value class LastPasswordChangeTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class AccountCreationTimestamp(@Contextual val value: Instant)
+value class LastLoginTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class LastPasswordChangeTimestamp(@Contextual val value: Instant)
+value class LastSeenTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class LastLoginTimestamp(@Contextual val value: Instant)
+value class LastModifiedTimestamp(val value: Instant)
 
-@Serializable
 @JvmInline
-value class LastSeenTimestamp(@Contextual val value: Instant)
+value class BanReason(val value: String) {
+    init {
+        require(value.isNotBlank())
+        require(value.length <= 256)
+        require(!value.contains('\n'))
+    }
+}
 
-@Serializable
 @JvmInline
-value class RegistrationIpAddress(@Contextual val value: InetAddress)
+value class FailedLoginAttemptCount private constructor(val value: Int) {
+    companion object {
+        fun from(raw: Int): FailedLoginAttemptCount {
+            require(raw in 0..10)
+            return FailedLoginAttemptCount(raw)
+        }
+    }
+}
 
-@Serializable
 @JvmInline
-value class LastLoginIpAddress(@Contextual val value: InetAddress)
+value class RegistrationIpAddress(val value: InetAddress) {
+    companion object {
+        fun fromString(hostOrIp: String): RegistrationIpAddress =
+            RegistrationIpAddress(InetAddress.getByName(hostOrIp))
+    }
+}
 
-@Serializable
 @JvmInline
-value class PreviousLoginIpAddresses(@Contextual val value: List<InetAddress>)
+value class LastLoginIpAddress(val value: InetAddress) {
+    companion object {
+        fun fromString(hostOrIp: String): LastLoginIpAddress =
+            LastLoginIpAddress(InetAddress.getByName(hostOrIp))
+    }
+}
 
-@Serializable
 @JvmInline
-value class DeviceToken(val value: String)
+value class PreviousLoginIpAddresses(val value: List<InetAddress>) {
+    companion object {
+        fun fromStrings(rawList: List<String>): PreviousLoginIpAddresses =
+            PreviousLoginIpAddresses(rawList.map { InetAddress.getByName(it) })
+    }
+}
 
-@Serializable
+@JvmInline
+value class DeviceToken private constructor(val uuid: UUID) {
+    companion object {
+        fun fromUuid(uuid: UUID): DeviceToken = DeviceToken(uuid)
+        fun fromString(raw: String): DeviceToken = DeviceToken(UUID.fromString(raw))
+    }
+
+    override fun toString(): String = uuid.toString()
+}
+
 @JvmInline
 value class KnownDeviceTokens(val value: List<DeviceToken>)
 
-@Serializable
 @JvmInline
-value class LastModifiedTimestamp(@Contextual val value: Instant)
-
-@Serializable
-@JvmInline
-value class UserAccountVersion(val value: Int)
+value class UserAccountVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}

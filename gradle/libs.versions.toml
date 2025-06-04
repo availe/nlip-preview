@@ -2,6 +2,7 @@
 agp = "8.10.0"
 androidx-activityCompose = "1.10.1"
 androidx-lifecycle = "2.9.0"
+argon2Jvm = "2.12"
 arrow = "2.1.2"
 benManesVersions = "0.52.0"
 coilCompose = "3.2.0"
@@ -39,6 +40,7 @@ ksp = "2.1.21-2.0.1"
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+argon2-jvm = { module = "de.mkammerer:argon2-jvm", version.ref = "argon2Jvm" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
