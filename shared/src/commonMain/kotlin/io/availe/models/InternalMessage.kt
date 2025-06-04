@@ -1,12 +1,12 @@
-@file:OptIn(ExperimentalTime::class)
+@file:OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
 
 package io.availe.models
 
 import io.availe.openapi.model.NLIPRequest
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
+import kotlin.uuid.ExperimentalUuidApi
+
 
 @Serializable
 data class InternalMessage(
@@ -14,10 +14,8 @@ data class InternalMessage(
     val conversationId: ConversationId,
     val sender: Sender,
     val nlipMessage: NLIPRequest,
-    @Contextual val timeStamp: Instant,
-    val status: Status,
-    val parentMessageId: MessageId? = null
-) {
-    @Serializable
-    enum class Status { PENDING, SENT, RECEIVED, ERROR }
-}
+    val createdAt: CreatedAt,
+    val updatedAt: UpdatedAt,
+    val parentMessageId: MessageId?,
+    val version: InternalMessageVersion
+)

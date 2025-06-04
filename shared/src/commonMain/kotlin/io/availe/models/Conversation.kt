@@ -2,27 +2,20 @@
 
 package io.availe.models
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @Serializable
 data class Conversation(
     val id: ConversationId,
-    val title: String,
-    @Contextual val createdAt: Instant,
-    @Contextual val lastActivityAt: Instant,
-    val participants: Participants,
-    val status: Status
+    val title: ConversationTitle,
+    val createdAt: CreatedAt,
+    val updatedAt: UpdatedAt,
+    val owner: UserId,
+    val participants: List<Sender>,
+    val status: Status,
+    val version: ConversationVersion
 ) {
     @Serializable
     enum class Status { ACTIVE, ARCHIVED, LOCAL, TEMPORARY }
-
-    @Serializable
-    data class Participants(
-        val users: Set<UserSender>,
-        val agents: Set<AgentSender>,
-        val systems: Set<SystemSender>
-    )
 }

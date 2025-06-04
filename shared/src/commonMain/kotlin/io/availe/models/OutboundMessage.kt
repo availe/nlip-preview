@@ -7,4 +7,5 @@ import kotlinx.serialization.Serializable
 data class OutboundMessage(
     val targetUrl: Url,
     val internalMessage: InternalMessage,
+    val version: OutboundMessageVersion
 )

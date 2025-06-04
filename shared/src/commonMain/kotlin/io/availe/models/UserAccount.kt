@@ -14,5 +14,6 @@ data class UserAccount(
     val email: String,
     @Contextual val createdAt: Instant,
     @Contextual val lastLoginAt: Instant,
-    val isActive: Boolean = true
+    val isOnline: Boolean = true,
+    val version: UserAccountVersion
 )

@@ -89,6 +89,7 @@ kotlin {
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.arrow.core)
+                implementation(libs.kotlinx.datetime)
 
                 implementation(libs.kotlinx.rpc.core)
                 implementation(libs.kotlinx.rpc.krpc.client)

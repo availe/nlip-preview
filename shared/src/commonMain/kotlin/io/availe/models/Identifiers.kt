@@ -1,67 +1,66 @@
-@file:OptIn(ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
 
 package io.availe.models
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
-data class MessageId(val value: Uuid) {
-    companion object {
-        fun from(uuid: Uuid) = MessageId(uuid)
-        fun generate() = MessageId(Uuid.random())
-    }
+value class MessageId(val id: Uuid)
+
+@Serializable
+value class ConversationId(val id: Uuid)
+
+@Serializable
+value class UserId(val id: Uuid)
+
+@Serializable
+value class AgentId(val id: Uuid)
+
+@Serializable
+value class SystemId(val id: Uuid)
+
+@Serializable
+value class CreatedAt(@Contextual val instant: Instant)
+
+@Serializable
+value class UpdatedAt(@Contextual val instant: Instant)
+
+@Serializable
+value class ConversationTitle(val title: String)
+
+@Serializable
+value class InternalMessageVersion(val value: Int)
+
+@Serializable
+value class OutboundMessageVersion(val value: Int)
+
+@Serializable
+value class ConversationVersion(val value: Int)
+
+@Serializable
+value class UserAccountVersion(val value: Int)
+
+@Serializable
+sealed interface Sender {
+    val uuid: Uuid
 }
 
 @Serializable
-data class ConversationId(val value: Uuid) {
-    companion object Companion {
-        fun from(uuid: Uuid) = ConversationId(uuid)
-        fun generate() = ConversationId(Uuid.random())
-    }
+value class UserSender(val userId: UserId) : Sender {
+    override val uuid: Uuid get() = userId.id
 }
 
 @Serializable
-data class UserId(val value: Uuid) {
-    companion object {
-        fun from(uuid: Uuid) = UserId(uuid)
-        fun generate() = UserId(Uuid.random())
-    }
+value class AgentSender(val agentId: AgentId) : Sender {
+    override val uuid: Uuid get() = agentId.id
 }
 
 @Serializable
-data class AgentId(val value: Uuid) {
-    companion object {
-        fun from(uuid: Uuid) = AgentId(uuid)
-        fun generate() = AgentId(Uuid.random())
-    }
-}
-
-@Serializable
-data class SystemId(val value: Uuid) {
-    companion object {
-        fun from(uuid: Uuid) = SystemId(uuid)
-        fun generate() = SystemId(Uuid.random())
-    }
-}
-
-@Serializable
-sealed class Sender {
-    abstract val id: Uuid
-}
-
-@Serializable
-data class UserSender(val userId: UserId) : Sender() {
-    override val id: Uuid get() = userId.value
-}
-
-@Serializable
-data class AgentSender(val agentId: AgentId) : Sender() {
-    override val id: Uuid get() = agentId.value
-}
-
-@Serializable
-data class SystemSender(val systemId: SystemId) : Sender() {
-    override val id: Uuid get() = systemId.value
+value class SystemSender(val systemId: SystemId) : Sender {
+    override val uuid: Uuid get() = systemId.id
 }
