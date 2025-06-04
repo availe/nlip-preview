@@ -77,6 +77,8 @@ dependencies {
     implementation(libs.ktor.server.cors.jvm)
     implementation(libs.ktor.server.status.pages.jvm)
     implementation(libs.argon2.jvm)
+    implementation(libs.kotlinx.datetime)
+
 
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)

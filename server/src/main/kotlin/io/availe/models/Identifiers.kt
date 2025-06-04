@@ -3,9 +3,9 @@
 package io.availe.models
 
 import de.mkammerer.argon2.Argon2Factory
+import kotlinx.datetime.Instant
 import java.net.InetAddress
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
