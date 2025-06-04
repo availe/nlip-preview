@@ -11,7 +11,7 @@ import kotlin.time.Instant
 @Serializable
 data class InternalMessage(
     val id: MessageId,
-    val sessionId: SessionId,
+    val conversationId: SessionId,
     val sender: Sender,
     val nlipMessage: NLIPRequest,
     @Contextual val timeStamp: Instant,

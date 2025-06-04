@@ -36,7 +36,7 @@ fun Route.chatProxyRoutes(internalChat: OllamaClient, httpClient: HttpClient) =
             val generatedRequest = outbound.internalMessage.nlipMessage.copy(content = replyText)
             val reply = InternalMessage(
                 id = Uuid.random().toString(),
-                sessionId = sessionId,
+                conversationId = sessionId,
                 senderId = "agent-${Uuid.random()}",
                 senderRole = InternalMessage.Role.AGENT,
                 nlipMessage = generatedRequest,

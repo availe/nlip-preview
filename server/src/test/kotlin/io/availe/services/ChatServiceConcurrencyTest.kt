@@ -49,7 +49,7 @@ class ChatServiceConcurrencyTest {
         val currentTimestamp = Clock.System.now().toEpochMilliseconds()
         return InternalMessage(
             id = id,
-            sessionId = sessionId,
+            conversationId = sessionId,
             senderId = "user1",
             senderRole = InternalMessage.Role.USER,
             nlipMessage = NLIPRequest(
