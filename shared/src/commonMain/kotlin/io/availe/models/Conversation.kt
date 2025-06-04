@@ -8,7 +8,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @Serializable
-data class Session(
+data class Conversation(
     val id: SessionId,
     val title: String,
     @Contextual val createdAt: Instant,

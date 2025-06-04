@@ -1,8 +1,8 @@
 package io.availe.routes
 
 import io.availe.models.BranchId
+import io.availe.models.Conversation
 import io.availe.models.InternalMessage
-import io.availe.models.Session
 import io.availe.services.ChatError
 import io.availe.services.ChatStore
 import io.availe.services.toApiError
@@ -14,7 +14,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreateSessionRequest(val session: Session)
+data class CreateSessionRequest(val conversation: Conversation)
 
 @Serializable
 data class SendMessageRequest(val branchId: String = "root", val message: InternalMessage)
@@ -54,7 +54,7 @@ fun Route.chatServiceRoutes() = route("/api/chat/sessions") {
 
     post {
         val req = call.receive<CreateSessionRequest>()
-        ChatStore.createSession(req.session).fold(
+        ChatStore.createSession(req.conversation).fold(
             { err -> call.respond(err.toStatusCode(), err.toApiError()) },
             { call.respond(HttpStatusCode.Created, mapOf("message" to "Session created")) }
         )

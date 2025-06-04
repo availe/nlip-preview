@@ -2,8 +2,8 @@ package io.availe.services
 
 import arrow.core.Either
 import io.availe.models.BranchId
+import io.availe.models.Conversation
 import io.availe.models.InternalMessage
-import io.availe.models.Session
 import io.availe.openapi.model.AllowedFormat
 import io.availe.openapi.model.NLIPRequest
 import kotlinx.coroutines.coroutineScope
@@ -28,15 +28,15 @@ class ChatServiceConcurrencyTest {
     }
 
     @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
-    private fun createTestSession(id: String = Uuid.random().toString()): Session {
+    private fun createTestSession(id: String = Uuid.random().toString()): Conversation {
         val currentTimestamp = Clock.System.now().toEpochMilliseconds()
-        return Session(
+        return Conversation(
             id = id,
             title = "Test Session $id",
             createdAt = currentTimestamp,
             lastActivityAt = currentTimestamp,
             participantIds = setOf("user1", "user2"),
-            status = Session.Status.ACTIVE
+            status = Conversation.Status.ACTIVE
         )
     }
 

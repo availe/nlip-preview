@@ -2,8 +2,8 @@ package io.availe.services.impl
 
 import arrow.core.Either
 import io.availe.models.BranchId
+import io.availe.models.Conversation
 import io.availe.models.InternalMessage
-import io.availe.models.Session
 import io.availe.services.*
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
@@ -24,7 +24,7 @@ object ChatServiceImpl : IChatService {
             )
         }
 
-    override suspend fun getSession(sessionId: String): Either<ApiError, Session> =
+    override suspend fun getSession(sessionId: String): Either<ApiError, Conversation> =
         ChatStore.getSession(sessionId).mapLeft { chatError: ChatError ->
             ApiError(
                 type = ApiErrorType.SESSION_NOT_FOUND,
@@ -33,24 +33,24 @@ object ChatServiceImpl : IChatService {
         }
 
     @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
-    override suspend fun createSession(): Either<ApiError, Session> {
+    override suspend fun createSession(): Either<ApiError, Conversation> {
         val currentTimestamp: Instant = Clock.System.now()
-        val session = Session(
+        val conversation = Conversation(
             id = Uuid.random().toString(),
             title = null,
             createdAt = currentTimestamp,
             lastActivityAt = currentTimestamp,
             participantIds = emptySet(),
-            status = Session.Status.ACTIVE
+            status = Conversation.Status.ACTIVE
         )
-        return ChatStore.createSession(session)
+        return ChatStore.createSession(conversation)
             .mapLeft { chatError ->
                 ApiError(
                     type = ApiErrorType.SESSION_CREATE_FAILED,
                     message = chatError.message
                 )
             }
-            .map { session }
+            .map { conversation }
     }
 
     override suspend fun deleteSession(sessionId: String): Either<ApiError, Unit> {
