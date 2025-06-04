@@ -50,21 +50,21 @@ sealed class Sender {
     @Serializable
     data class User(val id: UserId) : Sender() {
         companion object {
-            fun create(uuid: Uuid) = User(UserId(uuid))
+            fun fromId(uuid: Uuid) = User(UserId(uuid))
         }
     }
 
     @Serializable
     data class Agent(val id: AgentId) : Sender() {
         companion object {
-            fun create(uuid: Uuid) = Agent(AgentId(uuid))
+            fun fromId(uuid: Uuid) = Agent(AgentId(uuid))
         }
     }
 
     @Serializable
     data class System(val id: SystemId) : Sender() {
         companion object {
-            fun create(uuid: Uuid) = System(SystemId(uuid))
+            fun fromId(uuid: Uuid) = System(SystemId(uuid))
         }
     }
 }
