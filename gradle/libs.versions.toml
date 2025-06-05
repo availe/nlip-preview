@@ -7,7 +7,6 @@ arrow = "2.1.2"
 benManesVersions = "0.52.0"
 coilCompose = "3.2.0"
 compose-multiplatform = "1.8.1"
-dotenvKotlin = "6.5.1"
 fastscrollerCore = "0.3.2"
 filekitCore = "0.10.0-beta04"
 flyway = "11.8.2"
@@ -47,7 +46,6 @@ argon2-jvm = { module = "de.mkammerer:argon2-jvm", version.ref = "argon2Jvm" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
-dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenvKotlin" }
 fastscroller-core = { module = "io.github.oikvpqya.compose.fastscroller:fastscroller-core", version.ref = "fastscrollerCore" }
 fastscroller-indicator = { module = "io.github.oikvpqya.compose.fastscroller:fastscroller-indicator", version.ref = "fastscrollerCore" }
 fastscroller-material3 = { module = "io.github.oikvpqya.compose.fastscroller:fastscroller-material3", version.ref = "fastscrollerCore" }

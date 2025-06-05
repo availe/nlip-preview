@@ -26,14 +26,6 @@ tasks.withType<Test>().configureEach {
     environment("DB_URL", dbUrl)
 }
 
-buildscript {
-    repositories { mavenCentral() }
-    dependencies {
-        classpath(libs.flyway.database.postgresql)
-        classpath(libs.postgresql)
-    }
-}
-
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
@@ -85,8 +77,10 @@ dependencies {
     implementation(libs.ktor.server.status.pages.jvm)
     implementation(libs.argon2.jvm)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.dotenv.kotlin)
     implementation(libs.hikaricp)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.database.postgresql)
+    implementation(libs.postgresql)
 
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)
@@ -105,9 +99,6 @@ dependencies {
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.postgresql)
-    testImplementation(libs.flyway.core)
-    testImplementation(libs.flyway.database.postgresql)
     testImplementation(libs.snakeyaml)
     testImplementation(platform(libs.jackson.bom))
     testImplementation(libs.jackson.databind)

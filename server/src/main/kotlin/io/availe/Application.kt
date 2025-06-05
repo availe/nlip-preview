@@ -2,10 +2,7 @@ package io.availe
 
 import io.availe.client.NLIPClient
 import io.availe.client.OllamaClient
-import io.availe.config.DatabaseFactory
-import io.availe.config.HttpClientProvider
-import io.availe.config.NetworkConfig
-import io.availe.config.configurePlugins
+import io.availe.config.*
 import io.availe.models.*
 import io.availe.repositories.ConversationRepository
 import io.ktor.http.*
@@ -21,6 +18,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 fun main() {
+    EnvLoader.load()
     embeddedServer(
         CIO,
         port = NetworkConfig.SELF_PORT,

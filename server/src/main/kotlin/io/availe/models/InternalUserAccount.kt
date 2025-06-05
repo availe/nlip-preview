@@ -1,9 +1,7 @@
 package io.availe.models
 
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class InternalUserAccount(
     val userAccount: UserAccount,
     val passwordHash: PasswordHash,
