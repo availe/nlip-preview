@@ -78,8 +78,9 @@ dependencies {
     implementation(libs.ktor.server.status.pages.jvm)
     implementation(libs.argon2.jvm)
     implementation(libs.kotlinx.datetime)
-
-
+    implementation(libs.dotenv.kotlin)
+    implementation(libs.hikaricp)
+    
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)
     implementation(libs.kotlinx.rpc.krpc.serialization.json)
