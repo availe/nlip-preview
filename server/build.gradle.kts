@@ -16,14 +16,31 @@ val dbSchema = requireSecret("DB_SCHEMA")
 
 val dbUrl = "jdbc:postgresql://$dbHost:$dbPort/$dbName?currentSchema=$dbSchema"
 
+val dbEnv = mapOf(
+    "DB_HOST" to dbHost,
+    "DB_PORT" to dbPort,
+    "DB_NAME" to dbName,
+    "DB_USER" to dbUser,
+    "DB_PASS" to dbPass,
+    "DB_SCHEMA" to dbSchema,
+    "DB_URL" to dbUrl
+)
+
 tasks.withType<Test>().configureEach {
-    environment("DB_HOST", dbHost)
-    environment("DB_PORT", dbPort)
-    environment("DB_NAME", dbName)
-    environment("DB_USER", dbUser)
-    environment("DB_PASS", dbPass)
-    environment("DB_SCHEMA", dbSchema)
-    environment("DB_URL", dbUrl)
+    environment(dbEnv)
+}
+
+tasks.named<JavaExec>("run") {
+    dependsOn("flywayMigrate")
+    environment(dbEnv)
+}
+
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        classpath(libs.flyway.database.postgresql)
+        classpath(libs.postgresql)
+    }
 }
 
 plugins {
