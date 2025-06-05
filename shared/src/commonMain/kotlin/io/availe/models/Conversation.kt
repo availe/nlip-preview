@@ -18,3 +18,11 @@ data class Conversation(
     @Serializable
     enum class Status { ACTIVE, ARCHIVED, LOCAL, TEMPORARY }
 }
+
+@Serializable
+data class ConversationCreate(
+    val title: ConversationTitle,
+    val owner: UserId,
+    val status: Conversation.Status,
+    val version: ConversationVersion
+)
