@@ -8,6 +8,7 @@ import io.availe.config.NetworkConfig
 import io.availe.config.configurePlugins
 import io.availe.models.*
 import io.availe.repositories.ConversationRepository
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
@@ -21,6 +22,8 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 fun main() {
+    dotenv { ignoreIfMissing = true }
+
     embeddedServer(
         CIO,
         port = NetworkConfig.SELF_PORT,

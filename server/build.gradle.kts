@@ -26,15 +26,6 @@ val dbEnv = mapOf(
     "DB_URL" to dbUrl
 )
 
-tasks.withType<Test>().configureEach {
-    environment(dbEnv)
-}
-
-tasks.named<JavaExec>("run") {
-    dependsOn("flywayMigrate")
-    environment(dbEnv)
-}
-
 buildscript {
     repositories { mavenCentral() }
     dependencies {
@@ -98,6 +89,7 @@ dependencies {
     implementation(libs.flyway.core)
     implementation(libs.flyway.database.postgresql)
     implementation(libs.postgresql)
+    implementation(libs.dotenv.kotlin)
 
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)
@@ -180,8 +172,14 @@ tasks.named("compileKotlin") {
     dependsOn("flywayMigrate", "generateJooq")
 }
 
+tasks.withType<Test>().configureEach {
+    environment(dbEnv)
+}
+
 tasks.named<JavaExec>("run") {
     dependsOn("flywayMigrate")
+    environment(dbEnv)
+    systemProperties(dbEnv)
 }
 
 tasks.register("clearDb") {

@@ -7,19 +7,12 @@ import arrow.core.none
 import arrow.core.some
 import io.availe.jooq.enums.ConversationStatusType
 import io.availe.jooq.tables.Conversations
-import io.availe.models.Conversation
-import io.availe.models.ConversationCreate
-import io.availe.models.ConversationId
-import io.availe.models.ConversationTitle
-import io.availe.models.ConversationVersion
-import io.availe.models.CreatedAt
-import io.availe.models.UpdatedAt
-import io.availe.models.UserId
+import io.availe.models.*
+import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
-import kotlinx.datetime.toKotlinInstant
 
 
 sealed class ConversationError {
@@ -75,7 +68,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             .insertInto(Conversations.CONVERSATIONS)
             .set(Conversations.CONVERSATIONS.TITLE, create.title.title)
             .set(Conversations.CONVERSATIONS.OWNER_ID, create.owner.id.toJavaUuid())
-            .set(Conversations.CONVERSATIONS.STATUS, ConversationStatusType.valueOf(create.status.name))
+            .set(Conversations.CONVERSATIONS.STATUS, ConversationStatusType.valueOf(create.status.name.lowercase()))
             .set(Conversations.CONVERSATIONS.VERSION, create.version.value)
             .returning(
                 Conversations.CONVERSATIONS.ID,
