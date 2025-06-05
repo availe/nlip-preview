@@ -6,6 +6,7 @@ import io.availe.config.DatabaseFactory
 import io.availe.config.HttpClientProvider
 import io.availe.config.NetworkConfig
 import io.availe.config.configurePlugins
+import io.availe.models.*
 import io.availe.repositories.ConversationRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -16,6 +17,8 @@ import kotlinx.rpc.krpc.ktor.server.rpc
 import kotlinx.rpc.krpc.rpcServerConfig
 import kotlinx.rpc.krpc.serialization.json.json
 import kotlinx.serialization.json.Json
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 fun main() {
     embeddedServer(
@@ -32,6 +35,8 @@ fun Application.module() {
     val dsl = DatabaseFactory.createDsl(environment)
     val conversationRepo = ConversationRepository(dsl)
 
+    hello(conversationRepo)
+
     val httpClient = HttpClientProvider.httpClient
     val internalChat = OllamaClient(httpClient)
     val externalChat = NLIPClient(httpClient, Url("http://localhost:8004"))
@@ -40,4 +45,18 @@ fun Application.module() {
         rpc("/krpc/chat") {
         }
     }
+}
+
+@OptIn(ExperimentalUuidApi::class)
+fun hello(repository: ConversationRepository) {
+    val randomTitle = "Test Conversation"
+    val ownerId = UserId.from(Uuid.random())
+    val create = ConversationCreate(
+        title = ConversationTitle(randomTitle),
+        owner = ownerId,
+        status = Conversation.Status.ACTIVE,
+        version = ConversationVersion(1)
+    )
+    val conversation = repository.insert(create)
+    println("Inserted conversation: $conversation")
 }

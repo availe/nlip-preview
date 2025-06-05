@@ -7,16 +7,23 @@ val secrets = rootProject.extra["secrets"] as Map<String, String>
 fun requireSecret(key: String): String =
     secrets[key] ?: error("Missing required secret: $key")
 
-val dbUrl = requireSecret("DB_URL")
+val dbHost = requireSecret("DB_HOST")
+val dbPort = requireSecret("DB_PORT")
+val dbName = requireSecret("DB_NAME")
 val dbUser = requireSecret("DB_USER")
 val dbPass = requireSecret("DB_PASS")
 val dbSchema = requireSecret("DB_SCHEMA")
 
+val dbUrl = "jdbc:postgresql://$dbHost:$dbPort/$dbName?currentSchema=$dbSchema"
+
 tasks.withType<Test>().configureEach {
-    environment("DB_URL", dbUrl)
+    environment("DB_HOST", dbHost)
+    environment("DB_PORT", dbPort)
+    environment("DB_NAME", dbName)
     environment("DB_USER", dbUser)
     environment("DB_PASS", dbPass)
     environment("DB_SCHEMA", dbSchema)
+    environment("DB_URL", dbUrl)
 }
 
 buildscript {
@@ -80,7 +87,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.dotenv.kotlin)
     implementation(libs.hikaricp)
-    
+
     implementation(libs.kotlinx.rpc.krpc.server)
     implementation(libs.kotlinx.rpc.krpc.ktor.server)
     implementation(libs.kotlinx.rpc.krpc.serialization.json)
