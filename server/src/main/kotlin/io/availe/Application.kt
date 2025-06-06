@@ -19,6 +19,8 @@ import kotlinx.rpc.krpc.ktor.server.rpc
 import kotlinx.rpc.krpc.rpcServerConfig
 import kotlinx.rpc.krpc.serialization.json.json
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration
+import kotlin.time.measureTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -64,10 +66,23 @@ fun hello(repository: ConversationRepository) {
     val conversation = repository.insertConversation(create)
     println("Inserted conversation: $conversation")
 
-    runBlocking {
-        println("Streaming conversations for $ownerId:")
-        repository.streamAllUserConversations(ownerId).collect { conv ->
-            println(conv)
+    benchmarkFetchMethods(repository, ownerId)
+}
+
+fun benchmarkFetchMethods(repo: ConversationRepository, userId: UserId) {
+    val fetchDuration: Duration = measureTime {
+        val idsOpt = repo.fetchAllUserConversationIds(userId)
+        val ids = idsOpt.getOrNull()
+        ids?.forEach { conversationId ->
+            repo.fetchConversationById(conversationId)
         }
     }
+    println("Time taken for .fetch() + byId: $fetchDuration")
+
+    val flowDuration: Duration = measureTime {
+        runBlocking {
+            repo.streamAllUserConversations(userId).collect { }
+        }
+    }
+    println("Time taken for streaming Flow: $flowDuration")
 }
