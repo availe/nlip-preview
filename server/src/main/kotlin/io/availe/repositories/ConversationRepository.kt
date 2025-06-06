@@ -8,6 +8,10 @@ import arrow.core.some
 import io.availe.jooq.enums.ConversationStatusType
 import io.availe.jooq.tables.Conversations
 import io.availe.models.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -52,6 +56,32 @@ class ConversationRepository(private val dsl: DSLContext) {
             version = ConversationSchemaVersion(record.version)
         ).some()
     }
+
+    fun streamAllUserConversations(userId: UserId): Flow<Conversation> = flow {
+        val cursor = dsl
+            .selectFrom(Conversations.CONVERSATIONS)
+            .where(Conversations.CONVERSATIONS.OWNER_ID.eq(userId.id.toJavaUuid()))
+            .fetchSize(100)
+            .fetchLazy()
+        try {
+            while (cursor.hasNext()) {
+                val record = cursor.fetchNext()
+                emit(
+                    Conversation(
+                        id = ConversationId.from(checkNotNull(checkNotNull(record).id).toKotlinUuid()),
+                        title = ConversationTitle(record.title),
+                        createdAt = CreatedAt(checkNotNull(record.createdAt).toInstant().toKotlinInstant()),
+                        updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
+                        owner = UserId.from(record.ownerId.toKotlinUuid()),
+                        status = record.status.toModel(),
+                        version = ConversationSchemaVersion(record.version)
+                    )
+                )
+            }
+        } finally {
+            cursor.close()
+        }
+    }.flowOn(Dispatchers.IO)
 
     fun insertConversation(create: ConversationCreateRequest): Conversation {
         require(
