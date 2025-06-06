@@ -130,6 +130,7 @@ jooq {
                 }
 
                 generator.apply {
+                    name = "org.jooq.codegen.KotlinGenerator"
                     strategy.apply {
                         name = "io.availe.jooq.CustomGeneratorStrategy"
                     }
@@ -140,6 +141,14 @@ jooq {
                     generate.apply {
                         isImmutablePojos = true
                         isRecords = true
+                        isImplicitJoinPathsAsKotlinProperties = true
+                        isKotlinSetterJvmNameAnnotationsOnIsPrefix = true
+                        isPojosAsKotlinDataClasses = true
+                        isKotlinNotNullPojoAttributes = true
+                        isKotlinNotNullRecordAttributes = true
+                        isKotlinNotNullInterfaceAttributes = true
+                        isKotlinDefaultedNullablePojoAttributes = false
+                        isKotlinDefaultedNullableRecordAttributes = false
                     }
                     target.apply {
                         packageName = "io.availe.jooq"

@@ -10,6 +10,7 @@ import io.availe.jooq.tables.Conversations
 import io.availe.models.*
 import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
+import org.jooq.Field
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -24,7 +25,7 @@ sealed class ConversationError {
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userId: UserId): Option<List<ConversationId>> {
         val records = dsl
-            .select(Conversations.CONVERSATIONS.ID)
+            .select(Conversations.CONVERSATIONS.ID.asNonNullable())
             .from(Conversations.CONVERSATIONS)
             .where(Conversations.CONVERSATIONS.OWNER_ID.eq(userId.id.toJavaUuid()))
             .fetch()
@@ -34,7 +35,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         }
 
         return records.map { record ->
-            ConversationId.from(record[Conversations.CONVERSATIONS.ID].toKotlinUuid())
+            ConversationId.from(record.value1().toKotlinUuid())
         }.some()
     }
 
@@ -102,3 +103,13 @@ class ConversationRepository(private val dsl: DSLContext) {
         return if (rowsDeleted > 0) Unit.some() else none()
     }
 }
+
+/**
+ * Convert a nullable Field<T?> into a non-nullable Field<T>.
+ * At fetch time, if the database returns NULL for this column,
+ * you'll get an IllegalStateException with the given message.
+ */
+fun <T> Field<T?>.asNonNullable(): Field<T> =
+    this.convertFrom { value ->
+        checkNotNull(value) { "Column [$this] was null but expected non-null" }
+    }
