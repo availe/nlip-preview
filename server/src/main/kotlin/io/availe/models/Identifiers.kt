@@ -130,10 +130,3 @@ value class DeviceToken private constructor(val uuid: Uuid) {
 
 @JvmInline
 value class KnownDeviceTokens(val value: List<Uuid>)
-
-@JvmInline
-value class UserAccountVersion(val value: Int) {
-    init {
-        require(value >= 1)
-    }
-}

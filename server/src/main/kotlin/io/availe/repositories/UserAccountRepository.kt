@@ -5,7 +5,7 @@ package io.availe.repositories
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.some
-import io.availe.jooq.enums.ConversationStatusType
+import io.availe.jooq.enums.UserSubscriptionTierEnum
 import io.availe.jooq.tables.UserAccounts
 import io.availe.models.*
 import org.jooq.DSLContext
@@ -29,22 +29,22 @@ class UserAccountRepository(private val dsl: DSLContext) {
             username = Username(record.username),
             emailAddress = EmailAddress(record.emailAddress),
             accountIsActive = AccountIsActive(record.accountIsActive),
+            userSubscriptionTier = record.userSubscriptionTier.toModel(),
+            schemaVersion = UserAccountSchemaVersion(record.userAccountSchemaVersion),
         ).some()
     }
 }
 
-fun Conversation.Status.toJooq(): ConversationStatusType =
+fun UserAccount.UserSubscriptionTier.toJooq() =
     when (this) {
-        Conversation.Status.ACTIVE -> ConversationStatusType.active
-        Conversation.Status.ARCHIVED -> ConversationStatusType.archived
-        Conversation.Status.LOCAL -> ConversationStatusType.local
-        Conversation.Status.TEMPORARY -> ConversationStatusType.temporary
+        UserAccount.UserSubscriptionTier.STANDARD -> UserSubscriptionTierEnum.standard
+        UserAccount.UserSubscriptionTier.BYOK -> UserSubscriptionTierEnum.byok
+        UserAccount.UserSubscriptionTier.ENTERPRISE -> UserSubscriptionTierEnum.enterprise
     }
 
-fun ConversationStatusType.toModel(): Conversation.Status =
+fun UserSubscriptionTierEnum.toModel() =
     when (this) {
-        ConversationStatusType.active -> Conversation.Status.ACTIVE
-        ConversationStatusType.archived -> Conversation.Status.ARCHIVED
-        ConversationStatusType.local -> Conversation.Status.LOCAL
-        ConversationStatusType.temporary -> Conversation.Status.TEMPORARY
+        UserSubscriptionTierEnum.standard -> UserAccount.UserSubscriptionTier.STANDARD
+        UserSubscriptionTierEnum.byok -> UserAccount.UserSubscriptionTier.BYOK
+        UserSubscriptionTierEnum.enterprise -> UserAccount.UserSubscriptionTier.ENTERPRISE
     }
