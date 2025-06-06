@@ -14,13 +14,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
-
-sealed class ConversationError {
-    data class UserNotFound(val id: UserId) : ConversationError()
-    data class ConversationNotFound(val id: ConversationId) : ConversationError()
-    data class CreationFailed(val id: ConversationId) : ConversationError()
-}
-
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userId: UserId): Option<List<ConversationId>> {
         val records = dsl
