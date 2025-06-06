@@ -2,8 +2,10 @@
 
 package io.availe.repositories
 
+import arrow.core.Either
 import arrow.core.None
 import arrow.core.Option
+import arrow.core.raise.either
 import arrow.core.some
 import io.availe.jooq.enums.UserSubscriptionTierEnum
 import io.availe.jooq.tables.UserAccounts
@@ -12,6 +14,10 @@ import org.jooq.DSLContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
+
+sealed class UserAccountError {
+    object UserAlreadyExists : UserAccountError()
+}
 
 class UserAccountRepository(private val dsl: DSLContext) {
     fun fetchById(userId: UserId): Option<UserAccount> {
@@ -32,6 +38,10 @@ class UserAccountRepository(private val dsl: DSLContext) {
             userSubscriptionTier = record.userSubscriptionTier.toModel(),
             schemaVersion = UserAccountSchemaVersion(record.userAccountSchemaVersion),
         ).some()
+    }
+
+    internal fun insert(user: UserAccount): Either<UserAccountError, UserAccount> = either {
+        TODO()
     }
 }
 
