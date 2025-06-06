@@ -14,6 +14,11 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
+sealed class ConversationUpdate {
+    data class ChangeTitle(val newTitle: String) : ConversationUpdate()
+    data class ChangeStatus(val newStatus: Conversation.Status) : ConversationUpdate()
+}
+
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userId: UserId): Option<List<ConversationId>> {
         val records = dsl
@@ -94,6 +99,8 @@ class ConversationRepository(private val dsl: DSLContext) {
 
         return if (rowsDeleted > 0) Unit.some() else none()
     }
+
+    // command pattern for updates TODO()
 }
 
 fun Conversation.Status.toJooq(): ConversationStatusType =
