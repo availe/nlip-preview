@@ -1,4 +1,4 @@
-CREATE TYPE sender_type AS ENUM (
+CREATE TYPE sender_type_enum AS ENUM (
     'user',
     'agent',
     'system'
@@ -8,7 +8,7 @@ CREATE TABLE internal_messages
 (
     id                UUID PRIMARY KEY,
     conversation_id   UUID                     NOT NULL REFERENCES conversations (id),
-    sender_type       sender_type              NOT NULL,
+    sender_type       sender_type_enum         NOT NULL,
     sender_id         UUID                     NOT NULL,
     nlip_request_id   BIGINT                   NOT NULL REFERENCES nlip_requests (id),
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL,
