@@ -24,7 +24,9 @@ CREATE TABLE nlip_requests
 CREATE TABLE nlip_submessages
 (
     id              BIGSERIAL PRIMARY KEY,
-    nlip_request_id BIGINT                   NOT NULL REFERENCES nlip_requests (id),
+    nlip_request_id BIGINT                   NOT NULL
+        REFERENCES nlip_requests (id)
+            ON DELETE CASCADE,
     format          allowed_format_type_enum NOT NULL,
     subformat       TEXT                     NOT NULL,
     content         TEXT                     NOT NULL,
