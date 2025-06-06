@@ -53,7 +53,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
             status = Conversation.Status.valueOf(record.status.name),
-            version = ConversationVersion(record.version)
+            version = ConversationSchemaVersion(record.version)
         ).some()
     }
 
@@ -87,7 +87,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
             status = record.status.toModel(),
-            version = ConversationVersion(record.version)
+            version = ConversationSchemaVersion(record.version)
         )
     }
 
@@ -100,7 +100,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         return if (rowsDeleted > 0) Unit.some() else none()
     }
 
-    // command pattern for updates TODO()
+    fun applyUpdate(conversationId: ConversationId, update: ConversationUpdate): Option<Conversation> {}
 }
 
 fun Conversation.Status.toJooq(): ConversationStatusType =

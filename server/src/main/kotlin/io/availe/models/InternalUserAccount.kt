@@ -22,5 +22,5 @@ data class InternalUserAccount(
     val knownDeviceTokens: KnownDeviceTokens,
     val lastModifiedByUserId: UserId?,
     @Contextual val lastModifiedTimestamp: LastModifiedTimestamp?,
-    val userAccountVersion: UserAccountVersion
+    val userAccountSchemaVersion: UserAccountSchemaVersion
 )

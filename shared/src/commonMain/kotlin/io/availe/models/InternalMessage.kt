@@ -17,5 +17,5 @@ data class InternalMessage(
     val createdAt: CreatedAt,
     val updatedAt: UpdatedAt,
     val parentMessageId: MessageId?,
-    val version: InternalMessageVersion
+    val version: InternalMessageSchemaVersion
 )

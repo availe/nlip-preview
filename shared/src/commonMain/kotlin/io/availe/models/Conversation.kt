@@ -13,7 +13,7 @@ data class Conversation(
     val updatedAt: UpdatedAt,
     val owner: UserId,
     val status: Status,
-    val version: ConversationVersion
+    val version: ConversationSchemaVersion
 ) {
     @Serializable
     enum class Status { ACTIVE, ARCHIVED, LOCAL, TEMPORARY }
@@ -24,5 +24,11 @@ data class ConversationCreate(
     val title: ConversationTitle,
     val owner: UserId,
     val status: Conversation.Status,
-    val version: ConversationVersion
+    val version: ConversationSchemaVersion
+)
+
+data class ConversationUpdateRequest(
+    val title: ConversationTitle? = null,
+    val status: Conversation.Status? = null,
+    val version: ConversationSchemaVersion? = null
 )

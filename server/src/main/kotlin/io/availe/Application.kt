@@ -58,7 +58,7 @@ fun hello(repository: ConversationRepository) {
         title = ConversationTitle(randomTitle),
         owner = ownerId,
         status = Conversation.Status.ACTIVE,
-        version = ConversationVersion(1)
+        version = ConversationSchemaVersion(1)
     )
     val conversation = repository.insert(create)
     println("Inserted conversation: $conversation")

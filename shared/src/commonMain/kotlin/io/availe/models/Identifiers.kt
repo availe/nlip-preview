@@ -69,7 +69,7 @@ value class ConversationTitle(val title: String) {
 
 @Serializable
 @JvmInline
-value class InternalMessageVersion(val value: Int) {
+value class InternalMessageSchemaVersion(val value: Int) {
     init {
         require(value >= 1)
     }
@@ -77,7 +77,7 @@ value class InternalMessageVersion(val value: Int) {
 
 @Serializable
 @JvmInline
-value class OutboundMessageVersion(val value: Int) {
+value class OutboundMessageSchemaVersion(val value: Int) {
     init {
         require(value >= 1)
     }
@@ -85,7 +85,7 @@ value class OutboundMessageVersion(val value: Int) {
 
 @Serializable
 @JvmInline
-value class ConversationVersion(val value: Int) {
+value class ConversationSchemaVersion(val value: Int) {
     init {
         require(value >= 1)
     }
@@ -93,7 +93,7 @@ value class ConversationVersion(val value: Int) {
 
 @Serializable
 @JvmInline
-value class UserAccountVersion(val value: Int) {
+value class UserAccountSchemaVersion(val value: Int) {
     init {
         require(value >= 1)
     }
