@@ -7,12 +7,16 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import io.ktor.server.websocket.*
 import kotlinx.serialization.json.Json
 
 fun Application.configurePlugins() {
     install(ContentNegotiation) {
         json(Json { prettyPrint = true; isLenient = true; ignoreUnknownKeys = true })
     }
+
+    install(WebSockets)
+
     install(CORS) {
         allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Put)

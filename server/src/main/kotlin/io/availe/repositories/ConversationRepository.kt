@@ -10,7 +10,6 @@ import io.availe.jooq.tables.Conversations
 import io.availe.models.*
 import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
-import org.jooq.Field
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -25,7 +24,7 @@ sealed class ConversationError {
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userId: UserId): Option<List<ConversationId>> {
         val records = dsl
-            .select(Conversations.CONVERSATIONS.ID.asNonNullable())
+            .select(Conversations.CONVERSATIONS.ID)
             .from(Conversations.CONVERSATIONS)
             .where(Conversations.CONVERSATIONS.OWNER_ID.eq(userId.id.toJavaUuid()))
             .fetch()
@@ -35,7 +34,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         }
 
         return records.map { record ->
-            ConversationId.from(record.value1().toKotlinUuid())
+            ConversationId.from(checkNotNull(record.value1()).toKotlinUuid())
         }.some()
     }
 
@@ -50,10 +49,10 @@ class ConversationRepository(private val dsl: DSLContext) {
         }
 
         return Conversation(
-            id = ConversationId.from(record.id.toKotlinUuid()),
+            id = ConversationId.from(checkNotNull(record.id).toKotlinUuid()),
             title = ConversationTitle(record.title),
-            createdAt = CreatedAt(record.createdAt.toInstant().toKotlinInstant()),
-            updatedAt = UpdatedAt(record.updatedAt.toInstant().toKotlinInstant()),
+            createdAt = CreatedAt(checkNotNull(record.createdAt).toInstant().toKotlinInstant()),
+            updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
             status = Conversation.Status.valueOf(record.status.name),
             version = ConversationVersion(record.version)
@@ -69,7 +68,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             .insertInto(Conversations.CONVERSATIONS)
             .set(Conversations.CONVERSATIONS.TITLE, create.title.title)
             .set(Conversations.CONVERSATIONS.OWNER_ID, create.owner.id.toJavaUuid())
-            .set(Conversations.CONVERSATIONS.STATUS, ConversationStatusType.valueOf(create.status.name.lowercase()))
+            .set(Conversations.CONVERSATIONS.STATUS, create.status.toJooq())
             .set(Conversations.CONVERSATIONS.VERSION, create.version.value)
             .returning(
                 Conversations.CONVERSATIONS.ID,
@@ -84,12 +83,12 @@ class ConversationRepository(private val dsl: DSLContext) {
             ?: throw IllegalStateException("Failed to insert conversation")
 
         return Conversation(
-            id = ConversationId.from(record.id.toKotlinUuid()),
+            id = ConversationId.from(checkNotNull(record.id).toKotlinUuid()),
             title = ConversationTitle(record.title),
-            createdAt = CreatedAt(record.createdAt.toInstant().toKotlinInstant()),
-            updatedAt = UpdatedAt(record.updatedAt.toInstant().toKotlinInstant()),
+            createdAt = CreatedAt(checkNotNull(record.createdAt).toInstant().toKotlinInstant()),
+            updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
-            status = Conversation.Status.valueOf(record.status.name),
+            status = record.status.toModel(),
             version = ConversationVersion(record.version)
         )
     }
@@ -104,12 +103,18 @@ class ConversationRepository(private val dsl: DSLContext) {
     }
 }
 
-/**
- * Convert a nullable Field<T?> into a non-nullable Field<T>.
- * At fetch time, if the database returns NULL for this column,
- * you'll get an IllegalStateException with the given message.
- */
-fun <T> Field<T?>.asNonNullable(): Field<T> =
-    this.convertFrom { value ->
-        checkNotNull(value) { "Column [$this] was null but expected non-null" }
+fun Conversation.Status.toJooq(): ConversationStatusType =
+    when (this) {
+        Conversation.Status.ACTIVE -> ConversationStatusType.active
+        Conversation.Status.ARCHIVED -> ConversationStatusType.archived
+        Conversation.Status.LOCAL -> ConversationStatusType.local
+        Conversation.Status.TEMPORARY -> ConversationStatusType.temporary
+    }
+
+fun ConversationStatusType.toModel(): Conversation.Status =
+    when (this) {
+        ConversationStatusType.active -> Conversation.Status.ACTIVE
+        ConversationStatusType.archived -> Conversation.Status.ARCHIVED
+        ConversationStatusType.local -> Conversation.Status.LOCAL
+        ConversationStatusType.temporary -> Conversation.Status.TEMPORARY
     }
