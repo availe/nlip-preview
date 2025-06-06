@@ -54,7 +54,7 @@ fun Application.module() {
 fun hello(repository: ConversationRepository) {
     val randomTitle = "Test Conversation"
     val ownerId = UserId.from(Uuid.random())
-    val create = ConversationCreate(
+    val create = ConversationCreateRequest(
         title = ConversationTitle(randomTitle),
         owner = ownerId,
         status = Conversation.Status.ACTIVE,

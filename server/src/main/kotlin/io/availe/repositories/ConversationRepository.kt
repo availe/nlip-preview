@@ -14,11 +14,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
-sealed class ConversationUpdate {
-    data class ChangeTitle(val newTitle: String) : ConversationUpdate()
-    data class ChangeStatus(val newStatus: Conversation.Status) : ConversationUpdate()
-}
-
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userId: UserId): Option<List<ConversationId>> {
         val records = dsl
@@ -57,7 +52,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         ).some()
     }
 
-    fun insert(create: ConversationCreate): Conversation {
+    fun insert(create: ConversationCreateRequest): Conversation {
         require(
             create.status == Conversation.Status.ACTIVE || create.status == Conversation.Status.TEMPORARY
         )
@@ -92,7 +87,7 @@ class ConversationRepository(private val dsl: DSLContext) {
     }
 
     fun deleteById(conversationId: ConversationId): Option<Unit> {
-        val rowsDeleted = dsl
+        val rowsDeleted: Int = dsl
             .deleteFrom(Conversations.CONVERSATIONS)
             .where(Conversations.CONVERSATIONS.ID.eq(conversationId.id.toJavaUuid()))
             .execute()
@@ -100,7 +95,16 @@ class ConversationRepository(private val dsl: DSLContext) {
         return if (rowsDeleted > 0) Unit.some() else none()
     }
 
-    fun applyUpdate(conversationId: ConversationId, update: ConversationUpdate): Option<Conversation> {}
+    fun applyUpdate(conversationId: ConversationId, update: ConversationUpdateRequest): Option<Conversation> {
+        val rowsUpdated: Int = dsl
+            .update(Conversations.CONVERSATIONS)
+            .set(Conversations.CONVERSATIONS.TITLE, update.title?.title)
+            .set(Conversations.CONVERSATIONS.STATUS, update.status?.toJooq())
+            .where(Conversations.CONVERSATIONS.ID.eq(conversationId.id.toJavaUuid()))
+            .execute()
+
+        return if (rowsUpdated > 0) fetchById(conversationId) else none()
+    }
 }
 
 fun Conversation.Status.toJooq(): ConversationStatusType =

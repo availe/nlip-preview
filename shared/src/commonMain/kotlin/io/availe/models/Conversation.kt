@@ -20,7 +20,7 @@ data class Conversation(
 }
 
 @Serializable
-data class ConversationCreate(
+data class ConversationCreateRequest(
     val title: ConversationTitle,
     val owner: UserId,
     val status: Conversation.Status,
@@ -30,5 +30,4 @@ data class ConversationCreate(
 data class ConversationUpdateRequest(
     val title: ConversationTitle? = null,
     val status: Conversation.Status? = null,
-    val version: ConversationSchemaVersion? = null
 )
