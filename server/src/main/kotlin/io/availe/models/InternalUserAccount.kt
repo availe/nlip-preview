@@ -23,7 +23,7 @@ data class InternalUserAccount(
     val lastModifiedByUserId: UserId?,
     @Contextual val lastModifiedTimestamp: LastModifiedTimestamp?,
     val userRole: UserRole,
-    val userAccountSchemaVersion: UserAccountSchemaVersion
+    val userAccountSchemaVersion: InternalUserAccountSchemaVersion
 ) {
     enum class UserRole {
         FREE_USER,

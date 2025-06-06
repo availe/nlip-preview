@@ -1,3 +1,9 @@
+CREATE TYPE user_role_enum AS ENUM (
+    'FREE_USER',
+    'PAID_USER',
+    'ADMIN'
+    );
+
 CREATE TABLE internal_user_accounts
 (
     user_id                        UUID PRIMARY KEY
@@ -21,5 +27,6 @@ CREATE TABLE internal_user_accounts
     last_modified_by_user_id       UUID
         REFERENCES user_accounts (id),
     last_modified_timestamp        TIMESTAMP WITH TIME ZONE,
+    user_role                      user_role_enum           NOT NULL,
     user_account_schema_version    INTEGER                  NOT NULL
 );

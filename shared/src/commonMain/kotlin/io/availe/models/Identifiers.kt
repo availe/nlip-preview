@@ -100,6 +100,14 @@ value class UserAccountSchemaVersion(val value: Int) {
 }
 
 @Serializable
+@JvmInline
+value class InternalUserAccountSchemaVersion(val value: Int) {
+    init {
+        require(value >= 1)
+    }
+}
+
+@Serializable
 sealed class Sender {
     @Serializable
     data class User(val id: UserId) : Sender() {

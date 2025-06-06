@@ -9,6 +9,7 @@ data class UserAccount(
     val emailAddress: EmailAddress,
     val accountIsActive: AccountIsActive,
     val userSubscriptionTier: UserSubscriptionTier,
+    val schemaVersion: UserAccountSchemaVersion
 ) {
     enum class UserSubscriptionTier {
         STANDARD,
