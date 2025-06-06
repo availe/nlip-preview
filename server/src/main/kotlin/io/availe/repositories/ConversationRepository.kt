@@ -10,6 +10,7 @@ import io.availe.jooq.tables.Conversations
 import io.availe.models.*
 import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
+import org.jooq.Field
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -31,7 +32,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         }.some()
     }
 
-    fun fetchById(conversationId: ConversationId): Option<Conversation> {
+    fun fetchConversationById(conversationId: ConversationId): Option<Conversation> {
         val record = dsl
             .selectFrom(Conversations.CONVERSATIONS)
             .where(Conversations.CONVERSATIONS.ID.eq(conversationId.id.toJavaUuid()))
@@ -52,7 +53,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         ).some()
     }
 
-    fun insert(create: ConversationCreateRequest): Conversation {
+    fun insertConversation(create: ConversationCreateRequest): Conversation {
         require(
             create.status == Conversation.Status.ACTIVE || create.status == Conversation.Status.TEMPORARY
         )
@@ -86,7 +87,7 @@ class ConversationRepository(private val dsl: DSLContext) {
         )
     }
 
-    fun deleteById(conversationId: ConversationId): Option<Unit> {
+    fun deleteConversationById(conversationId: ConversationId): Option<Unit> {
         val rowsDeleted: Int = dsl
             .deleteFrom(Conversations.CONVERSATIONS)
             .where(Conversations.CONVERSATIONS.ID.eq(conversationId.id.toJavaUuid()))
@@ -95,15 +96,21 @@ class ConversationRepository(private val dsl: DSLContext) {
         return if (rowsDeleted > 0) Unit.some() else none()
     }
 
-    fun applyUpdate(conversationId: ConversationId, update: ConversationUpdateRequest): Option<Conversation> {
+    fun patchConversation(conversationId: ConversationId, update: ConversationPatchRequest): Option<Unit> {
+        val updates = mutableMapOf<Field<*>, Any>()
+
+        update.title?.let { updates[Conversations.CONVERSATIONS.TITLE] = it.title }
+        update.status?.let { updates[Conversations.CONVERSATIONS.STATUS] = it.toJooq() }
+
+        if (updates.isEmpty()) return none()
+
         val rowsUpdated: Int = dsl
             .update(Conversations.CONVERSATIONS)
-            .set(Conversations.CONVERSATIONS.TITLE, update.title?.title)
-            .set(Conversations.CONVERSATIONS.STATUS, update.status?.toJooq())
+            .set(updates)
             .where(Conversations.CONVERSATIONS.ID.eq(conversationId.id.toJavaUuid()))
             .execute()
 
-        return if (rowsUpdated > 0) fetchById(conversationId) else none()
+        return if (rowsUpdated > 0) Unit.some() else none()
     }
 }
 

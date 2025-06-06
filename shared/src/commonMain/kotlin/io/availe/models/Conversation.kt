@@ -27,7 +27,7 @@ data class ConversationCreateRequest(
     val version: ConversationSchemaVersion
 )
 
-data class ConversationUpdateRequest(
+data class ConversationPatchRequest(
     val title: ConversationTitle? = null,
     val status: Conversation.Status? = null,
 )
