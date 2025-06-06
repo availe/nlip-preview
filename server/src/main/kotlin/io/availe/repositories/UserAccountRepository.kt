@@ -35,14 +35,14 @@ class UserAccountRepository(private val dsl: DSLContext) {
     }
 }
 
-fun UserAccount.UserSubscriptionTier.toJooq() =
+private fun UserAccount.UserSubscriptionTier.toJooq() =
     when (this) {
         UserAccount.UserSubscriptionTier.STANDARD -> UserSubscriptionTierEnum.standard
         UserAccount.UserSubscriptionTier.BYOK -> UserSubscriptionTierEnum.byok
         UserAccount.UserSubscriptionTier.ENTERPRISE -> UserSubscriptionTierEnum.enterprise
     }
 
-fun UserSubscriptionTierEnum.toModel() =
+private fun UserSubscriptionTierEnum.toModel() =
     when (this) {
         UserSubscriptionTierEnum.standard -> UserAccount.UserSubscriptionTier.STANDARD
         UserSubscriptionTierEnum.byok -> UserAccount.UserSubscriptionTier.BYOK

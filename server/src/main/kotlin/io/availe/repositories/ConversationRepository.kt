@@ -144,7 +144,7 @@ class ConversationRepository(private val dsl: DSLContext) {
     }
 }
 
-fun Conversation.Status.toJooq(): ConversationStatusTypeEnum =
+private fun Conversation.Status.toJooq(): ConversationStatusTypeEnum =
     when (this) {
         Conversation.Status.ACTIVE -> ConversationStatusTypeEnum.active
         Conversation.Status.ARCHIVED -> ConversationStatusTypeEnum.archived
@@ -152,7 +152,7 @@ fun Conversation.Status.toJooq(): ConversationStatusTypeEnum =
         Conversation.Status.TEMPORARY -> ConversationStatusTypeEnum.temporary
     }
 
-fun ConversationStatusTypeEnum.toModel(): Conversation.Status =
+private fun ConversationStatusTypeEnum.toModel(): Conversation.Status =
     when (this) {
         ConversationStatusTypeEnum.active -> Conversation.Status.ACTIVE
         ConversationStatusTypeEnum.archived -> Conversation.Status.ARCHIVED
