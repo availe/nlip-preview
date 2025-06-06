@@ -14,6 +14,7 @@ import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.rpc.krpc.ktor.server.rpc
 import kotlinx.rpc.krpc.rpcServerConfig
 import kotlinx.rpc.krpc.serialization.json.json
@@ -63,19 +64,10 @@ fun hello(repository: ConversationRepository) {
     val conversation = repository.insertConversation(create)
     println("Inserted conversation: $conversation")
 
-    printAllUserConversations(repository, ownerId)
-}
-
-fun printAllUserConversations(repo: ConversationRepository, userId: UserId) {
-    val all = repo.fetchAllUserConversationIds(userId)
-    if (all.isNone()) {
-        println("No conversations found for user: $userId")
-        printAllUserConversations(repo, userId)
-        return
-    }
-    println("Conversations for user $userId:")
-    all.getOrNull()?.forEach { conversationId ->
-        val convOpt = repo.fetchConversationById(conversationId)
-        println(convOpt)
+    runBlocking {
+        println("Streaming conversations for $ownerId:")
+        repository.streamAllUserConversations(ownerId).collect { conv ->
+            println(conv)
+        }
     }
 }
