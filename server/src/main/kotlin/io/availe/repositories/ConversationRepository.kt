@@ -5,7 +5,7 @@ package io.availe.repositories
 import arrow.core.Option
 import arrow.core.none
 import arrow.core.some
-import io.availe.jooq.enums.ConversationStatusType
+import io.availe.jooq.enums.ConversationStatusTypeEnum
 import io.availe.jooq.tables.Conversations
 import io.availe.models.*
 import kotlinx.coroutines.Dispatchers
@@ -144,18 +144,18 @@ class ConversationRepository(private val dsl: DSLContext) {
     }
 }
 
-fun Conversation.Status.toJooq(): ConversationStatusType =
+fun Conversation.Status.toJooq(): ConversationStatusTypeEnum =
     when (this) {
-        Conversation.Status.ACTIVE -> ConversationStatusType.active
-        Conversation.Status.ARCHIVED -> ConversationStatusType.archived
-        Conversation.Status.LOCAL -> ConversationStatusType.local
-        Conversation.Status.TEMPORARY -> ConversationStatusType.temporary
+        Conversation.Status.ACTIVE -> ConversationStatusTypeEnum.active
+        Conversation.Status.ARCHIVED -> ConversationStatusTypeEnum.archived
+        Conversation.Status.LOCAL -> ConversationStatusTypeEnum.local
+        Conversation.Status.TEMPORARY -> ConversationStatusTypeEnum.temporary
     }
 
-fun ConversationStatusType.toModel(): Conversation.Status =
+fun ConversationStatusTypeEnum.toModel(): Conversation.Status =
     when (this) {
-        ConversationStatusType.active -> Conversation.Status.ACTIVE
-        ConversationStatusType.archived -> Conversation.Status.ARCHIVED
-        ConversationStatusType.local -> Conversation.Status.LOCAL
-        ConversationStatusType.temporary -> Conversation.Status.TEMPORARY
+        ConversationStatusTypeEnum.active -> Conversation.Status.ACTIVE
+        ConversationStatusTypeEnum.archived -> Conversation.Status.ARCHIVED
+        ConversationStatusTypeEnum.local -> Conversation.Status.LOCAL
+        ConversationStatusTypeEnum.temporary -> Conversation.Status.TEMPORARY
     }

@@ -1,4 +1,4 @@
-CREATE TYPE allowed_format_type AS ENUM (
+CREATE TYPE allowed_format_type_enum AS ENUM (
     'text',
     'token',
     'structured',
@@ -7,26 +7,26 @@ CREATE TYPE allowed_format_type AS ENUM (
     'generic'
     );
 
-CREATE TYPE message_type AS ENUM (
+CREATE TYPE message_type_enum AS ENUM (
     'control'
     );
 
 CREATE TABLE nlip_requests
 (
     id           BIGSERIAL PRIMARY KEY,
-    format       allowed_format_type NOT NULL,
-    subformat    TEXT                NOT NULL,
-    content      TEXT                NOT NULL,
-    message_type message_type,
+    format       allowed_format_type_enum NOT NULL,
+    subformat    TEXT                     NOT NULL,
+    content      TEXT                     NOT NULL,
+    message_type message_type_enum,
     label        TEXT
 );
 
 CREATE TABLE nlip_submessages
 (
     id              BIGSERIAL PRIMARY KEY,
-    nlip_request_id BIGINT              NOT NULL REFERENCES nlip_requests (id),
-    format          allowed_format_type NOT NULL,
-    subformat       TEXT                NOT NULL,
-    content         TEXT                NOT NULL,
+    nlip_request_id BIGINT                   NOT NULL REFERENCES nlip_requests (id),
+    format          allowed_format_type_enum NOT NULL,
+    subformat       TEXT                     NOT NULL,
+    content         TEXT                     NOT NULL,
     label           TEXT
 );
