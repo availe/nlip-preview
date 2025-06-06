@@ -53,13 +53,29 @@ fun Application.module() {
 @OptIn(ExperimentalUuidApi::class)
 fun hello(repository: ConversationRepository) {
     val randomTitle = "Test Conversation"
-    val ownerId = UserId.from(Uuid.random())
+    val ownerId = UserId.from(Uuid.parse("e9126d4e-4667-4409-92b3-1032e5f90150"))
     val create = ConversationCreateRequest(
         title = ConversationTitle(randomTitle),
         owner = ownerId,
         status = Conversation.Status.ACTIVE,
         version = ConversationSchemaVersion(1)
     )
-    val conversation = repository.insert(create)
+    val conversation = repository.insertConversation(create)
     println("Inserted conversation: $conversation")
+
+    printAllUserConversations(repository, ownerId)
+}
+
+fun printAllUserConversations(repo: ConversationRepository, userId: UserId) {
+    val all = repo.fetchAllUserConversationIds(userId)
+    if (all.isNone()) {
+        println("No conversations found for user: $userId")
+        printAllUserConversations(repo, userId)
+        return
+    }
+    println("Conversations for user $userId:")
+    all.getOrNull()?.forEach { conversationId ->
+        val convOpt = repo.fetchConversationById(conversationId)
+        println(convOpt)
+    }
 }

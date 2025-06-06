@@ -52,7 +52,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             createdAt = CreatedAt(checkNotNull(record.createdAt).toInstant().toKotlinInstant()),
             updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
-            status = Conversation.Status.valueOf(record.status.name),
+            status = record.status.toModel(),
             version = ConversationSchemaVersion(record.version)
         ).some()
     }
