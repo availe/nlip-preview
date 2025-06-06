@@ -1,7 +1,7 @@
 CREATE TYPE user_subscription_tier_enum AS ENUM (
-    'STANDARD',
-    'BYOK',
-    'ENTERPRISE'
+    'standard',
+    'byok',
+    'enterprise'
     );
 
 CREATE TABLE user_accounts

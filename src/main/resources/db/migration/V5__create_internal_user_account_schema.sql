@@ -1,7 +1,7 @@
 CREATE TYPE user_role_enum AS ENUM (
-    'FREE_USER',
-    'PAID_USER',
-    'ADMIN'
+    'free_user',
+    'paid_user',
+    'admin'
     );
 
 CREATE TABLE internal_user_accounts
