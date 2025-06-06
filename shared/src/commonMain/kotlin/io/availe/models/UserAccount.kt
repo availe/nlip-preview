@@ -8,5 +8,11 @@ data class UserAccount(
     val username: Username,
     val emailAddress: EmailAddress,
     val accountIsActive: AccountIsActive,
-    val roles: Roles
-)
+    val userSubscriptionTier: UserSubscriptionTier,
+) {
+    enum class UserSubscriptionTier {
+        STANDARD,
+        BYOK,
+        ENTERPRISE
+    }
+}

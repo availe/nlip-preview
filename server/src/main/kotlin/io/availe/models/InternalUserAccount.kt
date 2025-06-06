@@ -22,5 +22,12 @@ data class InternalUserAccount(
     val knownDeviceTokens: KnownDeviceTokens,
     val lastModifiedByUserId: UserId?,
     @Contextual val lastModifiedTimestamp: LastModifiedTimestamp?,
+    val userRole: UserRole,
     val userAccountSchemaVersion: UserAccountSchemaVersion
-)
+) {
+    enum class UserRole {
+        FREE_USER,
+        PAID_USER,
+        ADMIN
+    }
+}

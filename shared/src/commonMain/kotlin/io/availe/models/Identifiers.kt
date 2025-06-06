@@ -144,21 +144,3 @@ value class EmailAddress(val value: String) {
 @Serializable
 @JvmInline
 value class AccountIsActive(val value: Boolean)
-
-@Serializable
-@JvmInline
-value class Role(val value: String) {
-    init {
-        require(value.isNotBlank())
-        require(value.length <= 50)
-    }
-}
-
-@Serializable
-@JvmInline
-value class Roles(val value: List<Role>) {
-    init {
-        require(value.isNotEmpty())
-        require(value.distinct().size == value.size)
-    }
-}
