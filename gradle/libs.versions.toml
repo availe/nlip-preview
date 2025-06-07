@@ -38,6 +38,7 @@ buildKonfig = "0.17.1"
 kotlinx-rpc = "0.7.0"
 ksp = "2.1.21-2.0.1"
 kotlinx-datetime = "0.6.2"
+kotlin-poet = "2.2.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -85,6 +86,12 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
+kotlinpoet-javapoet = { module = "com.squareup:kotlinpoet-javapoet", version.ref = "kotlin-poet" }
+kotlinpoet-metadata = { module = "com.squareup:kotlinpoet-metadata", version.ref = "kotlin-poet" }
+kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs", version.ref = "kotlin-poet" }
+kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin-poet" }
 
 kotlinx-rpc-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-core", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-client = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-krpc-client", version.ref = "kotlinx-rpc" }
