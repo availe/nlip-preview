@@ -9,37 +9,33 @@ import java.io.File
 
 fun generateInternalUserAccountModels() {
     val spec = codegen {
-        enum(
-            "UserRole",
-            listOf("free_user", "paid_user", "admin"),
-            nestedIn = "InternalUserAccount"
-        )
+        enum("UserRole", listOf("free_user", "paid_user", "admin"), nestedIn = "InternalUserAccount")
         model("InternalUserAccount", module = Module.SERVER) {
-            prop("userId", "UserAccountId")
+            prop("userAccount", "UserAccount")
             prop("passwordHash", "PasswordHash")
             prop("twoFactorEnabled", "TwoFactorEnabled")
-            prop("twoFactorSecret", "TwoFactorSecret")
-            prop("banTimestamp", "BanTimestamp")
-            prop("banReason", "BanReason")
+            prop("twoFactorSecret", "TwoFactorSecret", nullable = true)
+            prop("banTimestamp", "BanTimestamp", nullable = true)
+            prop("banReason", "BanReason", nullable = true)
             prop("failedLoginAttemptCount", "FailedLoginAttemptCount")
-            prop("lastFailedLoginTimestamp", "LastFailedLoginTimestamp")
-            prop("accountLockedUntilTimestamp", "AccountLockedUntilTimestamp")
+            prop("lastFailedLoginTimestamp", "LastFailedLoginTimestamp", nullable = true)
+            prop("accountLockedUntilTimestamp", "AccountLockedUntilTimestamp", nullable = true)
             prop("accountCreationTimestamp", "AccountCreationTimestamp")
-            prop("lastPasswordChangeTimestamp", "LastPasswordChangeTimestamp")
-            prop("lastLoginTimestamp", "LastLoginTimestamp")
-            prop("lastSeenTimestamp", "LastSeenTimestamp")
-            prop("lastModifiedByUserId", "UserAccountId")
-            prop("lastModifiedTimestamp", "LastModifiedTimestamp")
+            prop("lastPasswordChangeTimestamp", "LastPasswordChangeTimestamp", nullable = true)
+            prop("lastLoginTimestamp", "LastLoginTimestamp", nullable = true)
+            prop("lastSeenTimestamp", "LastSeenTimestamp", nullable = true)
+            prop("registrationIpAddress", "RegistrationIpAddress")
+            prop("lastLoginIpAddress", "LastLoginIpAddress", nullable = true)
+            prop("previousLoginIpAddresses", "PreviousLoginIpAddresses")
+            prop("knownDeviceTokens", "KnownDeviceTokens")
+            prop("lastModifiedByUserId", "UserAccountId", nullable = true)
+            prop("lastModifiedTimestamp", "LastModifiedTimestamp", nullable = true)
             prop("userRole", "UserRole")
             prop("schemaVersion", "InternalUserAccountSchemaVersion")
         }
     }
     spec.models.forEach { model ->
-        val dirPath = when (model.module) {
-            Module.SHARED -> "../shared/build/generated-src/kotlin-poet/io/availe/models"
-            Module.SERVER -> "../server/build/generated-src/kotlin-poet/io/availe/models"
-        }
-        val dir = File(dirPath).apply { mkdirs() }
+        val outDir = File("../server/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
         val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
         val modelType = generateDataClass(model).toBuilder().apply {
             nestedEnums.forEach { addType(generateEnum(it)) }
@@ -47,6 +43,6 @@ fun generateInternalUserAccountModels() {
         FileSpec.builder("io.availe.models", model.name)
             .addType(modelType)
             .build()
-            .writeTo(dir)
+            .writeTo(outDir)
     }
 }

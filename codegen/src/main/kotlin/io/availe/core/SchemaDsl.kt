@@ -31,12 +31,16 @@ class CodegenBuilder {
 
 class ModelBuilder(private val modelName: String, private val module: Module) {
     private val _props = mutableListOf<PropertySpecData>()
-    fun prop(name: String, typeName: String) {
-        _props += PropertySpecData(name, ClassName("io.availe.models", typeName))
+    fun prop(name: String, typeName: String, nullable: Boolean = false) {
+        var tn: TypeName = ClassName("io.availe.models", typeName)
+        if (nullable) tn = tn.copy(nullable = true)
+        _props += PropertySpecData(name, tn)
     }
 
-    fun prop(name: String, klass: KClass<*>) {
-        _props += PropertySpecData(name, klass.asTypeName())
+    fun prop(name: String, klass: KClass<*>, nullable: Boolean = false) {
+        var tn: TypeName = klass.asTypeName()
+        if (nullable) tn = tn.copy(nullable = true)
+        _props += PropertySpecData(name, tn)
     }
 
     internal fun build() = ModelSpec(modelName, _props.toList(), module)
