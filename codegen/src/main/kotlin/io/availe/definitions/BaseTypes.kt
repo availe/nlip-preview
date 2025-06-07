@@ -77,9 +77,6 @@ fun generateBaseTypes() {
         enum("AllowedFormatType", listOf("text", "token", "structured", "binary", "location", "error", "generic"))
         enum("MessageType", listOf("control"))
         enum("SenderType", listOf("user", "agent", "system"))
-        enum("UserSubscriptionTier", listOf("standard", "byok", "enterprise"))
-        enum("ConversationStatus", listOf("active", "archived", "local", "temporary"))
-        enum("UserRole", listOf("free_user", "paid_user", "admin"))
         enum("PlatformType", listOf("web", "ios", "android", "desktop"))
         enum("UserAccessType", listOf("anonymous", "authenticated"))
     }

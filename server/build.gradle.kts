@@ -207,9 +207,18 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn(project(":shared").tasks.named("openApiGenerate"))
+    dependsOn(generateServerModels)
 }
 
 tasks.named("generateJooq") {
     dependsOn("compileJooqKotlin")
     dependsOn("flywayMigrate")
+}
+
+val generateServerModels by tasks.registering(JavaExec::class) {
+    group = "codegen"
+    description = "Run KotlinPoet generator for server-only models"
+    classpath = project(":codegen").sourceSets["main"].runtimeClasspath
+    mainClass.set("io.availe.ApplicationKt")
+    workingDir = projectDir
 }

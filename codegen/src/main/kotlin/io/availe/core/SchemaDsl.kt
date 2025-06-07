@@ -5,9 +5,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
 
+enum class Module { SHARED, SERVER }
+
 data class InlineWrapper(val name: String, val backing: KClass<*>)
-data class EnumSpec(val name: String, val values: List<String>)
-data class ModelSpec(val name: String, val props: List<PropertySpecData>)
+data class EnumSpec(val name: String, val values: List<String>, val nestedIn: String? = null)
+data class ModelSpec(val name: String, val props: List<PropertySpecData>, val module: Module)
 data class PropertySpecData(val name: String, val type: TypeName)
 
 class CodegenBuilder {
@@ -18,16 +20,16 @@ class CodegenBuilder {
         wrappers += InlineWrapper(name, backing)
     }
 
-    fun enum(name: String, values: List<String>) {
-        enums += EnumSpec(name, values)
+    fun enum(name: String, values: List<String>, nestedIn: String? = null) {
+        enums += EnumSpec(name, values, nestedIn)
     }
 
-    fun model(name: String, block: ModelBuilder.() -> Unit) {
-        models += ModelBuilder(name).apply(block).build()
+    fun model(name: String, module: Module = Module.SHARED, block: ModelBuilder.() -> Unit) {
+        models += ModelBuilder(name, module).apply(block).build()
     }
 }
 
-class ModelBuilder(private val modelName: String) {
+class ModelBuilder(private val modelName: String, private val module: Module) {
     private val _props = mutableListOf<PropertySpecData>()
     fun prop(name: String, typeName: String) {
         _props += PropertySpecData(name, ClassName("io.availe.models", typeName))
@@ -37,7 +39,7 @@ class ModelBuilder(private val modelName: String) {
         _props += PropertySpecData(name, klass.asTypeName())
     }
 
-    internal fun build() = ModelSpec(modelName, _props.toList())
+    internal fun build() = ModelSpec(modelName, _props.toList(), module)
 }
 
 fun codegen(block: CodegenBuilder.() -> Unit) = CodegenBuilder().apply(block)
