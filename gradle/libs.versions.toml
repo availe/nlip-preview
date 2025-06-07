@@ -39,6 +39,7 @@ kotlinx-rpc = "0.7.0"
 ksp = "2.1.21-2.0.1"
 kotlinx-datetime = "0.6.2"
 kotlin-poet = "2.2.0"
+kotlin-poet-meta = "1.9.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -90,7 +91,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
 kotlinpoet-javapoet = { module = "com.squareup:kotlinpoet-javapoet", version.ref = "kotlin-poet" }
 kotlinpoet-metadata = { module = "com.squareup:kotlinpoet-metadata", version.ref = "kotlin-poet" }
-kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs", version.ref = "kotlin-poet" }
+kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs", version.ref = "kotlin-poet-meta" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin-poet" }
 
 kotlinx-rpc-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-rpc-core", version.ref = "kotlinx-rpc" }

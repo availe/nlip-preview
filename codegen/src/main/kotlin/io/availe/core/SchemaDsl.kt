@@ -6,19 +6,24 @@ import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
 
 data class InlineWrapper(val name: String, val backing: KClass<*>)
+data class EnumSpec(val name: String, val values: List<String>)
 data class ModelSpec(val name: String, val props: List<PropertySpecData>)
 data class PropertySpecData(val name: String, val type: TypeName)
 
 class CodegenBuilder {
     internal val wrappers = mutableListOf<InlineWrapper>()
+    internal val enums = mutableListOf<EnumSpec>()
     internal val models = mutableListOf<ModelSpec>()
     fun inlineValue(name: String, backing: KClass<*>) {
         wrappers += InlineWrapper(name, backing)
     }
 
+    fun enum(name: String, values: List<String>) {
+        enums += EnumSpec(name, values)
+    }
+
     fun model(name: String, block: ModelBuilder.() -> Unit) {
-        val mb = ModelBuilder(name).apply(block)
-        models += mb.build()
+        models += ModelBuilder(name).apply(block).build()
     }
 }
 

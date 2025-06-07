@@ -17,8 +17,9 @@ application {
 
 
 dependencies {
-    implementation(projects.shared)
     implementation(libs.logback)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.metadata)
@@ -27,5 +28,5 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.availe.codegen.GenerateModelsKt")
+    mainClass.set("io.availe.ApplicationKt")
 }
