@@ -21,4 +21,11 @@ dependencies {
     implementation(libs.logback)
 
     implementation(libs.kotlinpoet)
+    implementation(libs.kotlinpoet.metadata)
+    implementation(libs.kotlinpoet.metadata.specs)
+    implementation(libs.kotlinpoet.ksp)
+}
+
+application {
+    mainClass.set("com.availe.codegen.GenerateModelsKt")
 }
