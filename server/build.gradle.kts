@@ -149,6 +149,7 @@ jooq {
                         isKotlinNotNullInterfaceAttributes = true
                         isKotlinDefaultedNullablePojoAttributes = false
                         isKotlinDefaultedNullableRecordAttributes = false
+                        isDaos = true
                     }
                     target.apply {
                         packageName = "io.availe.jooq"
