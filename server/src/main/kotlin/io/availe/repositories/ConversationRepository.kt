@@ -53,7 +53,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
             status = record.status.toModel(),
-            version = ConversationSchemaVersion(record.version)
+            version = ConversationSchemaVersion(record.schemaVersions)
         ).some()
     }
 
@@ -74,7 +74,7 @@ class ConversationRepository(private val dsl: DSLContext) {
                         updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
                         owner = UserId.from(record.ownerId.toKotlinUuid()),
                         status = record.status.toModel(),
-                        version = ConversationSchemaVersion(record.version)
+                        version = ConversationSchemaVersion(record.schemaVersions)
                     )
                 )
             }
@@ -93,13 +93,13 @@ class ConversationRepository(private val dsl: DSLContext) {
             .set(Conversations.CONVERSATIONS.TITLE, create.title.title)
             .set(Conversations.CONVERSATIONS.OWNER_ID, create.owner.id.toJavaUuid())
             .set(Conversations.CONVERSATIONS.STATUS, create.status.toJooq())
-            .set(Conversations.CONVERSATIONS.VERSION, create.version.value)
+            .set(Conversations.CONVERSATIONS.SCHEMA_VERSIONS, create.version.value)
             .returning(
                 Conversations.CONVERSATIONS.ID,
                 Conversations.CONVERSATIONS.TITLE,
                 Conversations.CONVERSATIONS.OWNER_ID,
                 Conversations.CONVERSATIONS.STATUS,
-                Conversations.CONVERSATIONS.VERSION,
+                Conversations.CONVERSATIONS.SCHEMA_VERSIONS,
                 Conversations.CONVERSATIONS.CREATED_AT,
                 Conversations.CONVERSATIONS.UPDATED_AT
             )
@@ -113,7 +113,7 @@ class ConversationRepository(private val dsl: DSLContext) {
             updatedAt = UpdatedAt(checkNotNull(record.updatedAt).toInstant().toKotlinInstant()),
             owner = UserId.from(record.ownerId.toKotlinUuid()),
             status = record.status.toModel(),
-            version = ConversationSchemaVersion(record.version)
+            version = ConversationSchemaVersion(record.schemaVersions)
         )
     }
 
