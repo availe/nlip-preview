@@ -14,7 +14,7 @@ class CodegenBuilder {
     internal val wrappers = mutableListOf<InlineWrapper>()
     internal val enums = mutableListOf<EnumSpec>()
     internal val models = mutableListOf<ModelSpec>()
-    fun inlineValue(name: String, backing: KClass<*>) {
+    fun valueClass(name: String, backing: KClass<*>) {
         wrappers += InlineWrapper(name, backing)
     }
 
