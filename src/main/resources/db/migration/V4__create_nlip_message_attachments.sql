@@ -5,7 +5,8 @@ CREATE TABLE nlip_message_attachments
     file_key        TEXT        NOT NULL,
     content_type    TEXT        NOT NULL,
     file_size_bytes BIGINT      NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    schema_versions INTEGER     NOT NULL
 );
 
 CREATE INDEX idx_nlip_message_attach_msg_id ON nlip_message_attachments (nlip_message_id);

@@ -22,7 +22,7 @@ CREATE TABLE internal_user_accounts
     last_modified_by_user_id       UUID           REFERENCES user_accounts (id) ON DELETE SET NULL,
     last_modified_timestamp        TIMESTAMPTZ,
     user_role                      user_role_enum NOT NULL,
-    user_account_schema_version    INTEGER        NOT NULL
+    schema_version                 INTEGER        NOT NULL
 );
 
 CREATE INDEX idx_internal_user_accounts_last_modified_by_user_id ON internal_user_accounts (last_modified_by_user_id);

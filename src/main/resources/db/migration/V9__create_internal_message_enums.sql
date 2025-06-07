@@ -14,7 +14,7 @@ CREATE TABLE internal_messages
     created_at        TIMESTAMPTZ      NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ      NOT NULL DEFAULT now(),
     parent_message_id UUID REFERENCES internal_messages (id) ON DELETE CASCADE,
-    schema_versions   INTEGER          NOT NULL
+    schema_version    INTEGER          NOT NULL
 );
 
 CREATE INDEX idx_internal_messages_conversation_id ON internal_messages (conversation_id);

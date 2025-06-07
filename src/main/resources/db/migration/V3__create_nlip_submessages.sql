@@ -9,7 +9,7 @@ CREATE TABLE nlip_submessages
     content_json    JSONB,
     created_at      TIMESTAMPTZ              NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ              NOT NULL DEFAULT now(),
-    schema_versions INTEGER                  NOT NULL DEFAULT 1,
+    schema_version  INTEGER                  NOT NULL,
     label           TEXT,
     CONSTRAINT ck_nlip_submessages_content CHECK (
         (format = 'structured' AND content_json IS NOT NULL AND content_text IS NULL)

@@ -5,7 +5,8 @@ CREATE TABLE nlip_submessage_attachments
     file_key           TEXT        NOT NULL,
     content_type       TEXT        NOT NULL,
     file_size_bytes    BIGINT      NOT NULL,
-    created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    schema_versions    INTEGER     NOT NULL
 );
 
 CREATE INDEX idx_nlip_submsg_attach_submsg_id ON nlip_submessage_attachments (nlip_submessage_id);
