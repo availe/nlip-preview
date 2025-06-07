@@ -35,8 +35,8 @@ class UserAccountRepository(private val dsl: DSLContext) {
             username = Username(record.username),
             emailAddress = EmailAddress(record.emailAddress),
             accountIsActive = AccountIsActive(record.accountIsActive),
-            userSubscriptionTier = record.userSubscriptionTier.toModel(),
-            schemaVersion = UserAccountSchemaVersion(record.userAccountSchemaVersion),
+            userSubscriptionTier = record.subscriptionTier.toModel(),
+            schemaVersion = UserAccountSchemaVersion(record.schemaVersion),
         ).some()
     }
 
