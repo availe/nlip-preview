@@ -10,7 +10,12 @@ enum class Module { SHARED, SERVER }
 data class InlineWrapper(val name: String, val backing: TypeName)
 data class EnumSpec(val name: String, val values: List<String>, val nestedIn: String? = null)
 data class ModelSpec(val name: String, val props: List<PropertySpecData>, val module: Module)
-data class PropertySpecData(val name: String, val type: TypeName)
+data class PropertySpecData(
+    val name: String,
+    val type: TypeName,
+    val inCreate: Boolean = true,
+    val inPatch: Boolean = true
+)
 
 class CodegenBuilder {
     internal val wrappers = mutableListOf<InlineWrapper>()
@@ -42,8 +47,14 @@ class ModelBuilder(
     private val _props = mutableListOf<PropertySpecData>()
     private val nestedEnumNames = allEnums.filter { it.nestedIn == modelName }.map { it.name }.toSet()
 
-    fun prop(name: String, typeName: String, nullable: Boolean = false) {
-        val tn = when {
+    fun prop(
+        name: String,
+        typeName: String,
+        nullable: Boolean = false,
+        inCreate: Boolean = true,
+        inPatch: Boolean = true
+    ) {
+        val tnBase = when {
             typeName in nestedEnumNames ->
                 ClassName("io.availe.models", modelName).nestedClass(typeName)
 
@@ -53,15 +64,21 @@ class ModelBuilder(
             }
 
             else -> ClassName("io.availe.models", typeName)
-        }.let { if (nullable) it.copy(nullable = true) else it }
-
-        _props += PropertySpecData(name, tn)
+        }
+        val tn = if (nullable) tnBase.copy(nullable = true) else tnBase
+        _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 
-    fun prop(name: String, klass: KClass<*>, nullable: Boolean = false) {
+    fun prop(
+        name: String,
+        klass: KClass<*>,
+        nullable: Boolean = false,
+        inCreate: Boolean = true,
+        inPatch: Boolean = true
+    ) {
         var tn: TypeName = klass.asTypeName()
         if (nullable) tn = tn.copy(nullable = true)
-        _props += PropertySpecData(name, tn)
+        _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 
     internal fun build() = ModelSpec(modelName, _props.toList(), module)

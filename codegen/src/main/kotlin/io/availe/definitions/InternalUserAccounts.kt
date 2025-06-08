@@ -1,42 +1,41 @@
 package io.availe.definitions
 
-import io.availe.core.Module
-import io.availe.core.codegen
-import io.availe.core.generateDataClass
-import io.availe.core.generateEnum
+import io.availe.core.*
 
 fun generateInternalUserAccountModels() {
     val spec = codegen {
         enum("UserRole", listOf("free_user", "paid_user", "admin"), nestedIn = "InternalUserAccount")
         model("InternalUserAccount", module = Module.SERVER) {
             prop("userAccount", "UserAccount")
-            prop("passwordHash", "PasswordHash")
+            prop("passwordHash", "PasswordHash", inPatch = false)
             prop("twoFactorEnabled", "TwoFactorEnabled")
             prop("twoFactorSecret", "TwoFactorSecret", nullable = true)
-            prop("banTimestamp", "BanTimestamp", nullable = true)
-            prop("banReason", "BanReason", nullable = true)
-            prop("failedLoginAttemptCount", "FailedLoginAttemptCount")
-            prop("lastFailedLoginTimestamp", "LastFailedLoginTimestamp", nullable = true)
-            prop("accountLockedUntilTimestamp", "AccountLockedUntilTimestamp", nullable = true)
-            prop("accountCreationTimestamp", "AccountCreationTimestamp")
-            prop("lastPasswordChangeTimestamp", "LastPasswordChangeTimestamp", nullable = true)
-            prop("lastLoginTimestamp", "LastLoginTimestamp", nullable = true)
-            prop("lastSeenTimestamp", "LastSeenTimestamp", nullable = true)
-            prop("registrationIpAddress", "RegistrationIpAddress")
-            prop("lastLoginIpAddress", "LastLoginIpAddress", nullable = true)
-            prop("previousLoginIpAddresses", "PreviousLoginIpAddresses")
-            prop("knownDeviceTokens", "KnownDeviceTokens")
-            prop("lastModifiedByUserId", "UserAccountId", nullable = true)
-            prop("lastModifiedTimestamp", "LastModifiedTimestamp", nullable = true)
+            prop("banTimestamp", "BanTimestamp", nullable = true, inCreate = false)
+            prop("banReason", "BanReason", nullable = true, inCreate = false)
+            prop("failedLoginAttemptCount", "FailedLoginAttemptCount", inCreate = false, inPatch = false)
+            prop("lastFailedLoginTimestamp", "LastFailedLoginTimestamp", nullable = true, inCreate = false)
+            prop("accountLockedUntilTimestamp", "AccountLockedUntilTimestamp", nullable = true, inCreate = false)
+            prop("accountCreationTimestamp", "AccountCreationTimestamp", inCreate = false, inPatch = false)
+            prop("lastPasswordChangeTimestamp", "LastPasswordChangeTimestamp", nullable = true, inCreate = false)
+            prop("lastLoginTimestamp", "LastLoginTimestamp", nullable = true, inCreate = false)
+            prop("lastSeenTimestamp", "LastSeenTimestamp", nullable = true, inCreate = false)
+            prop("registrationIpAddress", "RegistrationIpAddress", inPatch = false)
+            prop("lastLoginIpAddress", "LastLoginIpAddress", nullable = true, inCreate = false)
+            prop("previousLoginIpAddresses", "PreviousLoginIpAddresses", inCreate = false, inPatch = false)
+            prop("knownDeviceTokens", "KnownDeviceTokens", inCreate = false, inPatch = false)
+            prop("lastModifiedByUserId", "UserAccountId", nullable = true, inCreate = false)
+            prop("lastModifiedTimestamp", "LastModifiedTimestamp", nullable = true, inCreate = false)
             prop("userRole", "UserRole")
-            prop("schemaVersion", "InternalUserAccountSchemaVersion")
+            prop("schemaVersion", "InternalUserAccountSchemaVersion", inCreate = false, inPatch = false)
         }
     }
     spec.models.forEach { model ->
         val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        val type = generateDataClass(model, spec.wrappers).toBuilder().apply {
-            nestedEnums.forEach { addType(generateEnum(it)) }
-        }.build()
-        writeServer(model.name, type)
+        fun withEnums(ts: com.squareup.kotlinpoet.TypeSpec) =
+            ts.toBuilder().apply { nestedEnums.forEach { addType(generateEnum(it)) } }.build()
+
+        writeServer(model.name, withEnums(generateDataClass(model, spec.wrappers)))
+        writeServer("${model.name}Create", withEnums(generateCreateClass(model, spec.wrappers)))
+        writeServer("${model.name}Patch", withEnums(generatePatchClass(model, spec.wrappers)))
     }
 }
