@@ -25,15 +25,24 @@ class CodegenBuilder {
     }
 
     fun model(name: String, module: Module = Module.SHARED, block: ModelBuilder.() -> Unit) {
-        models += ModelBuilder(name, module).apply(block).build()
+        models += ModelBuilder(name, module, enums).apply(block).build()
     }
 }
 
-class ModelBuilder(private val modelName: String, private val module: Module) {
+class ModelBuilder(
+    private val modelName: String,
+    private val module: Module,
+    private val allEnums: List<EnumSpec>
+) {
     private val _props = mutableListOf<PropertySpecData>()
+    private val nestedEnumNames = allEnums.filter { it.nestedIn == modelName }.map { it.name }.toSet()
+
     fun prop(name: String, typeName: String, nullable: Boolean = false) {
-        var tn: TypeName = ClassName("io.availe.models", typeName)
-        if (nullable) tn = tn.copy(nullable = true)
+        val tn = if (typeName in nestedEnumNames) {
+            ClassName("io.availe.models", modelName).nestedClass(typeName)
+        } else {
+            ClassName("io.availe.models", typeName)
+        }.let { if (nullable) it.copy(nullable = true) else it }
         _props += PropertySpecData(name, tn)
     }
 

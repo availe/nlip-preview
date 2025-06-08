@@ -1,14 +1,14 @@
 package io.availe.definitions
 
 import com.squareup.kotlinpoet.FileSpec
+import io.availe.core.Module
 import io.availe.core.codegen
 import io.availe.core.generateDataClass
 import java.io.File
 
 fun generateConnectionAggregateModels() {
-    val out = File("../shared/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
     val spec = codegen {
-        model("ConnectionLocationAggregate") {
+        model("ConnectionLocationAggregate", module = Module.SERVER) {
             prop("bucketDate", "BucketDate")
             prop("countryCode", "CountryCode")
             prop("regionCode", "RegionCode")
@@ -20,9 +20,10 @@ fun generateConnectionAggregateModels() {
         }
     }
     spec.models.forEach { model ->
+        val dir = File("../server/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
         FileSpec.builder("io.availe.models", model.name)
             .addType(generateDataClass(model))
             .build()
-            .writeTo(out)
+            .writeTo(dir)
     }
 }
