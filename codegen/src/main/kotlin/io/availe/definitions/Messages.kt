@@ -35,6 +35,6 @@ fun generateMessageModels() {
         }
     }
     spec.models.forEach { model ->
-        writeShared(model.name, generateDataClass(model))
+        writeShared(model.name, generateDataClass(model, spec.wrappers))
     }
 }

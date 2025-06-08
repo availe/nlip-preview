@@ -18,6 +18,6 @@ fun generateConnectionAggregateModels() {
         }
     }
     spec.models.forEach { model ->
-        writeServer(model.name, generateDataClass(model))
+        writeServer(model.name, generateDataClass(model, spec.wrappers))
     }
 }

@@ -19,7 +19,7 @@ fun generateConversationModels() {
     }
     spec.models.forEach { model ->
         val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        val type = generateDataClass(model).toBuilder().apply {
+        val type = generateDataClass(model, spec.wrappers).toBuilder().apply {
             nestedEnums.forEach { addType(generateEnum(it)) }
         }.build()
         writeShared(model.name, type)
