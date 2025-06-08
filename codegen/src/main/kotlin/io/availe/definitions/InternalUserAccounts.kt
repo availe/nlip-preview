@@ -1,6 +1,7 @@
 package io.availe.definitions
 
-import io.availe.core.*
+import io.availe.core.Module
+import io.availe.core.codegen
 
 fun generateInternalUserAccountModels() {
     val spec = codegen {
@@ -29,13 +30,5 @@ fun generateInternalUserAccountModels() {
             prop("schemaVersion", "InternalUserAccountSchemaVersion", inCreate = false, inPatch = false)
         }
     }
-    spec.models.forEach { model ->
-        val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        val main = generateDataClass(model, spec.wrappers).toBuilder().apply {
-            nestedEnums.forEach { addType(generateEnum(it)) }
-        }.build()
-        val create = generateCreateClass(model, spec.wrappers)
-        val patch = generatePatchClass(model, spec.wrappers)
-        writeServer(model.name, main, create, patch)
-    }
+    writeServerModels(spec, includeNestedEnums = true)
 }

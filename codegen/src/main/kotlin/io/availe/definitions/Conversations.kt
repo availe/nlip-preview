@@ -1,6 +1,6 @@
 package io.availe.definitions
 
-import io.availe.core.*
+import io.availe.core.codegen
 
 fun generateConversationModels() {
     val spec = codegen {
@@ -15,13 +15,5 @@ fun generateConversationModels() {
             prop("schemaVersion", "ConversationSchemaVersion", inCreate = false, inPatch = false)
         }
     }
-    spec.models.forEach { model ->
-        val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        val main = generateDataClass(model, spec.wrappers).toBuilder().apply {
-            nestedEnums.forEach { addType(generateEnum(it)) }
-        }.build()
-        val create = generateCreateClass(model, spec.wrappers)
-        val patch = generatePatchClass(model, spec.wrappers)
-        writeShared(model.name, main, create, patch)
-    }
+    writeSharedModels(spec, includeNestedEnums = true)
 }

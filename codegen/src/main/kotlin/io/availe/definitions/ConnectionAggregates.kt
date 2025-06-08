@@ -2,7 +2,6 @@ package io.availe.definitions
 
 import io.availe.core.Module
 import io.availe.core.codegen
-import io.availe.core.generateDataClass
 
 fun generateConnectionAggregateModels() {
     val spec = codegen {
@@ -18,7 +17,5 @@ fun generateConnectionAggregateModels() {
             prop("schemaVersion", "ConnectionLocationAggregateSchemaVersion")
         }
     }
-    spec.models.forEach { model ->
-        writeServer(model.name, generateDataClass(model, spec.wrappers))
-    }
+    writeServerModels(spec, onlyMain = true)
 }

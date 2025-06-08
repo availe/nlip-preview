@@ -1,9 +1,6 @@
 package io.availe.definitions
 
 import io.availe.core.codegen
-import io.availe.core.generateCreateClass
-import io.availe.core.generateDataClass
-import io.availe.core.generatePatchClass
 
 fun generateMessageModels() {
     val spec = codegen {
@@ -36,10 +33,5 @@ fun generateMessageModels() {
             prop("schemaVersion", "InternalMessageSchemaVersion", inCreate = false, inPatch = false)
         }
     }
-    spec.models.forEach { model ->
-        val main = generateDataClass(model, spec.wrappers)
-        val create = generateCreateClass(model, spec.wrappers)
-        val patch = generatePatchClass(model, spec.wrappers)
-        writeShared(model.name, main, create, patch)
-    }
+    writeSharedModels(spec)
 }
