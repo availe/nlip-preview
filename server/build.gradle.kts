@@ -118,14 +118,17 @@ dependencies {
     jooqGenerator(libs.postgresql)
 
     testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.snakeyaml)
     testImplementation(platform(libs.jackson.bom))
     testImplementation(libs.jackson.databind)
-    testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)
     testRuntimeOnly(libs.postgresql)
-    testImplementation(libs.junit.jupiter)
+
+    testImplementation(platform("org.junit:junit-bom:5.10.2")) // Or whatever is the latest
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 jooq {
