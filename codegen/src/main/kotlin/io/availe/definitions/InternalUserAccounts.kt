@@ -27,7 +27,7 @@ fun generateInternalUserAccountModels() {
             prop("lastModifiedByUserId", "UserAccountId", nullable = true, inCreate = false)
             prop("lastModifiedTimestamp", "LastModifiedTimestamp", nullable = true, inCreate = false)
             prop("userRole", "UserRole")
-            prop("schemaVersion", "InternalUserAccountSchemaVersion", inCreate = false, inPatch = false)
+            prop("schemaVersion", "InternalUserAccountSchemaVersion", inCreate = true, inPatch = true)
         }
     }
     writeServerModels(spec, includeNestedEnums = true)

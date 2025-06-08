@@ -12,7 +12,7 @@ fun generateConversationModels() {
             prop("updatedAt", "UpdatedAt", inCreate = false, inPatch = false)
             prop("ownerId", "UserAccountId", inPatch = false)
             prop("status", "ConversationStatus")
-            prop("schemaVersion", "ConversationSchemaVersion", inCreate = false, inPatch = false)
+            prop("schemaVersion", "ConversationSchemaVersion", inCreate = true, inPatch = true)
         }
     }
     writeSharedModels(spec, includeNestedEnums = true)

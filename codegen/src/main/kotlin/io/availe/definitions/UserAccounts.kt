@@ -11,7 +11,7 @@ fun generateUserAccountModels() {
             prop("emailAddress", "EmailAddress")
             prop("accountIsActive", "AccountIsActive")
             prop("subscriptionTier", "UserSubscriptionTier")
-            prop("schemaVersion", "UserAccountSchemaVersion", inCreate = false, inPatch = false)
+            prop("schemaVersion", "UserAccountSchemaVersion", inCreate = true, inPatch = true)
         }
     }
     writeSharedModels(spec, includeNestedEnums = true)

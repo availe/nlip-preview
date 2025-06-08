@@ -71,7 +71,7 @@ fun generateMessageModels() {
         model("OutboundMessage") {
             prop("targetUrl", String::class)
             prop("internalMessage", "InternalMessage")
-            prop("schemaVersion", "InternalMessageSchemaVersion", inCreate = false, inPatch = false)
+            prop("schemaVersion", "InternalMessageSchemaVersion", inCreate = true, inPatch = true)
         }
     }
     writeSharedModels(spec)
