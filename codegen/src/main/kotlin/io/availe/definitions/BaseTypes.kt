@@ -78,6 +78,7 @@ fun generateBaseTypes() {
         enum("PlatformType", listOf("web", "ios", "android", "desktop"))
         enum("UserAccessType", listOf("anonymous", "authenticated"))
     }
+
     val fileOptIn = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
         .useSiteTarget(UseSiteTarget.FILE)
         .addMember("%T::class, %T::class", ExperimentalTime::class, ExperimentalUuidApi::class)

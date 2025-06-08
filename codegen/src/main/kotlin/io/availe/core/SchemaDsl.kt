@@ -81,6 +81,17 @@ class ModelBuilder(
         _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 
+    fun prop(
+        name: String,
+        type: TypeName,
+        nullable: Boolean = false,
+        inCreate: Boolean = true,
+        inPatch: Boolean = true
+    ) {
+        val tn = if (nullable) type.copy(nullable = true) else type
+        _props += PropertySpecData(name, tn, inCreate, inPatch)
+    }
+
     internal fun build() = ModelSpec(modelName, _props.toList(), module)
 }
 
