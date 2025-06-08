@@ -54,6 +54,17 @@ sourceSets {
 
 kotlin {
     jvmToolchain(21)
+
+    sourceSets {
+        named("main") {
+            kotlin.srcDir(
+                layout.buildDirectory.dir("generated-src/kotlin-poet")
+            )
+        }
+//        create("jooq") {
+//            kotlin.srcDir("src/jooq/kotlin")
+//        }
+    }
 }
 
 group = "io.availe"

@@ -82,6 +82,10 @@ kotlin {
                 layout.buildDirectory
                     .dir("generated/openapi/src/commonMain/kotlin")
             )
+            kotlin.srcDir(
+                layout.buildDirectory
+                    .dir("generated-src/kotlin-poet")
+            )
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)

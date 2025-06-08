@@ -12,13 +12,11 @@ import io.availe.core.generateValueClass
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonElement
-import java.io.File
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 fun generateBaseTypes() {
-    val out = File("../shared/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
     val spec = codegen {
         valueClass("NlipMessageId", Long::class)
         valueClass("NlipSubmessageId", Long::class)
@@ -26,7 +24,6 @@ fun generateBaseTypes() {
         valueClass("InternalMessageId", Uuid::class)
         valueClass("ConversationId", Uuid::class)
         valueClass("UserAccountId", Uuid::class)
-
         valueClass("NlipMessageSchemaVersion", Int::class)
         valueClass("NlipSubmessageSchemaVersion", Int::class)
         valueClass("NlipMessageAttachmentSchemaVersion", Int::class)
@@ -36,13 +33,11 @@ fun generateBaseTypes() {
         valueClass("InternalUserAccountSchemaVersion", Int::class)
         valueClass("ConversationSchemaVersion", Int::class)
         valueClass("ConnectionLocationAggregateSchemaVersion", Int::class)
-
         valueClass("CreatedAt", Instant::class)
         valueClass("UpdatedAt", Instant::class)
         valueClass("Username", String::class)
         valueClass("EmailAddress", String::class)
         valueClass("AccountIsActive", Boolean::class)
-
         valueClass("PasswordHash", String::class)
         valueClass("TwoFactorEnabled", Boolean::class)
         valueClass("TwoFactorSecret", String::class)
@@ -56,7 +51,6 @@ fun generateBaseTypes() {
         valueClass("LastLoginTimestamp", Instant::class)
         valueClass("LastSeenTimestamp", Instant::class)
         valueClass("LastModifiedTimestamp", Instant::class)
-
         valueClass("Subformat", String::class)
         valueClass("ContentText", String::class)
         valueClass("ContentJson", JsonElement::class)
@@ -66,14 +60,11 @@ fun generateBaseTypes() {
         valueClass("ContentType", String::class)
         valueClass("FileSizeBytes", Long::class)
         valueClass("SenderId", Uuid::class)
-
         valueClass("ConversationTitle", String::class)
-
         valueClass("BucketDate", LocalDate::class)
         valueClass("CountryCode", String::class)
         valueClass("RegionCode", String::class)
         valueClass("ConnectionCount", Long::class)
-
         enum("AllowedFormatType", listOf("text", "token", "structured", "binary", "location", "error", "generic"))
         enum("MessageType", listOf("control"))
         enum("SenderType", listOf("user", "agent", "system"))
@@ -81,8 +72,7 @@ fun generateBaseTypes() {
         enum("UserAccessType", listOf("anonymous", "authenticated"))
     }
 
-    val optIn = ClassName("kotlin", "OptIn")
-    val fileOptIn = AnnotationSpec.builder(optIn)
+    val fileOptIn = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
         .useSiteTarget(UseSiteTarget.FILE)
         .addMember("%T::class, %T::class", ExperimentalTime::class, ExperimentalUuidApi::class)
         .build()
@@ -94,5 +84,5 @@ fun generateBaseTypes() {
             spec.enums.forEach { addType(generateEnum(it)) }
         }
         .build()
-        .writeTo(out)
+        .writeTo(Paths.sharedRoot)
 }

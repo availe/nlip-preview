@@ -1,10 +1,8 @@
 package io.availe.definitions
 
-import com.squareup.kotlinpoet.FileSpec
 import io.availe.core.Module
 import io.availe.core.codegen
 import io.availe.core.generateDataClass
-import java.io.File
 
 fun generateConnectionAggregateModels() {
     val spec = codegen {
@@ -20,10 +18,6 @@ fun generateConnectionAggregateModels() {
         }
     }
     spec.models.forEach { model ->
-        val dir = File("../server/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
-        FileSpec.builder("io.availe.models", model.name)
-            .addType(generateDataClass(model))
-            .build()
-            .writeTo(dir)
+        writeServer(model.name, generateDataClass(model))
     }
 }

@@ -1,11 +1,9 @@
 package io.availe.definitions
 
-import com.squareup.kotlinpoet.FileSpec
 import io.availe.core.Module
 import io.availe.core.codegen
 import io.availe.core.generateDataClass
 import io.availe.core.generateEnum
-import java.io.File
 
 fun generateInternalUserAccountModels() {
     val spec = codegen {
@@ -35,14 +33,10 @@ fun generateInternalUserAccountModels() {
         }
     }
     spec.models.forEach { model ->
-        val outDir = File("../server/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
         val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        val modelType = generateDataClass(model).toBuilder().apply {
+        val type = generateDataClass(model).toBuilder().apply {
             nestedEnums.forEach { addType(generateEnum(it)) }
         }.build()
-        FileSpec.builder("io.availe.models", model.name)
-            .addType(modelType)
-            .build()
-            .writeTo(outDir)
+        writeServer(model.name, type)
     }
 }

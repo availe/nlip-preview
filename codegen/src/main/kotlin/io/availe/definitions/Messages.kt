@@ -1,9 +1,7 @@
 package io.availe.definitions
 
-import com.squareup.kotlinpoet.FileSpec
 import io.availe.core.codegen
 import io.availe.core.generateDataClass
-import java.io.File
 
 fun generateMessageModels() {
     val spec = codegen {
@@ -36,11 +34,7 @@ fun generateMessageModels() {
             prop("schemaVersion", "InternalMessageSchemaVersion")
         }
     }
-    val outDir = File("../shared/build/generated-src/kotlin-poet/io/availe/models").apply { mkdirs() }
     spec.models.forEach { model ->
-        FileSpec.builder("io.availe.models", model.name)
-            .addType(generateDataClass(model))
-            .build()
-            .writeTo(outDir)
+        writeShared(model.name, generateDataClass(model))
     }
 }
