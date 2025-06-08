@@ -122,6 +122,10 @@ dependencies {
     testImplementation(libs.snakeyaml)
     testImplementation(platform(libs.jackson.bom))
     testImplementation(libs.jackson.databind)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.postgresql)
+    testRuntimeOnly(libs.postgresql)
+    testImplementation(libs.junit.jupiter)
 }
 
 jooq {
@@ -194,6 +198,7 @@ tasks.named("compileKotlin") {
 }
 
 tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
     environment(dbEnv)
 }
 
