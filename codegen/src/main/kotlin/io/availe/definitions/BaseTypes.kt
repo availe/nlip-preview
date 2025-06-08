@@ -6,6 +6,8 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.asTypeName
 import io.availe.core.codegen
 import io.availe.core.generateEnum
 import io.availe.core.generateValueClass
@@ -17,13 +19,18 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 fun generateBaseTypes() {
+    val listOfString = ClassName("kotlin.collections", "List").parameterizedBy(String::class.asTypeName())
+
     val spec = codegen {
+        // primitives & ids
         valueClass("NlipMessageId", Long::class)
         valueClass("NlipSubmessageId", Long::class)
         valueClass("AttachmentId", Long::class)
         valueClass("InternalMessageId", Uuid::class)
         valueClass("ConversationId", Uuid::class)
         valueClass("UserAccountId", Uuid::class)
+
+        // schema versions
         valueClass("NlipMessageSchemaVersion", Int::class)
         valueClass("NlipSubmessageSchemaVersion", Int::class)
         valueClass("NlipMessageAttachmentSchemaVersion", Int::class)
@@ -33,17 +40,11 @@ fun generateBaseTypes() {
         valueClass("InternalUserAccountSchemaVersion", Int::class)
         valueClass("ConversationSchemaVersion", Int::class)
         valueClass("ConnectionLocationAggregateSchemaVersion", Int::class)
+
+        // timestamps & dates
         valueClass("CreatedAt", Instant::class)
         valueClass("UpdatedAt", Instant::class)
-        valueClass("Username", String::class)
-        valueClass("EmailAddress", String::class)
-        valueClass("AccountIsActive", Boolean::class)
-        valueClass("PasswordHash", String::class)
-        valueClass("TwoFactorEnabled", Boolean::class)
-        valueClass("TwoFactorSecret", String::class)
         valueClass("BanTimestamp", Instant::class)
-        valueClass("BanReason", String::class)
-        valueClass("FailedLoginAttemptCount", Int::class)
         valueClass("LastFailedLoginTimestamp", Instant::class)
         valueClass("AccountLockedUntilTimestamp", Instant::class)
         valueClass("AccountCreationTimestamp", Instant::class)
@@ -51,6 +52,17 @@ fun generateBaseTypes() {
         valueClass("LastLoginTimestamp", Instant::class)
         valueClass("LastSeenTimestamp", Instant::class)
         valueClass("LastModifiedTimestamp", Instant::class)
+        valueClass("BucketDate", LocalDate::class)
+
+        // strings / ints / bools
+        valueClass("Username", String::class)
+        valueClass("EmailAddress", String::class)
+        valueClass("AccountIsActive", Boolean::class)
+        valueClass("PasswordHash", String::class)
+        valueClass("TwoFactorEnabled", Boolean::class)
+        valueClass("TwoFactorSecret", String::class)
+        valueClass("BanReason", String::class)
+        valueClass("FailedLoginAttemptCount", Int::class)
         valueClass("Subformat", String::class)
         valueClass("ContentText", String::class)
         valueClass("ContentJson", JsonElement::class)
@@ -61,10 +73,17 @@ fun generateBaseTypes() {
         valueClass("FileSizeBytes", Long::class)
         valueClass("SenderId", Uuid::class)
         valueClass("ConversationTitle", String::class)
-        valueClass("BucketDate", LocalDate::class)
         valueClass("CountryCode", String::class)
         valueClass("RegionCode", String::class)
         valueClass("ConnectionCount", Long::class)
+        valueClass("RegistrationIpAddress", String::class)
+        valueClass("LastLoginIpAddress", String::class)
+
+        // list wrappers (require generic backing)
+        valueClass("PreviousLoginIpAddresses", listOfString)
+        valueClass("KnownDeviceTokens", listOfString)
+
+        // enums
         enum("AllowedFormatType", listOf("text", "token", "structured", "binary", "location", "error", "generic"))
         enum("MessageType", listOf("control"))
         enum("SenderType", listOf("user", "agent", "system"))

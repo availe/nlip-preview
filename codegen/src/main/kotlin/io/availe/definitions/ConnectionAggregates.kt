@@ -6,6 +6,7 @@ import io.availe.core.generateDataClass
 
 fun generateConnectionAggregateModels() {
     val spec = codegen {
+        enum("UserSubscriptionTier", listOf("standard", "byok", "enterprise"), nestedIn = "UserAccount")
         model("ConnectionLocationAggregate", module = Module.SERVER) {
             prop("bucketDate", "BucketDate")
             prop("countryCode", "CountryCode")

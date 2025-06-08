@@ -1,24 +1,43 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package io.availe.core
 
 import com.squareup.kotlinpoet.*
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-fun generateValueClass(wrapper: InlineWrapper): TypeSpec =
-    TypeSpec.classBuilder(wrapper.name)
+fun generateValueClass(wrapper: InlineWrapper): TypeSpec {
+    val backingType = wrapper.backing
+    val contextualBackings = setOf(
+        Instant::class.asTypeName(),
+        LocalDate::class.asTypeName(),
+        Uuid::class.asTypeName(),
+        ClassName("kotlinx.serialization.json", "JsonElement")
+    )
+
+    val valueProp = PropertySpec.builder("value", backingType)
+        .initializer("value")
+        .apply {
+            if (backingType in contextualBackings) addAnnotation(Contextual::class)
+        }
+        .build()
+
+    return TypeSpec.classBuilder(wrapper.name)
         .addModifiers(KModifier.VALUE)
         .addAnnotation(JvmInline::class)
+        .addAnnotation(Serializable::class)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("value", wrapper.backing.asTypeName())
+                .addParameter("value", backingType)
                 .build()
         )
-        .addProperty(
-            PropertySpec.builder("value", wrapper.backing.asTypeName())
-                .initializer("value")
-                .build()
-        )
+        .addProperty(valueProp)
         .build()
+}
 
 fun generateEnum(spec: EnumSpec): TypeSpec =
     TypeSpec.enumBuilder(spec.name)
@@ -28,6 +47,7 @@ fun generateEnum(spec: EnumSpec): TypeSpec =
 
 fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec {
     val wrapperNames = wrappers.map { it.name }.toSet()
+
     val ctor = FunSpec.constructorBuilder().apply {
         model.props.forEach { addParameter(it.name, it.type) }
     }.build()
@@ -38,11 +58,12 @@ fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec
         .primaryConstructor(ctor)
 
     ctor.parameters.forEach { param ->
-        val typeName = param.type
-        val propBuilder = PropertySpec.builder(param.name, typeName)
+        val paramType: TypeName = param.type
+        val propBuilder = PropertySpec.builder(param.name, paramType)
             .initializer(param.name)
 
-        if (typeName is ClassName && typeName.simpleName in wrapperNames) {
+        val simpleName = (paramType as? ClassName)?.simpleName
+        if (simpleName != null && simpleName in wrapperNames) {
             propBuilder.addAnnotation(
                 AnnotationSpec.builder(Contextual::class)
                     .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
