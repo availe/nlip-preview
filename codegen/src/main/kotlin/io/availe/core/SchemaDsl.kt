@@ -1,6 +1,7 @@
 package io.availe.core
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
@@ -16,6 +17,8 @@ data class PropertySpecData(
     val inCreate: Boolean = true,
     val inPatch: Boolean = true
 )
+
+private val optionClass = ClassName("arrow.core", "Option")
 
 class CodegenBuilder {
     internal val wrappers = mutableListOf<InlineWrapper>()
@@ -47,6 +50,9 @@ class ModelBuilder(
     private val _props = mutableListOf<PropertySpecData>()
     private val nestedEnumNames = allEnums.filter { it.nestedIn == modelName }.map { it.name }.toSet()
 
+    /** Arrow Option wrapper helper */
+    private fun optionOf(t: TypeName): TypeName = optionClass.parameterizedBy(t)
+
     fun prop(
         name: String,
         typeName: String,
@@ -65,7 +71,7 @@ class ModelBuilder(
 
             else -> ClassName("io.availe.models", typeName)
         }
-        val tn = if (nullable) tnBase.copy(nullable = true) else tnBase
+        val tn = if (nullable) optionOf(tnBase) else tnBase
         _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 
@@ -76,8 +82,8 @@ class ModelBuilder(
         inCreate: Boolean = true,
         inPatch: Boolean = true
     ) {
-        var tn: TypeName = klass.asTypeName()
-        if (nullable) tn = tn.copy(nullable = true)
+        val base = klass.asTypeName()
+        val tn = if (nullable) optionOf(base) else base
         _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 
@@ -88,7 +94,7 @@ class ModelBuilder(
         inCreate: Boolean = true,
         inPatch: Boolean = true
     ) {
-        val tn = if (nullable) type.copy(nullable = true) else type
+        val tn = if (nullable) optionOf(type) else type
         _props += PropertySpecData(name, tn, inCreate, inPatch)
     }
 

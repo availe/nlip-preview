@@ -3,12 +3,21 @@
 package io.availe.core
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+private val optionClass = ClassName("arrow.core", "Option")
+
+private fun optionOf(t: TypeName): TypeName = optionClass.parameterizedBy(t)
+
+private fun wrapForPatch(original: TypeName): TypeName =
+    if (original is ParameterizedTypeName && original.rawType == optionClass) original
+    else optionOf(original)
 
 fun generateValueClass(wrapper: InlineWrapper): TypeSpec {
     val backingType = wrapper.backing
@@ -43,6 +52,30 @@ fun generateEnum(spec: EnumSpec): TypeSpec =
         .apply { spec.values.forEach { addEnumConstant(it.uppercase()) } }
         .build()
 
+private fun annotateContextualIfNeeded(
+    propBuilder: PropertySpec.Builder,
+    type: TypeName,
+    wrapperNames: Set<String>
+) {
+    val isOption = type is ParameterizedTypeName && type.rawType == optionClass
+    val targetType = when (type) {
+        is ParameterizedTypeName ->
+            if (type.rawType == optionClass) type.typeArguments.first() else null
+
+        is ClassName -> type
+        else -> null
+    }
+    if (isOption ||
+        (targetType is ClassName && targetType.simpleName in wrapperNames)
+    ) {
+        propBuilder.addAnnotation(
+            AnnotationSpec.builder(Contextual::class)
+                .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
+                .build()
+        )
+    }
+}
+
 fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec {
     val wrapperNames = wrappers.map { it.name }.toSet()
     val ctor = FunSpec.constructorBuilder().apply {
@@ -53,17 +86,9 @@ fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec
         .addAnnotation(Serializable::class)
         .primaryConstructor(ctor)
     ctor.parameters.forEach { param ->
-        val paramType: TypeName = param.type
-        val propBuilder = PropertySpec.builder(param.name, paramType)
+        val propBuilder = PropertySpec.builder(param.name, param.type)
             .initializer(param.name)
-        val simpleName = (paramType as? ClassName)?.simpleName
-        if (simpleName != null && simpleName in wrapperNames) {
-            propBuilder.addAnnotation(
-                AnnotationSpec.builder(Contextual::class)
-                    .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
-                    .build()
-            )
-        }
+        annotateContextualIfNeeded(propBuilder, param.type, wrapperNames)
         builder.addProperty(propBuilder.build())
     }
     return builder.build()
@@ -74,13 +99,13 @@ private fun generateRequestClass(
     wrappers: List<InlineWrapper>,
     suffix: String,
     filter: (PropertySpecData) -> Boolean,
-    makeNullable: Boolean
+    wrapOptional: Boolean
 ): TypeSpec {
     val reqProps = model.props.filter(filter)
     val wrapperNames = wrappers.map { it.name }.toSet()
     val ctor = FunSpec.constructorBuilder().apply {
         reqProps.forEach { p ->
-            val t = if (makeNullable) p.type.copy(nullable = true) else p.type
+            val t = if (wrapOptional) wrapForPatch(p.type) else p.type
             addParameter(p.name, t)
         }
     }.build()
@@ -89,17 +114,9 @@ private fun generateRequestClass(
         .addAnnotation(Serializable::class)
         .primaryConstructor(ctor)
     ctor.parameters.forEach { param ->
-        val paramType: TypeName = param.type
-        val propBuilder = PropertySpec.builder(param.name, paramType)
+        val propBuilder = PropertySpec.builder(param.name, param.type)
             .initializer(param.name)
-        val simpleName = (paramType as? ClassName)?.simpleName
-        if (simpleName != null && simpleName in wrapperNames) {
-            propBuilder.addAnnotation(
-                AnnotationSpec.builder(Contextual::class)
-                    .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
-                    .build()
-            )
-        }
+        annotateContextualIfNeeded(propBuilder, param.type, wrapperNames)
         builder.addProperty(propBuilder.build())
     }
     return builder.build()
