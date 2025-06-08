@@ -37,8 +37,9 @@ fun generateMessageModels() {
         }
     }
     spec.models.forEach { model ->
-        writeShared(model.name, generateDataClass(model, spec.wrappers))
-        writeShared("${model.name}Create", generateCreateClass(model, spec.wrappers))
-        writeShared("${model.name}Patch", generatePatchClass(model, spec.wrappers))
+        val main = generateDataClass(model, spec.wrappers)
+        val create = generateCreateClass(model, spec.wrappers)
+        val patch = generatePatchClass(model, spec.wrappers)
+        writeShared(model.name, main, create, patch)
     }
 }

@@ -20,17 +20,13 @@ import kotlin.uuid.Uuid
 
 fun generateBaseTypes() {
     val listOfString = ClassName("kotlin.collections", "List").parameterizedBy(String::class.asTypeName())
-
     val spec = codegen {
-        // primitives & ids
         valueClass("NlipMessageId", Long::class)
         valueClass("NlipSubmessageId", Long::class)
         valueClass("AttachmentId", Long::class)
         valueClass("InternalMessageId", Uuid::class)
         valueClass("ConversationId", Uuid::class)
         valueClass("UserAccountId", Uuid::class)
-
-        // schema versions
         valueClass("NlipMessageSchemaVersion", Int::class)
         valueClass("NlipSubmessageSchemaVersion", Int::class)
         valueClass("NlipMessageAttachmentSchemaVersion", Int::class)
@@ -40,8 +36,6 @@ fun generateBaseTypes() {
         valueClass("InternalUserAccountSchemaVersion", Int::class)
         valueClass("ConversationSchemaVersion", Int::class)
         valueClass("ConnectionLocationAggregateSchemaVersion", Int::class)
-
-        // timestamps & dates
         valueClass("CreatedAt", Instant::class)
         valueClass("UpdatedAt", Instant::class)
         valueClass("BanTimestamp", Instant::class)
@@ -53,8 +47,6 @@ fun generateBaseTypes() {
         valueClass("LastSeenTimestamp", Instant::class)
         valueClass("LastModifiedTimestamp", Instant::class)
         valueClass("BucketDate", LocalDate::class)
-
-        // strings / ints / bools
         valueClass("Username", String::class)
         valueClass("EmailAddress", String::class)
         valueClass("AccountIsActive", Boolean::class)
@@ -78,30 +70,29 @@ fun generateBaseTypes() {
         valueClass("ConnectionCount", Long::class)
         valueClass("RegistrationIpAddress", String::class)
         valueClass("LastLoginIpAddress", String::class)
-
-        // list wrappers (require generic backing)
         valueClass("PreviousLoginIpAddresses", listOfString)
         valueClass("KnownDeviceTokens", listOfString)
-
-        // enums
         enum("AllowedFormatType", listOf("text", "token", "structured", "binary", "location", "error", "generic"))
         enum("MessageType", listOf("control"))
         enum("SenderType", listOf("user", "agent", "system"))
         enum("PlatformType", listOf("web", "ios", "android", "desktop"))
         enum("UserAccessType", listOf("anonymous", "authenticated"))
     }
-
     val fileOptIn = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
         .useSiteTarget(UseSiteTarget.FILE)
         .addMember("%T::class, %T::class", ExperimentalTime::class, ExperimentalUuidApi::class)
         .build()
 
-    FileSpec.builder("io.availe.models", "Identifiers")
-        .addAnnotation(fileOptIn)
-        .apply {
-            spec.wrappers.forEach { addType(generateValueClass(it)) }
-            spec.enums.forEach { addType(generateEnum(it)) }
-        }
-        .build()
-        .writeTo(Paths.sharedRoot)
+    fun writeIdentifiersTo(root: java.io.File) {
+        FileSpec.builder("io.availe.models", "Identifiers")
+            .addAnnotation(fileOptIn)
+            .apply {
+                spec.wrappers.forEach { addType(generateValueClass(it)) }
+                spec.enums.forEach { addType(generateEnum(it)) }
+            }
+            .build()
+            .writeTo(root)
+    }
+    writeIdentifiersTo(Paths.sharedRoot)
+    writeIdentifiersTo(Paths.serverRoot)
 }

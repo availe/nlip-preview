@@ -31,11 +31,11 @@ fun generateInternalUserAccountModels() {
     }
     spec.models.forEach { model ->
         val nestedEnums = spec.enums.filter { it.nestedIn == model.name }
-        fun withEnums(ts: com.squareup.kotlinpoet.TypeSpec) =
-            ts.toBuilder().apply { nestedEnums.forEach { addType(generateEnum(it)) } }.build()
-
-        writeServer(model.name, withEnums(generateDataClass(model, spec.wrappers)))
-        writeServer("${model.name}Create", withEnums(generateCreateClass(model, spec.wrappers)))
-        writeServer("${model.name}Patch", withEnums(generatePatchClass(model, spec.wrappers)))
+        val main = generateDataClass(model, spec.wrappers).toBuilder().apply {
+            nestedEnums.forEach { addType(generateEnum(it)) }
+        }.build()
+        val create = generateCreateClass(model, spec.wrappers)
+        val patch = generatePatchClass(model, spec.wrappers)
+        writeServer(model.name, main, create, patch)
     }
 }
