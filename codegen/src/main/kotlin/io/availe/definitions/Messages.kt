@@ -9,7 +9,7 @@ fun generateMessageModels() {
     val nlipAttachmentListType = listType.parameterizedBy(ClassName("io.availe.models", "NlipAttachment"))
     val nlipSubmessageListType = listType.parameterizedBy(ClassName("io.availe.models", "NlipSubmessage"))
 
-    val codegenSpecification = codegen {
+    val spec = codegen {
         model("NlipAttachment") {
             prop("id", "AttachmentId", inCreate = false, inPatch = false)
             prop("nlipMessageId", "NlipMessageId", nullable = true, inCreate = false, inPatch = false)
@@ -65,5 +65,5 @@ fun generateMessageModels() {
             prop("schemaVersion", "InternalMessageSchemaVersion", inCreate = true, inPatch = true)
         }
     }
-    writeSharedModels(codegenSpecification)
+    writeSharedModels(spec)
 }
