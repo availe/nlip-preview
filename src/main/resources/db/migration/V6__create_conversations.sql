@@ -16,4 +16,4 @@ CREATE TABLE conversations
     schema_version INTEGER                       NOT NULL
 );
 
-CREATE INDEX idx_conversations_owner_id ON conversations (owner_id);
+CREATE INDEX index_conversations_owner_id ON conversations (owner_id);

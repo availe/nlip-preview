@@ -10,7 +10,7 @@ CREATE TABLE nlip_messages
     schema_version INTEGER                  NOT NULL,
     message_type   message_type_enum,
     label          TEXT,
-    CONSTRAINT ck_nlip_messages_content CHECK (
+    CONSTRAINT check_nlip_messages_content CHECK (
         (format = 'structured' AND content_json IS NOT NULL AND content_text IS NULL)
             OR (format <> 'structured' AND content_text IS NOT NULL AND content_json IS NULL)
         )

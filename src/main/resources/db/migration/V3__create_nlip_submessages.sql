@@ -11,10 +11,10 @@ CREATE TABLE nlip_submessages
     updated_at      TIMESTAMPTZ              NOT NULL DEFAULT now(),
     schema_version  INTEGER                  NOT NULL,
     label           TEXT,
-    CONSTRAINT ck_nlip_submessages_content CHECK (
+    CONSTRAINT check_nlip_submessages_content CHECK (
         (format = 'structured' AND content_json IS NOT NULL AND content_text IS NULL)
             OR (format <> 'structured' AND content_text IS NOT NULL AND content_json IS NULL)
         )
 );
 
-CREATE INDEX idx_nlip_submsgs_msg_pos ON nlip_submessages (nlip_message_id, position);
+CREATE INDEX index_nlip_submessages_message_position ON nlip_submessages (nlip_message_id, position);

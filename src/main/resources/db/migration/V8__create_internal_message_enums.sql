@@ -17,6 +17,6 @@ CREATE TABLE internal_messages
     schema_version    INTEGER          NOT NULL
 );
 
-CREATE INDEX idx_internal_messages_conversation_id ON internal_messages (conversation_id);
-CREATE INDEX idx_internal_messages_nlip_message_id ON internal_messages (nlip_message_id);
-CREATE INDEX idx_internal_messages_parent_message_id ON internal_messages (parent_message_id);
+CREATE INDEX index_internal_messages_conversation_id ON internal_messages (conversation_id);
+CREATE INDEX index_internal_messages_nlip_message_id ON internal_messages (nlip_message_id);
+CREATE INDEX index_internal_messages_parent_message_id ON internal_messages (parent_message_id);

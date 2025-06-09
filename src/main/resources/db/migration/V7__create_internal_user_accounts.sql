@@ -25,4 +25,4 @@ CREATE TABLE internal_user_accounts
     schema_version                 INTEGER        NOT NULL
 );
 
-CREATE INDEX idx_internal_user_accounts_last_modified_by_user_id ON internal_user_accounts (last_modified_by_user_id);
+CREATE INDEX index_internal_user_accounts_last_modified_by_user_id ON internal_user_accounts (last_modified_by_user_id);
