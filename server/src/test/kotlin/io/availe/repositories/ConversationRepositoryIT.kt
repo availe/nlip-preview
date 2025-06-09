@@ -2,6 +2,7 @@
 
 package io.availe.repositories
 
+import arrow.core.none
 import arrow.core.some
 import io.availe.models.*
 import io.availe.testutil.TestFixtures
@@ -46,6 +47,13 @@ class ConversationRepositoryIT {
     }
 
     @Test
+    fun `fetchAllUserConversationIds none when no conversations`() = withRollback {
+        val user = TestFixtures.insertUser(userRepo)
+        val idsOpt = convoRepo.fetchAllUserConversationIds(user.id)
+        assertTrue(idsOpt.isNone())
+    }
+
+    @Test
     fun `streamAllUserConversations emits all conversations`() = withRollback {
         val user = TestFixtures.insertUser(userRepo)
         val conv1 = TestFixtures.insertConversation(convoRepo, user.id)
@@ -54,6 +62,13 @@ class ConversationRepositoryIT {
         val ids = list.map(Conversation::id).toSet()
         assertEquals(setOf(conv1.id, conv2.id), ids)
         Unit
+    }
+
+    @Test
+    fun `streamAllUserConversations empty when none`() = withRollback {
+        val user = TestFixtures.insertUser(userRepo)
+        val list = runBlocking { convoRepo.streamAllUserConversations(user.id).toList() }
+        assertTrue(list.isEmpty())
     }
 
     @Test
@@ -72,6 +87,32 @@ class ConversationRepositoryIT {
         assertEquals(newTitle, fetched.title)
         assertEquals(Conversation.ConversationStatus.ARCHIVED, fetched.status)
         Unit
+    }
+
+    @Test
+    fun `patchConversation unknown id returns none`() = withRollback {
+        val patch = ConversationPatch(
+            title = ConversationTitle("X").some(),
+            status = none(),
+            schemaVersion = none()
+        )
+        val noneOpt = convoRepo.patchConversation(ConversationId(Uuid.random()), patch)
+        assertTrue(noneOpt.isNone())
+    }
+
+    @Test
+    fun `patchConversation empty patch returns none`() = withRollback {
+        val user = TestFixtures.insertUser(userRepo)
+        val conv = TestFixtures.insertConversation(convoRepo, user.id)
+        val noneOpt = convoRepo.patchConversation(
+            conv.id,
+            ConversationPatch(
+                title = none(),
+                status = none(),
+                schemaVersion = none()
+            )
+        )
+        assertTrue(noneOpt.isNone())
     }
 
     @Test

@@ -83,22 +83,17 @@ class UserAccountRepository(private val dsl: DSLContext) {
     }
 
     internal fun patchUserAccount(userAccountId: UserAccountId, patch: UserAccountPatch): Option<Unit> {
-        val query = mutableMapOf<Field<*>, Any>()
-        if (patch.accountIsActive.isSome()) {
-            query[UserAccounts.USER_ACCOUNTS.ACCOUNT_IS_ACTIVE] = patch.accountIsActive
-        }
-        if (patch.emailAddress.isSome()) {
-            query[UserAccounts.USER_ACCOUNTS.EMAIL_ADDRESS] = patch.emailAddress
-        }
-        if (patch.accountIsActive.isSome()) {
-            query[UserAccounts.USER_ACCOUNTS.SUBSCRIPTION_TIER] = patch.subscriptionTier.map { it.toJooq() }
-        }
+        val updates = mutableMapOf<Field<*>, Any>()
 
-        if (query.isEmpty()) return None
+        patch.accountIsActive.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.ACCOUNT_IS_ACTIVE] = it.value }
+        patch.emailAddress.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.EMAIL_ADDRESS] = it.value }
+        patch.subscriptionTier.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.SUBSCRIPTION_TIER] = it.toJooq() }
+
+        if (updates.isEmpty()) return None
 
         val rowsUpdated: Int = dsl
             .update(UserAccounts.USER_ACCOUNTS)
-            .set(query)
+            .set(updates)
             .where(UserAccounts.USER_ACCOUNTS.ID.eq(userAccountId.value.toJavaUuid()))
             .execute()
 
