@@ -1,16 +1,18 @@
 package io.availe.repositories
 
-import io.availe.infra.TestFixtures
+import io.availe.testutil.TestFixtures
+import io.availe.testutil.db.Jooq
+import io.availe.testutil.tx.withRollback
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class UserAccountRepositoryIT {
 
-    private val repo = UserAccountRepository(io.availe.infra.Jooq.dsl)
+    private val repo = UserAccountRepository(Jooq.dsl)
 
     @Test
-    fun `insert + fetchById round-trip`() {
+    fun `insert + fetchById round-trip`() = withRollback {
         val create = TestFixtures.newUserAccountCreate()
         val insertedEither = repo.insertUserAccount(create)
         assertTrue(insertedEither.isRight())

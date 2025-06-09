@@ -1,4 +1,4 @@
-package io.availe.infra
+package io.availe.testutil.db
 
 import org.testcontainers.containers.PostgreSQLContainer
 

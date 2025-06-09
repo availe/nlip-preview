@@ -1,5 +1,6 @@
-package io.availe.infra
+package io.availe.testutil.db
 
+import io.availe.testutil.TestConfig
 import org.flywaydb.core.Flyway
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -8,17 +9,20 @@ import java.io.File
 import java.sql.DriverManager
 
 object Jooq {
-    private val rootDir: File = File(System.getProperty("user.dir")).let { dir ->
-        if (dir.name == "server") dir.parentFile else dir
+    private val rootDir = File(System.getProperty("user.dir")).let {
+        // if we are inside :server module adjust path one level up
+        if (it.name == "server") it.parentFile else it
     }
     private val migrationPath = "filesystem:${rootDir.absolutePath}/src/main/resources/db/migration"
 
     init {
-        Flyway.configure()
+        val flyway = Flyway.configure()
             .dataSource(Postgres.jdbcUrl, Postgres.username, Postgres.password)
             .locations(migrationPath)
             .load()
-            .migrate()
+
+        if (TestConfig.resetDb) flyway.clean()
+        flyway.migrate()
     }
 
     private val conn = DriverManager.getConnection(Postgres.jdbcUrl, Postgres.username, Postgres.password)
