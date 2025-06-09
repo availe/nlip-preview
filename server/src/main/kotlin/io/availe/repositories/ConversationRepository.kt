@@ -129,12 +129,12 @@ class ConversationRepository(private val dsl: DSLContext) {
     fun patchConversation(conversationId: ConversationId, patch: ConversationPatch): Option<Unit> {
         val query = mutableMapOf<Field<*>, Any>()
 
-        if (patch.title.isSome()) {
-            query[Conversations.CONVERSATIONS.TITLE] = patch.title
+        patch.title.getOrNull()?.let { newTitle ->
+            query[Conversations.CONVERSATIONS.TITLE] = newTitle.value
         }
 
-        if (patch.status.isSome()) {
-            query[Conversations.CONVERSATIONS.STATUS] = patch.status.map { it.toJooq() }
+        patch.status.getOrNull()?.let { newStatus ->
+            query[Conversations.CONVERSATIONS.STATUS] = newStatus.toJooq()
         }
 
         if (query.isEmpty()) return none()
