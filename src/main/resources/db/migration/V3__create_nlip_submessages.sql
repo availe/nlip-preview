@@ -14,7 +14,8 @@ CREATE TABLE nlip_submessages
     CONSTRAINT check_nlip_submessages_content CHECK (
         (format = 'structured' AND content_json IS NOT NULL AND content_text IS NULL)
             OR (format <> 'structured' AND content_text IS NOT NULL AND content_json IS NULL)
-        )
+        ),
+    CONSTRAINT unique_nlip_submessages_message_position UNIQUE (nlip_message_id, position)
 );
 
-CREATE INDEX index_nlip_submessages_message_position ON nlip_submessages (nlip_message_id, position);
+CREATE INDEX index_nlip_submessages_message_id ON nlip_submessages (nlip_message_id);

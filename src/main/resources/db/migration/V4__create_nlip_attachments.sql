@@ -11,7 +11,11 @@ CREATE TABLE nlip_attachments
     CONSTRAINT check_nlip_attachments_parent CHECK (
         (nlip_message_id IS NOT NULL AND nlip_submessage_id IS NULL)
             OR (nlip_message_id IS NULL AND nlip_submessage_id IS NOT NULL)
-        )
+        ),
+    CONSTRAINT uq_nlip_attachments_message_file
+        UNIQUE (nlip_message_id, file_key) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT uq_nlip_attachments_submessage_file
+        UNIQUE (nlip_submessage_id, file_key) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX index_nlip_attachments_message_id ON nlip_attachments (nlip_message_id);

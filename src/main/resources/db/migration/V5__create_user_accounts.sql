@@ -15,3 +15,5 @@ CREATE TABLE user_accounts
     subscription_tier user_subscription_tier_enum NOT NULL,
     schema_version    INTEGER                     NOT NULL
 );
+
+CREATE INDEX idx_user_accounts_subscription_tier ON user_accounts (subscription_tier);

@@ -19,7 +19,7 @@ CREATE TABLE connection_location_aggregates
     subscription_tier user_subscription_tier_enum NOT NULL,
     access_type       user_access_type_enum       NOT NULL,
     connection_count  BIGINT                      NOT NULL,
-    schema_versions   INTEGER                     NOT NULL,
+    schema_version    INTEGER                     NOT NULL,
     PRIMARY KEY (
                  bucket_date,
                  country_code,
