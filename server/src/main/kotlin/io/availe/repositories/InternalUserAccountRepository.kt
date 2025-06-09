@@ -5,13 +5,17 @@ package io.availe.repositories
 import arrow.core.Option
 import arrow.core.none
 import arrow.core.some
+import io.availe.jooq.enums.UserRoleEnum
 import io.availe.jooq.tables.references.INTERNAL_USER_ACCOUNTS
 import io.availe.jooq.tables.references.USER_ACCOUNTS
-import io.availe.models.InternalUserAccount
-import io.availe.models.UserAccountId
+import io.availe.models.*
+import kotlinx.datetime.toKotlinInstant
 import org.jooq.DSLContext
+import java.time.Instant
+import java.time.OffsetDateTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 class InternalUserAccountRepository(
     private val dsl: DSLContext,
@@ -24,33 +28,85 @@ class InternalUserAccountRepository(
             .join(USER_ACCOUNTS).on(INTERNAL_USER_ACCOUNTS.USER_ID.eq(USER_ACCOUNTS.ID))
             .where(INTERNAL_USER_ACCOUNTS.USER_ID.eq(userAccountId.value.toJavaUuid()))
             .fetchOne()
-        
+
         if (record == null) {
             return none()
         }
 
+        val userAccountRecord = record.into(USER_ACCOUNTS)
+        val internalRecord = record.into(INTERNAL_USER_ACCOUNTS)
+
         return InternalUserAccount(
-            userAccount = TODO(),
-            passwordHash = TODO(),
-            twoFactorEnabled = TODO(),
-            twoFactorSecret = TODO(),
-            banTimestamp = TODO(),
-            banReason = TODO(),
-            failedLoginAttemptCount = TODO(),
-            lastFailedLoginTimestamp = TODO(),
-            accountLockedUntilTimestamp = TODO(),
-            accountCreationTimestamp = TODO(),
-            lastPasswordChangeTimestamp = TODO(),
-            lastLoginTimestamp = TODO(),
-            lastSeenTimestamp = TODO(),
-            registrationIpAddress = TODO(),
-            lastLoginIpAddress = TODO(),
-            previousLoginIpAddresses = TODO(),
-            knownDeviceTokens = TODO(),
-            lastModifiedByUserId = TODO(),
-            lastModifiedTimestamp = TODO(),
-            userRole = TODO(),
-            schemaVersion = TODO()
+            userAccount = userAccountRecord.toUserAccountModel(),
+            passwordHash = PasswordHash(internalRecord.passwordHash),
+            twoFactorEnabled = TwoFactorEnabled(internalRecord.twoFactorEnabled),
+            twoFactorSecret = Option
+                .fromNullable(internalRecord.twoFactorSecret)
+                .map(::TwoFactorSecret),
+            banTimestamp = Option
+                .fromNullable(internalRecord.banTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::BanTimestamp),
+            banReason = Option
+                .fromNullable(internalRecord.banReason)
+                .map(::BanReason),
+            failedLoginAttemptCount = FailedLoginAttemptCount(internalRecord.failedLoginAttemptCount),
+            lastFailedLoginTimestamp = Option
+                .fromNullable(internalRecord.lastFailedLoginTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::LastFailedLoginTimestamp),
+            accountLockedUntilTimestamp = Option
+                .fromNullable(internalRecord.accountCreationTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::AccountLockedUntilTimestamp),
+            accountCreationTimestamp = AccountCreationTimestamp(
+                internalRecord.accountCreationTimestamp.toInstant().toKotlinInstant()
+            ),
+            lastPasswordChangeTimestamp = Option
+                .fromNullable(internalRecord.lastPasswordChangeTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::LastPasswordChangeTimestamp),
+            lastLoginTimestamp = Option
+                .fromNullable(internalRecord.lastPasswordChangeTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::LastLoginTimestamp),
+            lastSeenTimestamp = Option
+                .fromNullable(internalRecord.lastSeenTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::LastSeenTimestamp),
+            lastModifiedByUserId = Option
+                .fromNullable(internalRecord.lastModifiedByUserId)
+                .map { it.toKotlinUuid() }
+                .map(::UserAccountId),
+            lastModifiedTimestamp = Option
+                .fromNullable(internalRecord.lastModifiedTimestamp)
+                .map(OffsetDateTime::toInstant)
+                .map(Instant::toKotlinInstant)
+                .map(::LastModifiedTimestamp),
+            userRole = internalRecord.userRole.toModel(),
+            schemaVersion = InternalUserAccountSchemaVersion(internalRecord.schemaVersion)
         ).some()
+    }
+}
+
+private fun InternalUserAccount.UserRole.toJooq() {
+    when (this) {
+        InternalUserAccount.UserRole.FREE_USER -> UserRoleEnum.free_user
+        InternalUserAccount.UserRole.PAID_USER -> UserRoleEnum.paid_user
+        InternalUserAccount.UserRole.ADMIN -> UserRoleEnum.admin
+    }
+}
+
+private fun UserRoleEnum.toModel(): InternalUserAccount.UserRole {
+    return when (this) {
+        UserRoleEnum.free_user -> InternalUserAccount.UserRole.FREE_USER
+        UserRoleEnum.paid_user -> InternalUserAccount.UserRole.PAID_USER
+        UserRoleEnum.admin -> InternalUserAccount.UserRole.ADMIN
     }
 }
