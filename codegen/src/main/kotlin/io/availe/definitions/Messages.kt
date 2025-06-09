@@ -5,29 +5,20 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.core.codegen
 
 fun generateMessageModels() {
-    val LIST = ClassName("kotlin.collections", "List")
-    val nlipMsgAttachList = LIST.parameterizedBy(ClassName("io.availe.models", "NlipMessageAttachment"))
-    val nlipSubmsgAttachList = LIST.parameterizedBy(ClassName("io.availe.models", "NlipSubmessageAttachment"))
-    val nlipSubmsgList = LIST.parameterizedBy(ClassName("io.availe.models", "NlipSubmessage"))
+    val listType = ClassName("kotlin.collections", "List")
+    val nlipAttachmentListType = listType.parameterizedBy(ClassName("io.availe.models", "NlipAttachment"))
+    val nlipSubmessageListType = listType.parameterizedBy(ClassName("io.availe.models", "NlipSubmessage"))
 
-    val spec = codegen {
-        model("NlipMessageAttachment") {
+    val codegenSpecification = codegen {
+        model("NlipAttachment") {
             prop("id", "AttachmentId", inCreate = false, inPatch = false)
-            prop("nlipMessageId", "NlipMessageId", inPatch = false)
+            prop("nlipMessageId", "NlipMessageId", nullable = true, inCreate = false, inPatch = false)
+            prop("nlipSubmessageId", "NlipSubmessageId", nullable = true, inCreate = false, inPatch = false)
             prop("fileKey", "FileKey")
             prop("contentType", "ContentType")
             prop("fileSizeBytes", "FileSizeBytes")
             prop("createdAt", "CreatedAt", inCreate = false, inPatch = false)
             prop("schemaVersion", "NlipMessageAttachmentSchemaVersion", inCreate = false, inPatch = false)
-        }
-        model("NlipSubmessageAttachment") {
-            prop("id", "AttachmentId", inCreate = false, inPatch = false)
-            prop("nlipSubmessageId", "NlipSubmessageId", inPatch = false)
-            prop("fileKey", "FileKey")
-            prop("contentType", "ContentType")
-            prop("fileSizeBytes", "FileSizeBytes")
-            prop("createdAt", "CreatedAt", inCreate = false, inPatch = false)
-            prop("schemaVersion", "NlipSubmessageAttachmentSchemaVersion", inCreate = false, inPatch = false)
         }
         model("NlipSubmessage") {
             prop("id", "NlipSubmessageId", inCreate = false, inPatch = false)
@@ -41,7 +32,7 @@ fun generateMessageModels() {
             prop("updatedAt", "UpdatedAt", inCreate = false, inPatch = false)
             prop("schemaVersion", "NlipSubmessageSchemaVersion", inCreate = false, inPatch = false)
             prop("label", "Label", nullable = true)
-            prop("attachments", nlipSubmsgAttachList)
+            prop("attachments", nlipAttachmentListType)
         }
         model("NlipMessage") {
             prop("id", "NlipMessageId", inCreate = false, inPatch = false)
@@ -54,8 +45,8 @@ fun generateMessageModels() {
             prop("schemaVersion", "NlipMessageSchemaVersion", inCreate = false, inPatch = false)
             prop("messageType", "MessageType", nullable = true, inPatch = false)
             prop("label", "Label", nullable = true)
-            prop("attachments", nlipMsgAttachList)
-            prop("submessages", nlipSubmsgList)
+            prop("attachments", nlipAttachmentListType)
+            prop("submessages", nlipSubmessageListType)
         }
         model("InternalMessage") {
             prop("id", "InternalMessageId", inCreate = false, inPatch = false)
@@ -74,5 +65,5 @@ fun generateMessageModels() {
             prop("schemaVersion", "InternalMessageSchemaVersion", inCreate = true, inPatch = true)
         }
     }
-    writeSharedModels(spec)
+    writeSharedModels(codegenSpecification)
 }
