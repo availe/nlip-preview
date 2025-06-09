@@ -85,6 +85,8 @@ class UserAccountRepository(private val dsl: DSLContext) {
     internal fun patchUserAccount(userAccountId: UserAccountId, patch: UserAccountPatch): Option<Unit> {
         val updates = mutableMapOf<Field<*>, Any>()
 
+        patch.username.getOrNull()
+            ?.let { newUsername -> updates[UserAccounts.USER_ACCOUNTS.USERNAME] = newUsername.value }
         patch.accountIsActive.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.ACCOUNT_IS_ACTIVE] = it.value }
         patch.emailAddress.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.EMAIL_ADDRESS] = it.value }
         patch.subscriptionTier.getOrNull()?.let { updates[UserAccounts.USER_ACCOUNTS.SUBSCRIPTION_TIER] = it.toJooq() }
