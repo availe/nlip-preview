@@ -17,6 +17,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
+sealed class InternalUserAccountError {
+    object UserAlreadyExists : UserAccountError()
+}
+
 class InternalUserAccountRepository(
     private val dsl: DSLContext,
     private val userAccountRepository: UserAccountRepository
@@ -93,6 +97,8 @@ class InternalUserAccountRepository(
             schemaVersion = InternalUserAccountSchemaVersion(internalRecord.schemaVersion)
         ).some()
     }
+
+    fun insert(create: InternalUserAccountCreate): InternalUserAccount {}
 }
 
 private fun InternalUserAccount.UserRole.toJooq() {

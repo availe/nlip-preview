@@ -6,7 +6,7 @@ CREATE TYPE user_role_enum AS ENUM (
 
 CREATE TABLE internal_user_accounts
 (
-    user_id                        UUID PRIMARY KEY REFERENCES user_accounts (id) ON DELETE CASCADE,
+    user_id                        UUID PRIMARY KEY REFERENCES user_accounts (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     password_hash                  TEXT           NOT NULL,
     two_factor_enabled             BOOLEAN        NOT NULL,
     two_factor_secret              TEXT,
@@ -27,3 +27,10 @@ CREATE TABLE internal_user_accounts
 );
 
 CREATE INDEX index_internal_user_accounts_last_modified_by_user_id ON internal_user_accounts (last_modified_by_user_id);
+
+ALTER TABLE user_accounts
+    ADD CONSTRAINT fk_user_accounts_requires_internal_user_account
+        FOREIGN KEY (id)
+            REFERENCES internal_user_accounts (user_id)
+            ON DELETE CASCADE
+            DEFERRABLE INITIALLY DEFERRED;
