@@ -34,7 +34,7 @@ fun Application.module() {
 
     val dsl = DatabaseFactory.createDsl(environment)
     val conversationRepo = ConversationRepository(dsl)
-    
+
     val httpClient = HttpClientProvider.httpClient
     val internalChat = OllamaClient(httpClient)
     val externalChat = NLIPClient(httpClient, Url("http://localhost:8004"))
