@@ -6,8 +6,9 @@ import arrow.core.Option
 import arrow.core.none
 import arrow.core.some
 import io.availe.jooq.enums.ConversationStatusTypeEnum
-import io.availe.jooq.tables.Conversations
+import io.availe.jooq.tables.references.CONVERSATIONS
 import io.availe.models.*
+import io.availe.repositories.utils.putIfSome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -22,9 +23,9 @@ import kotlin.uuid.toKotlinUuid
 class ConversationRepository(private val dsl: DSLContext) {
     fun fetchAllUserConversationIds(userAccountId: UserAccountId): Option<List<ConversationId>> {
         val records = dsl
-            .select(Conversations.CONVERSATIONS.ID)
-            .from(Conversations.CONVERSATIONS)
-            .where(Conversations.CONVERSATIONS.OWNER_ID.eq(userAccountId.value.toJavaUuid()))
+            .select(CONVERSATIONS.ID)
+            .from(CONVERSATIONS)
+            .where(CONVERSATIONS.OWNER_ID.eq(userAccountId.value.toJavaUuid()))
             .fetch()
 
         if (records.isEmpty()) {
@@ -38,8 +39,8 @@ class ConversationRepository(private val dsl: DSLContext) {
 
     fun fetchConversationById(conversationId: ConversationId): Option<Conversation> {
         val record = dsl
-            .selectFrom(Conversations.CONVERSATIONS)
-            .where(Conversations.CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
+            .selectFrom(CONVERSATIONS)
+            .where(CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
             .fetchOne()
 
         if (record == null) {
@@ -59,8 +60,8 @@ class ConversationRepository(private val dsl: DSLContext) {
 
     fun streamAllUserConversations(userAccountId: UserAccountId): Flow<Conversation> = flow {
         val cursor = dsl
-            .selectFrom(Conversations.CONVERSATIONS)
-            .where(Conversations.CONVERSATIONS.OWNER_ID.eq(userAccountId.value.toJavaUuid()))
+            .selectFrom(CONVERSATIONS)
+            .where(CONVERSATIONS.OWNER_ID.eq(userAccountId.value.toJavaUuid()))
             .fetchSize(100)
             .fetchLazy()
         try {
@@ -89,19 +90,19 @@ class ConversationRepository(private val dsl: DSLContext) {
         )
 
         val record = dsl
-            .insertInto(Conversations.CONVERSATIONS)
-            .set(Conversations.CONVERSATIONS.TITLE, create.title.value)
-            .set(Conversations.CONVERSATIONS.OWNER_ID, create.ownerId.value.toJavaUuid())
-            .set(Conversations.CONVERSATIONS.STATUS, create.status.toJooq())
-            .set(Conversations.CONVERSATIONS.SCHEMA_VERSION, create.schemaVersion.value)
+            .insertInto(CONVERSATIONS)
+            .set(CONVERSATIONS.TITLE, create.title.value)
+            .set(CONVERSATIONS.OWNER_ID, create.ownerId.value.toJavaUuid())
+            .set(CONVERSATIONS.STATUS, create.status.toJooq())
+            .set(CONVERSATIONS.SCHEMA_VERSION, create.schemaVersion.value)
             .returning(
-                Conversations.CONVERSATIONS.ID,
-                Conversations.CONVERSATIONS.TITLE,
-                Conversations.CONVERSATIONS.OWNER_ID,
-                Conversations.CONVERSATIONS.STATUS,
-                Conversations.CONVERSATIONS.SCHEMA_VERSION,
-                Conversations.CONVERSATIONS.CREATED_AT,
-                Conversations.CONVERSATIONS.UPDATED_AT
+                CONVERSATIONS.ID,
+                CONVERSATIONS.TITLE,
+                CONVERSATIONS.OWNER_ID,
+                CONVERSATIONS.STATUS,
+                CONVERSATIONS.SCHEMA_VERSION,
+                CONVERSATIONS.CREATED_AT,
+                CONVERSATIONS.UPDATED_AT
             )
             .fetchOne()
             ?: throw IllegalStateException("Failed to insert conversation")
@@ -119,8 +120,8 @@ class ConversationRepository(private val dsl: DSLContext) {
 
     fun deleteConversationById(conversationId: ConversationId): Option<Unit> {
         val rowsDeleted: Int = dsl
-            .deleteFrom(Conversations.CONVERSATIONS)
-            .where(Conversations.CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
+            .deleteFrom(CONVERSATIONS)
+            .where(CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
             .execute()
 
         return if (rowsDeleted > 0) Unit.some() else none()
@@ -129,15 +130,15 @@ class ConversationRepository(private val dsl: DSLContext) {
     fun patchConversation(conversationId: ConversationId, patch: ConversationPatch): Option<Unit> {
         val updates = mutableMapOf<Field<*>, Any>()
 
-        updates.putIfSome(patch.title, Conversations.CONVERSATIONS.TITLE) { it.value }
-        updates.putIfSome(patch.status, Conversations.CONVERSATIONS.STATUS) { it.toJooq() }
+        updates.putIfSome(patch.title, CONVERSATIONS.TITLE) { it.value }
+        updates.putIfSome(patch.status, CONVERSATIONS.STATUS) { it.toJooq() }
 
         if (updates.isEmpty()) return none()
 
         val rowsUpdated: Int = dsl
-            .update(Conversations.CONVERSATIONS)
+            .update(CONVERSATIONS)
             .set(updates)
-            .where(Conversations.CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
+            .where(CONVERSATIONS.ID.eq(conversationId.value.toJavaUuid()))
             .execute()
 
         return if (rowsUpdated > 0) Unit.some() else none()

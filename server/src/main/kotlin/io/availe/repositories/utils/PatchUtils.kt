@@ -1,4 +1,4 @@
-package io.availe.repositories
+package io.availe.repositories.utils
 
 import arrow.core.Option
 import org.jooq.Field
