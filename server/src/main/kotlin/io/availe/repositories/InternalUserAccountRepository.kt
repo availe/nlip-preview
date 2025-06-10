@@ -2,6 +2,7 @@
 
 package io.availe.repositories
 
+import arrow.core.Either
 import arrow.core.Option
 import arrow.core.none
 import arrow.core.some
@@ -98,8 +99,16 @@ class InternalUserAccountRepository(
         ).some()
     }
 
-    fun insert(create: InternalUserAccountCreate): InternalUserAccount {
-        val userAccount = userAccountRepository.insertUserAccount(create.userAccount)
+    fun insert(create: InternalUserAccountCreate): Either<InternalUserAccountError, InternalUserAccount> {
+        val userAccount = userAccountRepository.insertUserAccount(create.userAccountCreate)
+
+        val record = dsl
+            .insertInto(INTERNAL_USER_ACCOUNTS)
+            .set(INTERNAL_USER_ACCOUNTS.USER_ID, userAccount.getOrNull()!!.id.value.toJavaUuid())
+            .set(INTERNAL_USER_ACCOUNTS.PASSWORD_HASH, create.passwordHash.value)
+            .set(INTERNAL_USER_ACCOUNTS.TWO_FACTOR_ENABLED, create.twoFactorEnabled.value)
+            .set(INTERNAL_USER_ACCOUNTS.TWO_FACTOR_SECRET, create.twoFactorSecret.getOrNull()?.value)
+        TODO()
     }
 }
 
