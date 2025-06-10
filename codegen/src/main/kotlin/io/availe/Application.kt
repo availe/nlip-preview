@@ -1,8 +1,20 @@
-package io.availe.core
+package io.availe
 
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.typeNameOf
+import io.availe.core.Model
+import io.availe.core.Module
+import io.availe.core.Property
+import io.availe.core.Replication
+import io.availe.generators.generateDataClasses
+import io.availe.generators.generateValueClasses
+import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
+
+object Paths {
+    
+    val sharedRoot = File("../shared/build/generated-src/kotlin-poet")
+    val serverRoot = File("../server/build/generated-src/kotlin-poet")
+}
 
 @OptIn(ExperimentalUuidApi::class)
 fun main() {
@@ -47,27 +59,6 @@ fun main() {
 
     val modelDefinitions = listOf(messageModelDefinition, internalMessageModelDefinition)
 
-    modelDefinitions.forEach { model ->
-        generateValueClasses(model).forEach { vcSpec ->
-            FileSpec.builder(packageName, vcSpec.name!!)
-                .addType(vcSpec)
-                .build()
-                .writeTo(System.out)
-        }
-
-        listOf(Variant.BASE, Variant.CREATE, Variant.PATCH).forEach { variant ->
-            val props = when (variant) {
-                Variant.BASE -> fieldsForBase(model)
-                Variant.CREATE -> fieldsForCreate(model)
-                Variant.PATCH -> fieldsForPatch(model)
-            }
-            val className = model.name + variant.suffix
-            val typeSpec = generateDataClass(model, props, variant)
-
-            FileSpec.builder(packageName, className)
-                .addType(typeSpec)
-                .build()
-                .writeTo(System.out)
-        }
-    }
+    generateValueClasses(modelDefinitions)
+    generateDataClasses(modelDefinitions)
 }

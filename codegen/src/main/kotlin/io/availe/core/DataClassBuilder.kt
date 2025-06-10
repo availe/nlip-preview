@@ -5,30 +5,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 const val packageName: String = "io.availe.models"
 
-fun generateValueClasses(modelParameter: Model): List<TypeSpec> =
-    modelParameter.properties.mapNotNull { prop ->
-        if (prop is Property.Property) {
-            val className = modelParameter.name +
-                    prop.name.replaceFirstChar { it.uppercaseChar() }
-            TypeSpec.classBuilder(className)
-                .addAnnotation(JvmInline::class)
-                .addModifiers(KModifier.VALUE)
-                .primaryConstructor(
-                    FunSpec.constructorBuilder()
-                        .addParameter(prop.name, prop.underlyingType)
-                        .build()
-                )
-                .addProperty(
-                    PropertySpec.builder(prop.name, prop.underlyingType)
-                        .initializer(prop.name)
-                        .build()
-                )
-                .build()
-        } else null
-    }
-
-fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
-    val suffix: String = variant.suffix
+fun resolvedTypeName(modelParameter: Model, property: Property): TypeName {
     val type = when (property) {
         is Property.Property ->
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
@@ -41,7 +18,7 @@ fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant
             // e.g. prop.name = "message" → "Message"
             ClassName(
                 packageName = packageName,
-                property.name.replaceFirstChar { it.uppercaseChar() } + suffix
+                property.name.replaceFirstChar { it.uppercaseChar() }
             )
     }
 
@@ -58,13 +35,13 @@ fun generateDataClass(modelParameter: Model, propertyList: List<Property>, varia
         propertyList.forEach { propertyItem ->
             addParameter(
                 propertyItem.name,
-                resolvedTypeName(modelParameter, propertyItem, variant = variant)
+                resolvedTypeName(modelParameter, propertyItem)
             )
         }
     }.build()
 
     val propertySpecs = propertyList.map { propertyItem ->
-        val typeName = resolvedTypeName(modelParameter, propertyItem, variant = variant)
+        val typeName = resolvedTypeName(modelParameter, propertyItem)
         val propertyBuilder = PropertySpec.builder(
             propertyItem.name,
             typeName
