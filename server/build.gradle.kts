@@ -64,7 +64,7 @@ kotlin {
         }
 //        create("jooq") {
 //            kotlin.srcDir("src/jooq/kotlin")
-//        }
+//        }f
     }
 }
 
@@ -224,11 +224,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     archiveClassifier.set("all")
     archiveVersion.set("")
     mergeServiceFiles()
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    dependsOn(project(":shared").tasks.named("openApiGenerate"))
-    dependsOn(generateServerModels)
 }
 
 tasks.named("generateJooq") {
