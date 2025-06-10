@@ -1,13 +1,13 @@
 package io.availe.utils
 
 import io.availe.Paths
-import io.availe.core.Model
-import io.availe.core.Module
-import io.availe.core.Property
-import io.availe.core.Replication
+import io.availe.models.Model
+import io.availe.models.Module
+import io.availe.models.Property
+import io.availe.models.Replication
 import java.io.File
 
-fun outputDirForModule(module: io.availe.core.Module): File =
+fun outputDirForModule(module: Module): File =
     when (module) {
         Module.SHARED -> Paths.sharedRoot
         Module.SERVER -> Paths.serverRoot

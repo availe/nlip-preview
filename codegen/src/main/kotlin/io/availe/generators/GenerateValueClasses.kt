@@ -1,10 +1,10 @@
 package io.availe.generators
 
 import com.squareup.kotlinpoet.FileSpec
-import io.availe.core.Model
-import io.availe.core.Property
-import io.availe.core.buildValueClass
-import io.availe.core.packageName
+import io.availe.builders.buildValueClass
+import io.availe.builders.packageName
+import io.availe.models.Model
+import io.availe.models.Property
 import io.availe.utils.outputDirForModule
 
 fun generateValueClasses(models: List<Model>) {

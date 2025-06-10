@@ -1,17 +1,17 @@
 package io.availe
 
 import com.squareup.kotlinpoet.typeNameOf
-import io.availe.core.Model
-import io.availe.core.Module
-import io.availe.core.Property
-import io.availe.core.Replication
 import io.availe.generators.generateDataClasses
 import io.availe.generators.generateValueClasses
+import io.availe.models.Model
+import io.availe.models.Module
+import io.availe.models.Property
+import io.availe.models.Replication
 import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
 
 object Paths {
-    
+
     val sharedRoot = File("../shared/build/generated-src/kotlin-poet")
     val serverRoot = File("../server/build/generated-src/kotlin-poet")
 }

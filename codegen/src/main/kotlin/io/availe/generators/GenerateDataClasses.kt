@@ -1,10 +1,10 @@
 package io.availe.generators
 
 import com.squareup.kotlinpoet.FileSpec
-import io.availe.core.Model
-import io.availe.core.Variant
-import io.availe.core.generateDataClass
-import io.availe.core.packageName
+import io.availe.builders.generateDataClass
+import io.availe.builders.packageName
+import io.availe.models.Model
+import io.availe.models.Variant
 import io.availe.utils.fieldsForBase
 import io.availe.utils.fieldsForCreate
 import io.availe.utils.fieldsForPatch

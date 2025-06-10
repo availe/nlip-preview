@@ -1,7 +1,10 @@
-package io.availe.core
+package io.availe.builders
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.availe.models.Model
+import io.availe.models.Property
+import io.availe.models.Variant
 
 const val packageName: String = "io.availe.models"
 
