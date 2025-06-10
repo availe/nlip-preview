@@ -1,5 +1,6 @@
 package io.availe.core
 
+import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.typeNameOf
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -46,23 +47,27 @@ fun main() {
 
     val modelDefinitions = listOf(messageModelDefinition, internalMessageModelDefinition)
 
-    modelDefinitions.forEach { modelParameter ->
-        val baseProperties: List<Property> = fieldsForBase(modelParameter)
-        val createProperties: List<Property> = fieldsForCreate(modelParameter)
-        val patchProperties: List<Property> = fieldsForPatch(modelParameter)
+    modelDefinitions.forEach { model ->
+        generateValueClasses(model).forEach { vcSpec ->
+            FileSpec.builder(packageName, vcSpec.name!!)
+                .addType(vcSpec)
+                .build()
+                .writeTo(System.out)
+        }
 
-        println("Generating for ${modelParameter.name}")
-        println("Base:")
-        baseProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.BASE) }
-        println("Create:")
-        createProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.CREATE) }
-        println("Patch:")
-        patchProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.PATCH) }
-        println("---")
+        listOf(Variant.BASE, Variant.CREATE, Variant.PATCH).forEach { variant ->
+            val props = when (variant) {
+                Variant.BASE -> fieldsForBase(model)
+                Variant.CREATE -> fieldsForCreate(model)
+                Variant.PATCH -> fieldsForPatch(model)
+            }
+            val className = model.name + variant.suffix
+            val typeSpec = generateDataClass(model, props, variant)
+
+            FileSpec.builder(packageName, className)
+                .addType(typeSpec)
+                .build()
+                .writeTo(System.out)
+        }
     }
-}
-
-fun helper(model: Model, property: Property, variant: Variant) {
-    val typeName = resolvedTypeName(model, property, variant)
-    println(" - ${property.name}: $typeName")
 }

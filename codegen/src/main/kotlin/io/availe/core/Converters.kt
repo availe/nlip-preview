@@ -4,17 +4,27 @@ import com.squareup.kotlinpoet.*
 
 const val packageName: String = "io.availe.models"
 
-fun convertToPropertySpec(property: Property): PropertySpec {
-    return when (property) {
-        is Property.Property -> PropertySpec.builder(property.name, property.underlyingType)
-            .initializer(property.name)
-            .build()
-
-        is Property.ForeignProperty -> PropertySpec.builder(property.name, property.property.underlyingType)
-            .initializer(property.name)
-            .build()
+fun generateValueClasses(modelParameter: Model): List<TypeSpec> =
+    modelParameter.properties.mapNotNull { prop ->
+        if (prop is Property.Property) {
+            val className = modelParameter.name +
+                    prop.name.replaceFirstChar { it.uppercaseChar() }
+            TypeSpec.classBuilder(className)
+                .addAnnotation(JvmInline::class)
+                .addModifiers(KModifier.VALUE)
+                .primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addParameter(prop.name, prop.underlyingType)
+                        .build()
+                )
+                .addProperty(
+                    PropertySpec.builder(prop.name, prop.underlyingType)
+                        .initializer(prop.name)
+                        .build()
+                )
+                .build()
+        } else null
     }
-}
 
 fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
     val suffix: String = variant.suffix
