@@ -42,7 +42,6 @@ buildkonfig {
     }
 }
 
-
 kotlin {
     jvmToolchain(21)
 
@@ -87,6 +86,7 @@ kotlin {
                     .dir("generated-src/kotlin-poet")
             )
             dependencies {
+                implementation(project(":model-ksp-processor"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)

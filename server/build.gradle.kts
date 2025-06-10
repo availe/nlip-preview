@@ -42,6 +42,7 @@ plugins {
     alias(libs.plugins.flyway)
     alias(libs.plugins.shadow)
     alias(libs.plugins.kotlinx.rpc.plugin)
+    alias(libs.plugins.ksp)
     id("org.jetbrains.kotlin.kapt")
     application
 }
@@ -75,6 +76,7 @@ application {
 }
 
 dependencies {
+    ksp(project(":model-ksp-processor"))
     implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
