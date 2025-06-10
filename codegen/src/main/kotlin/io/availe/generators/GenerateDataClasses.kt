@@ -1,7 +1,13 @@
 package io.availe.generators
 
 import com.squareup.kotlinpoet.FileSpec
-import io.availe.core.*
+import io.availe.core.Model
+import io.availe.core.Variant
+import io.availe.core.generateDataClass
+import io.availe.core.packageName
+import io.availe.utils.fieldsForBase
+import io.availe.utils.fieldsForCreate
+import io.availe.utils.fieldsForPatch
 import io.availe.utils.outputDirForModule
 
 fun generateDataClasses(models: List<Model>) {

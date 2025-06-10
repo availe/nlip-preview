@@ -69,16 +69,3 @@ fun generateDataClass(modelParameter: Model, propertyList: List<Property>, varia
 
     return typeSpecBuilder.build()
 }
-
-fun fieldsForBase(modelParameter: Model): List<Property> =
-    modelParameter.properties
-
-fun fieldsForCreate(modelParameter: Model): List<Property> =
-    modelParameter.properties.filter { propertyItem ->
-        propertyItem.replication == Replication.CREATE || propertyItem.replication == Replication.BOTH
-    }
-
-fun fieldsForPatch(modelParameter: Model): List<Property> =
-    modelParameter.properties.filter { propertyItem ->
-        propertyItem.replication == Replication.PATCH || propertyItem.replication == Replication.BOTH
-    }
