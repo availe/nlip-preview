@@ -16,21 +16,21 @@ fun convertToPropertySpec(property: Property): PropertySpec {
     }
 }
 
-private fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
+fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
     val suffix: String = variant.suffix
     return when (property) {
         is Property.Property ->
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
             ClassName(
                 packageName = packageName,
-                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() + suffix }
+                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() }
             )
 
         is Property.ForeignProperty ->
             // e.g. prop.name = "message" → "Message"
             ClassName(
                 packageName = packageName,
-                property.name.replaceFirstChar { it.uppercaseChar() }
+                property.name.replaceFirstChar { it.uppercaseChar() } + suffix
             )
     }
 }

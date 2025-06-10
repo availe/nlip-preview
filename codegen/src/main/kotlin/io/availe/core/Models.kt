@@ -8,8 +8,8 @@ enum class Replication { NONE, PATCH, CREATE, BOTH }
 
 enum class Variant(val suffix: String) {
     BASE(""),
-    CREATE("Create"),
-    PATCH("Patch")
+    CREATE("CreateRequest"),
+    PATCH("PatchRequest")
 }
 
 sealed class Property {

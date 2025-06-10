@@ -53,20 +53,16 @@ fun main() {
 
         println("Generating for ${modelParameter.name}")
         println("Base:")
-        baseProperties.forEach { propertyItem -> helper(propertyItem) }
+        baseProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.BASE) }
         println("Create:")
-        baseProperties.forEach { propertyItem -> helper(propertyItem) }
+        createProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.CREATE) }
         println("Patch:")
-        baseProperties.forEach { propertyItem -> helper(propertyItem) }
+        patchProperties.forEach { propertyItem -> helper(modelParameter, propertyItem, Variant.PATCH) }
         println("---")
     }
 }
 
-fun helper(property: Property) {
-    val type = when (property) {
-        is Property.Property -> property.underlyingType.toString()
-        is Property.ForeignProperty -> property.property.underlyingType.toString()
-    }
-
-    println(" - ${property.name}: $type")
+fun helper(model: Model, property: Property, variant: Variant) {
+    val typeName = resolvedTypeName(model, property, variant)
+    println(" - ${property.name}: $typeName")
 }
