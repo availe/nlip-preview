@@ -14,7 +14,7 @@ fun main() {
                 name = "id",
                 underlyingType = typeNameOf<String>(),
                 optional = false,
-                replication = Replication.PATCH
+                replication = Replication.PATCH,
             )
         ),
         replication = Replication.PATCH
