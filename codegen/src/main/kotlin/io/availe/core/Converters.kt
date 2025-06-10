@@ -64,19 +64,33 @@ fun generateDataClass(modelParameter: Model, propertyList: List<Property>, varia
     }.build()
 
     val propertySpecs = propertyList.map { propertyItem ->
-        PropertySpec.builder(
+        val typeName = resolvedTypeName(modelParameter, propertyItem, variant = variant)
+        val propertyBuilder = PropertySpec.builder(
             propertyItem.name,
-            resolvedTypeName(modelParameter, propertyItem, variant = variant)
-        )
-            .initializer(propertyItem.name)
-            .build()
+            typeName
+        ).initializer(propertyItem.name)
+
+        if (modelParameter.contextual && propertyItem.optional) {
+            propertyBuilder.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Contextual"))
+                    .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
+                    .build()
+            )
+        }
+
+        propertyBuilder.build()
     }
 
-    return TypeSpec.classBuilder(modelParameter.name)
+    val typeSpecBuilder = TypeSpec.classBuilder(modelParameter.name)
         .addModifiers(KModifier.DATA)
         .primaryConstructor(constructorBuilder)
         .addProperties(propertySpecs)
-        .build()
+
+    if (modelParameter.contextual) {
+        typeSpecBuilder.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+    }
+
+    return typeSpecBuilder.build()
 }
 
 fun fieldsForBase(modelParameter: Model): List<Property> =
