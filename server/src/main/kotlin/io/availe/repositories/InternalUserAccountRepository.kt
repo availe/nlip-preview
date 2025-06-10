@@ -68,7 +68,7 @@ class InternalUserAccountRepository(
                 .map(Instant::toKotlinInstant)
                 .map(::AccountLockedUntilTimestamp),
             accountCreationTimestamp = AccountCreationTimestamp(
-                internalRecord.accountCreationTimestamp.toInstant().toKotlinInstant()
+                internalRecord.accountCreationTimestamp!!.toInstant().toKotlinInstant()
             ),
             lastPasswordChangeTimestamp = Option
                 .fromNullable(internalRecord.lastPasswordChangeTimestamp)

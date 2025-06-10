@@ -11,11 +11,11 @@ CREATE TABLE internal_user_accounts
             ON DELETE CASCADE
             DEFERRABLE INITIALLY DEFERRED,
     password_hash                  TEXT                     NOT NULL,
-    two_factor_enabled             BOOLEAN                  NOT NULL,
+    two_factor_enabled             BOOLEAN                  NOT NULL DEFAULT FALSE,
     two_factor_secret              TEXT,
     ban_timestamp                  TIMESTAMP WITH TIME ZONE,
     ban_reason                     TEXT,
-    failed_login_attempt_count     INTEGER                  NOT NULL,
+    failed_login_attempt_count     INTEGER                  NOT NULL DEFAULT 0,
     last_failed_login_timestamp    TIMESTAMP WITH TIME ZONE,
     account_locked_until_timestamp TIMESTAMP WITH TIME ZONE,
     account_creation_timestamp     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
