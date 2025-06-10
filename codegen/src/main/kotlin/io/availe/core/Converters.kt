@@ -23,14 +23,14 @@ private fun resolvedTypeName(modelParameter: Model, property: Property, variant:
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
             ClassName(
                 packageName = packageName,
-                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() }
+                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() + suffix }
             )
 
         is Property.ForeignProperty ->
             // e.g. prop.name = "message" → "Message"
             ClassName(
                 packageName = packageName,
-                property.name.replaceFirstChar { it.uppercaseChar() + suffix }
+                property.name.replaceFirstChar { it.uppercaseChar() }
             )
     }
 }

@@ -13,10 +13,10 @@ fun main() {
                 name = "id",
                 underlyingType = typeNameOf<String>(),
                 optional = false,
-                replication = Replication.CREATE
+                replication = Replication.PATCH
             )
         ),
-        replication = Replication.NONE
+        replication = Replication.PATCH
     )
 
     val internalMessageModelDefinition = Model(
@@ -53,11 +53,20 @@ fun main() {
 
         println("Generating for ${modelParameter.name}")
         println("Base:")
-        baseProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
+        baseProperties.forEach { propertyItem -> helper(propertyItem) }
         println("Create:")
-        createProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
+        baseProperties.forEach { propertyItem -> helper(propertyItem) }
         println("Patch:")
-        patchProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
+        baseProperties.forEach { propertyItem -> helper(propertyItem) }
         println("---")
     }
+}
+
+fun helper(property: Property) {
+    val type = when (property) {
+        is Property.Property -> property.underlyingType.toString()
+        is Property.ForeignProperty -> property.property.underlyingType.toString()
+    }
+
+    println(" - ${property.name}: $type")
 }
