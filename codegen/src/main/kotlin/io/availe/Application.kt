@@ -7,11 +7,11 @@ import io.availe.models.Model
 import io.availe.models.Module
 import io.availe.models.Property
 import io.availe.models.Replication
+import io.availe.utils.validateModelReplications
 import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
 
 object Paths {
-
     val sharedRoot = File("../shared/build/generated-src/kotlin-poet")
     val serverRoot = File("../server/build/generated-src/kotlin-poet")
 }
@@ -59,6 +59,7 @@ fun main() {
 
     val modelDefinitions = listOf(messageModelDefinition, internalMessageModelDefinition)
 
+    validateModelReplications(modelDefinitions)
     generateValueClasses(modelDefinitions)
     generateDataClasses(modelDefinitions)
 }
