@@ -16,14 +16,12 @@ sealed class Property {
     abstract val name: String
     abstract val optional: Boolean
     abstract val replication: Replication
-    abstract val contextual: Boolean
 
     data class Property(
         override val name: String,
         val underlyingType: TypeName,
         override val optional: Boolean,
         override val replication: Replication,
-        override val contextual: Boolean
     ) : io.availe.core.Property()
 
     data class ForeignProperty(
@@ -31,7 +29,6 @@ sealed class Property {
         val property: Property,
         override val optional: Boolean,
         override val replication: Replication,
-        override val contextual: Boolean
     ) : io.availe.core.Property()
 }
 
@@ -40,6 +37,7 @@ data class Model(
     val module: Module,
     val properties: List<Property>,
     val replication: Replication,
+    val contextual: Boolean = module.defaultContextual,
 ) {
     init {
         val invalidPropertyItem = properties.firstOrNull { propertyItem ->
