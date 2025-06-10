@@ -77,6 +77,7 @@ application {
 
 dependencies {
     ksp(project(":model-ksp-processor"))
+    implementation(project(":model-ksp-annotations"))
     implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)

@@ -44,6 +44,7 @@ buildkonfig {
 
 dependencies {
     ksp(project(":model-ksp-processor"))
+    implementation(project(":model-ksp-annotations"))
 }
 
 kotlin {
