@@ -27,7 +27,7 @@ fun main() {
             Property.Property(
                 name = "meta",
                 underlyingType = typeNameOf<String>(),
-                optional = false,
+                optional = true,
                 replication = Replication.BOTH
             ),
             Property.ForeignProperty(

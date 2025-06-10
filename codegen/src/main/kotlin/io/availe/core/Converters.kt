@@ -1,6 +1,7 @@
 package io.availe.core
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 const val packageName: String = "io.availe.models"
 
@@ -28,7 +29,7 @@ fun generateValueClasses(modelParameter: Model): List<TypeSpec> =
 
 fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
     val suffix: String = variant.suffix
-    return when (property) {
+    val type = when (property) {
         is Property.Property ->
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
             ClassName(
@@ -42,6 +43,13 @@ fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant
                 packageName = packageName,
                 property.name.replaceFirstChar { it.uppercaseChar() } + suffix
             )
+    }
+
+    return if (property.optional) {
+        ClassName("arrow.core", "Option")
+            .parameterizedBy(type)
+    } else {
+        type
     }
 }
 
