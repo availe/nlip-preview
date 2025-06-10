@@ -17,7 +17,6 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.openapi.generator)
     alias(libs.plugins.buildKonfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinx.rpc.plugin)
@@ -84,10 +83,6 @@ kotlin {
         commonMain {
             kotlin.srcDir(
                 layout.buildDirectory
-                    .dir("generated/openapi/src/commonMain/kotlin")
-            )
-            kotlin.srcDir(
-                layout.buildDirectory
                     .dir("generated-src/kotlin-poet")
             )
             dependencies {
@@ -129,26 +124,8 @@ android {
     }
 }
 
-/** ------------- OpenAPI Code Gen ------------- */
-
-openApiGenerate {
-    generatorName.set("kotlin")
-    inputSpec.set(layout.projectDirectory.file("src/commonMain/resources/openapi/nlip-api.yaml").asFile.absolutePath)
-    outputDir.set(layout.buildDirectory.dir("generated/openapi").get().toString())
-    apiPackage.set("io.availe.openapi.api")
-    modelPackage.set("io.availe.openapi.model")
-    library.set("multiplatform")
-    configOptions.set(
-        mapOf(
-            "serializableModel" to "false", // suppresses java.io.Serializable
-            "dateLibrary" to "string",
-        )
-    )
-}
-
 tasks.withType<KotlinCompile>().configureEach {
-    dependsOn(tasks.named("openApiGenerate"))
-    dependsOn(generateModels)
+    dependsOn(tasks.named("generateModels"))
     dependsOn(tasks.named("generateBuildKonfig"))
 }
 

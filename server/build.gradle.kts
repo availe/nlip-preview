@@ -228,7 +228,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    dependsOn(project(":shared").tasks.named("openApiGenerate"))
     dependsOn(generateServerModels)
 }
 
