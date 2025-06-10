@@ -8,7 +8,8 @@ import io.availe.models.Variant
 
 const val packageName: String = "io.availe.models"
 
-fun resolvedTypeName(modelParameter: Model, property: Property): TypeName {
+fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
+    val suffix = variant.suffix
     val type = when (property) {
         is Property.Property ->
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
@@ -21,7 +22,7 @@ fun resolvedTypeName(modelParameter: Model, property: Property): TypeName {
             // e.g. prop.name = "message" → "Message"
             ClassName(
                 packageName = packageName,
-                property.name.replaceFirstChar { it.uppercaseChar() }
+                property.name.replaceFirstChar { it.uppercaseChar() } + suffix
             )
     }
 
@@ -33,18 +34,18 @@ fun resolvedTypeName(modelParameter: Model, property: Property): TypeName {
     }
 }
 
-fun generateDataClass(modelParameter: Model, propertyList: List<Property>, variant: Variant): TypeSpec {
+fun dataClassBuilder(modelParameter: Model, propertyList: List<Property>, variant: Variant): TypeSpec {
     val constructorBuilder = FunSpec.constructorBuilder().apply {
         propertyList.forEach { propertyItem ->
             addParameter(
                 propertyItem.name,
-                resolvedTypeName(modelParameter, propertyItem)
+                resolvedTypeName(modelParameter, propertyItem, variant)
             )
         }
     }.build()
 
     val propertySpecs = propertyList.map { propertyItem ->
-        val typeName = resolvedTypeName(modelParameter, propertyItem)
+        val typeName = resolvedTypeName(modelParameter, propertyItem, variant)
         val propertyBuilder = PropertySpec.builder(
             propertyItem.name,
             typeName
@@ -61,7 +62,8 @@ fun generateDataClass(modelParameter: Model, propertyList: List<Property>, varia
         propertyBuilder.build()
     }
 
-    val typeSpecBuilder = TypeSpec.classBuilder(modelParameter.name)
+    val className = modelParameter.name + variant.suffix
+    val typeSpecBuilder = TypeSpec.classBuilder(className)
         .addModifiers(KModifier.DATA)
         .primaryConstructor(constructorBuilder)
         .addProperties(propertySpecs)

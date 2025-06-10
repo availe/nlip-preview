@@ -1,7 +1,7 @@
 package io.availe.generators
 
 import com.squareup.kotlinpoet.FileSpec
-import io.availe.builders.generateDataClass
+import io.availe.builders.dataClassBuilder
 import io.availe.builders.packageName
 import io.availe.models.Model
 import io.availe.models.Variant
@@ -22,7 +22,7 @@ fun generateDataClasses(models: List<Model>) {
             fieldsForPatch(model) to Variant.PATCH,
         ).forEach { (fields, variant) ->
             if (fields.isNotEmpty()) {
-                fileBuilder.addType(generateDataClass(model, fields, variant))
+                fileBuilder.addType(dataClassBuilder(model, fields, variant))
             }
         }
 
