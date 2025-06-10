@@ -2,67 +2,74 @@ package io.availe.core
 
 import com.squareup.kotlinpoet.*
 
-const val packageName = "io.availe.models"
+const val packageName: String = "io.availe.models"
 
-fun convertToPropertySpec(prop: Property): PropertySpec {
-    return when (prop) {
-        is Property.Property -> PropertySpec.builder(prop.name, prop.underlyingType)
-            .initializer(prop.name).build()
+fun convertToPropertySpec(property: Property): PropertySpec {
+    return when (property) {
+        is Property.Property -> PropertySpec.builder(property.name, property.underlyingType)
+            .initializer(property.name)
+            .build()
 
-        is Property.ForeignProperty -> PropertySpec.builder(prop.name, prop.property.underlyingType)
-            .initializer(prop.name).build()
+        is Property.ForeignProperty -> PropertySpec.builder(property.name, property.property.underlyingType)
+            .initializer(property.name)
+            .build()
     }
 }
 
-private fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
+private fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
     val suffix: String = variant.suffix
-    return when (prop) {
+    return when (property) {
         is Property.Property ->
             // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
             ClassName(
                 packageName = packageName,
-                model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
+                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() }
             )
 
         is Property.ForeignProperty ->
             // e.g. prop.name = "message" → "Message"
             ClassName(
                 packageName = packageName,
-                prop.name.replaceFirstChar { it.uppercaseChar() + suffix }
+                property.name.replaceFirstChar { it.uppercaseChar() + suffix }
             )
     }
 }
 
-fun generateDataClass(model: Model, properties: List<Property>, variant: Variant): TypeSpec {
+fun generateDataClass(modelParameter: Model, propertyList: List<Property>, variant: Variant): TypeSpec {
     val constructorBuilder = FunSpec.constructorBuilder().apply {
-        properties.forEach { property ->
+        propertyList.forEach { propertyItem ->
             addParameter(
-                property.name,
-                resolvedTypeName(model, property, variant = variant)
+                propertyItem.name,
+                resolvedTypeName(modelParameter, propertyItem, variant = variant)
             )
         }
     }.build()
 
-    val propertySpecs = properties.map { property ->
+    val propertySpecs = propertyList.map { propertyItem ->
         PropertySpec.builder(
-            property.name,
-            resolvedTypeName(model, property, variant = variant)
+            propertyItem.name,
+            resolvedTypeName(modelParameter, propertyItem, variant = variant)
         )
-            .initializer(property.name)
+            .initializer(propertyItem.name)
             .build()
     }
 
-    return TypeSpec.classBuilder(model.name)
+    return TypeSpec.classBuilder(modelParameter.name)
         .addModifiers(KModifier.DATA)
         .primaryConstructor(constructorBuilder)
         .addProperties(propertySpecs)
         .build()
 }
 
-fun fieldsForBase(model: Model): List<Property> = model.properties
+fun fieldsForBase(modelParameter: Model): List<Property> =
+    modelParameter.properties
 
-fun fieldsForCreate(model: Model): List<Property> =
-    model.properties.filter { it.replication == Replication.CREATE || it.replication == Replication.BOTH }
+fun fieldsForCreate(modelParameter: Model): List<Property> =
+    modelParameter.properties.filter { propertyItem ->
+        propertyItem.replication == Replication.CREATE || propertyItem.replication == Replication.BOTH
+    }
 
-fun fieldsForPatch(model: Model): List<Property> =
-    model.properties.filter { it.replication == Replication.PATCH || it.replication == Replication.BOTH }
+fun fieldsForPatch(modelParameter: Model): List<Property> =
+    modelParameter.properties.filter { propertyItem ->
+        propertyItem.replication == Replication.PATCH || propertyItem.replication == Replication.BOTH
+    }

@@ -5,7 +5,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 fun main() {
-    val messageModel = Model(
+    val messageModelDefinition = Model(
         name = "Message",
         module = Module.SHARED,
         properties = listOf(
@@ -13,13 +13,13 @@ fun main() {
                 name = "id",
                 underlyingType = typeNameOf<String>(),
                 optional = false,
-                replication = Replication.NONE
+                replication = Replication.CREATE
             )
         ),
         replication = Replication.NONE
     )
 
-    val internalMessageModel = Model(
+    val internalMessageModelDefinition = Model(
         name = "InternalMessage",
         module = Module.SHARED,
         properties = listOf(
@@ -44,46 +44,20 @@ fun main() {
         replication = Replication.BOTH
     )
 
-    val models = listOf(messageModel, internalMessageModel)
+    val modelDefinitions = listOf(messageModelDefinition, internalMessageModelDefinition)
 
-    models.forEach {
-        val baseTypes: List<Property> = fieldsForBase(it)
-        val createTypes: List<Property> = fieldsForCreate(it)
-        val patchTypes: List<Property> = fieldsForPatch(it)
+    modelDefinitions.forEach { modelParameter ->
+        val baseProperties: List<Property> = fieldsForBase(modelParameter)
+        val createProperties: List<Property> = fieldsForCreate(modelParameter)
+        val patchProperties: List<Property> = fieldsForPatch(modelParameter)
 
-        println("Generating for ${it.name}")
+        println("Generating for ${modelParameter.name}")
         println("Base:")
-        baseTypes.forEach { prop -> println(" - ${prop.name}") }
+        baseProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
         println("Create:")
-        createTypes.forEach { prop -> println(" - ${prop.name}") }
+        createProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
         println("Patch:")
-        patchTypes.forEach { prop -> println(" - ${prop.name}") }
+        patchProperties.forEach { propertyItem -> println(" - ${propertyItem.name}") }
         println("---")
     }
-
-//    models.forEach { model ->
-//        val baseType = generateDataClass(model, fieldsForBase(model), Variant.BASE)
-//        FileSpec.builder(packageName, model.name)
-//            .addType(baseType)
-//            .build()
-//            .writeTo(System.out)
-//
-//        val createProps = fieldsForCreate(model)
-//        if (createProps.isNotEmpty()) {
-//            val createType = generateDataClass(model, createProps, Variant.CREATE)
-//            FileSpec.builder(packageName, model.name + Variant.CREATE.suffix)
-//                .addType(createType)
-//                .build()
-//                .writeTo(System.out)
-//        }
-//
-//        val patchProps = fieldsForPatch(model)
-//        if (patchProps.isNotEmpty()) {
-//            val patchType = generateDataClass(model, patchProps, Variant.PATCH)
-//            FileSpec.builder(packageName, model.name + Variant.PATCH.suffix)
-//                .addType(patchType)
-//                .build()
-//                .writeTo(System.out)
-//        }
-//    }
 }

@@ -36,5 +36,36 @@ data class Model(
     val name: String,
     val module: Module,
     val properties: List<Property>,
-    val replication: Replication,
-)
+    val replication: Replication
+) {
+    init {
+        val invalidPropertyItem = properties.firstOrNull { propertyItem ->
+            !replication.allowedBy(propertyItem.replication)
+        }
+        val allowedReplications = when (replication) {
+            Replication.NONE -> "NONE"
+            Replication.PATCH -> "NONE, PATCH"
+            Replication.CREATE -> "NONE, CREATE"
+            Replication.BOTH -> "NONE, CREATE, PATCH, BOTH"
+        }
+        val errorMessage = """
+            Invalid property replication in Model '$name':
+
+              Property: '${invalidPropertyItem?.name}'
+              Property Replication: ${invalidPropertyItem?.replication}
+              Model Replication: $replication
+
+            Allowed property replications for model with $replication: { $allowedReplications }
+
+        """.trimIndent()
+        require(invalidPropertyItem == null) { errorMessage }
+    }
+}
+
+private fun Replication.allowedBy(childReplication: Replication): Boolean =
+    when (this) {
+        Replication.NONE -> childReplication == Replication.NONE
+        Replication.PATCH -> childReplication == Replication.NONE || childReplication == Replication.PATCH
+        Replication.CREATE -> childReplication == Replication.NONE || childReplication == Replication.CREATE
+        Replication.BOTH -> true
+    }
