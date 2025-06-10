@@ -1,5 +1,6 @@
 package io.availe
 
+import io.availe.models.Module
 import io.availe.models.Replication
 
 /**
