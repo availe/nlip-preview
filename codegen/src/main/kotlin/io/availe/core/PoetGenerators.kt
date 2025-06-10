@@ -19,6 +19,9 @@ private fun wrapForPatch(original: TypeName): TypeName =
     if (original is ParameterizedTypeName && original.rawType == optionClass) original
     else optionOf(original)
 
+// collect every model name as we generate its data class
+private val allModelNames = mutableSetOf<String>()
+
 fun generateValueClass(wrapper: InlineWrapper): TypeSpec {
     val backingType = wrapper.backing
     val contextualBackings = setOf(
@@ -77,6 +80,9 @@ private fun annotateContextualIfNeeded(
 }
 
 fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec {
+    // register for nested‐model lookup
+    allModelNames += model.name
+
     val wrapperNames = wrappers.map { it.name }.toSet()
     val ctor = FunSpec.constructorBuilder().apply {
         model.props.forEach { addParameter(it.name, it.type) }
@@ -94,36 +100,70 @@ fun generateDataClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec
     return builder.build()
 }
 
+sealed class RequestSuffix(val suffix: String) {
+    object Create : RequestSuffix("Create")
+    object Patch : RequestSuffix("Patch")
+}
+
+private fun remapNestedProperty(
+    prop: PropertySpecData,
+    suffix: RequestSuffix,
+    wrapOptionals: Boolean
+): Pair<String, TypeName> {
+    val original = prop.type
+    val innerClass = when (original) {
+        is ParameterizedTypeName ->
+            if (original.rawType == optionClass && original.typeArguments.first() is ClassName)
+                original.typeArguments.first() as ClassName
+            else null
+
+        is ClassName -> original
+        else -> null
+    }
+    if (innerClass != null && innerClass.simpleName in allModelNames) {
+        val base = innerClass.simpleName
+        val pkg = innerClass.packageName
+        val newType = ClassName(pkg, "${base}${suffix.suffix}")
+        val name = "${prop.name}${suffix.suffix}"
+        val type = if (suffix is RequestSuffix.Patch && wrapOptionals) optionOf(newType) else newType
+        return name to type
+    }
+    val name = prop.name
+    val type = if (wrapOptionals) wrapForPatch(original) else original
+    return name to type
+}
+
 private fun generateRequestClass(
     model: ModelSpec,
     wrappers: List<InlineWrapper>,
-    suffix: String,
+    suffix: RequestSuffix,
     filter: (PropertySpecData) -> Boolean,
     wrapOptional: Boolean
 ): TypeSpec {
     val reqProps = model.props.filter(filter)
     val wrapperNames = wrappers.map { it.name }.toSet()
-    val ctor = FunSpec.constructorBuilder().apply {
-        reqProps.forEach { p ->
-            val t = if (wrapOptional) wrapForPatch(p.type) else p.type
-            addParameter(p.name, t)
-        }
-    }.build()
-    val builder = TypeSpec.classBuilder("${model.name}$suffix")
+    val ctorBuilder = FunSpec.constructorBuilder()
+    val nameTypePairs = reqProps.map { prop ->
+        val (name, type) = remapNestedProperty(prop, suffix, wrapOptional)
+        ctorBuilder.addParameter(name, type)
+        name to type
+    }
+    val ctor = ctorBuilder.build()
+    val builder = TypeSpec.classBuilder("${model.name}${suffix.suffix}")
         .addModifiers(KModifier.DATA)
         .addAnnotation(Serializable::class)
         .primaryConstructor(ctor)
-    ctor.parameters.forEach { param ->
-        val propBuilder = PropertySpec.builder(param.name, param.type)
-            .initializer(param.name)
-        annotateContextualIfNeeded(propBuilder, param.type, wrapperNames)
+    nameTypePairs.forEach { (name, type) ->
+        val propBuilder = PropertySpec.builder(name, type)
+            .initializer(name)
+        annotateContextualIfNeeded(propBuilder, type, wrapperNames)
         builder.addProperty(propBuilder.build())
     }
     return builder.build()
 }
 
 fun generateCreateClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec =
-    generateRequestClass(model, wrappers, "Create", { it.inCreate }, false)
+    generateRequestClass(model, wrappers, RequestSuffix.Create, { it.inCreate }, false)
 
 fun generatePatchClass(model: ModelSpec, wrappers: List<InlineWrapper>): TypeSpec =
-    generateRequestClass(model, wrappers, "Patch", { it.inPatch }, true)
+    generateRequestClass(model, wrappers, RequestSuffix.Patch, { it.inPatch }, true)

@@ -98,7 +98,9 @@ class InternalUserAccountRepository(
         ).some()
     }
 
-    fun insert(create: InternalUserAccountCreate): InternalUserAccount {}
+    fun insert(create: InternalUserAccountCreate): InternalUserAccount {
+        val userAccount = userAccountRepository.insertUserAccount(create.userAccount)
+    }
 }
 
 private fun InternalUserAccount.UserRole.toJooq() {
