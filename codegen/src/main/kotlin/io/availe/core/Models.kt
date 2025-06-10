@@ -55,7 +55,7 @@ data class Model(
               Property Replication: ${invalidPropertyItem?.replication}
               Model Replication: $replication
 
-            Allowed property replications for model with $replication: { $allowedReplications }
+            Allowed property replications for model '$name' with $replication: { $allowedReplications }
 
         """.trimIndent()
         require(invalidPropertyItem == null) { errorMessage }
