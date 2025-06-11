@@ -151,15 +151,5 @@ android {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    dependsOn(tasks.named("generateModels"))
     dependsOn(tasks.named("generateBuildKonfig"))
-}
-
-val generateModels by tasks.registering(JavaExec::class) {
-    group = "codegen"
-    description = "Run the KotlinPoet code generator"
-    classpath = project(":codegen")
-        .sourceSets["main"].runtimeClasspath
-    mainClass.set("io.availe.ApplicationKt")
-    workingDir = projectDir
 }
