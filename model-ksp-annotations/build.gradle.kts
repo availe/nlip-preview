@@ -1,20 +1,14 @@
-plugins {
-    alias(libs.plugins.kotlinJvm)
-    alias(libs.plugins.ksp)
-    application
-}
+plugins { alias(libs.plugins.kotlinMultiplatform) }
 
 group = "io.availe"
 version = "1.0.0"
 
 kotlin {
-    jvmToolchain(21)
-}
-
-dependencies {
-    implementation(projects.codegen)
-}
-
-application {
-    mainClass.set("io.availe.ApplicationKt")
+    jvm()                      // publishes JVM byte-code
+    sourceSets {
+        commonMain {
+            kotlin.srcDir("src/main/kotlin")   // or move file as shown above
+        }
+        jvmMain { }            // inherits code from commonMain
+    }
 }
