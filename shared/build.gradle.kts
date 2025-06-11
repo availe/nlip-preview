@@ -1,8 +1,44 @@
+
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+interface KspDependencies { fun ksp(dep: Any) }
+
+fun KotlinTarget.kspDependencies(block: KspDependencies.() -> Unit) {
+    val configurationName = "ksp${targetName.replaceFirstChar { it.uppercaseChar() }}"
+    project.dependencies {
+        object : KspDependencies { override fun ksp(dep: Any) { add(configurationName, dep) } }.block()
+    }
+}
+
+fun KotlinMultiplatformExtension.kspDependenciesForAllTargets(block: KspDependencies.() -> Unit) {
+    targets.configureEach { if (targetName != "metadata") kspDependencies(block) }
+}
+
+fun KotlinMultiplatformExtension.commonMainKspDependencies(
+    project: Project,
+    block: KspDependencies.() -> Unit
+) {
+    project.dependencies {
+        object : KspDependencies { override fun ksp(dep: Any) { add("kspCommonMainMetadata", dep) } }.block()
+    }
+
+    sourceSets.named("commonMain").configure {
+        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+    }
+
+    project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
+        if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
 
 @Suppress("UNCHECKED_CAST")
 val secrets = rootProject.extra["secrets"] as Map<String, String>
@@ -70,6 +106,7 @@ kotlin {
         commonMain {
             kotlin.srcDir(layout.buildDirectory.dir("generated-src/kotlin-poet"))
             dependencies {
+                implementation(project(":model-ksp-annotations"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)
@@ -100,19 +137,6 @@ kotlin {
         }
     }
 }
-
-dependencies {
-    add("kspCommonMainMetadata", project(":model-ksp-processor"))
-    add("kspJvm",                project(":model-ksp-processor"))
-    add("kspAndroid",                project(":model-ksp-processor"))
-    add("kspIosX64",             project(":model-ksp-processor"))
-    add("kspIosArm64",           project(":model-ksp-processor"))
-    add("kspIosSimulatorArm64",  project(":model-ksp-processor"))
-    add("kspWasmJs",             project(":model-ksp-processor"))
-
-    implementation(project(":model-ksp-annotations"))
-}
-
 
 android {
     namespace = "io.availe.shared"
