@@ -5,71 +5,75 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.models.Model
 import io.availe.models.Property
 import io.availe.models.Variant
-import kotlin.collections.map
 
 const val packageName: String = "io.availe.models"
+private const val BASE_IMPL_SUFFIX = "Data"
 
-fun resolvedTypeName(modelParameter: Model, property: Property, variant: Variant): TypeName {
-    val suffix = variant.suffix
-    val type = when (property) {
-        is Property.Property ->
-            // e.g. Model.name = "User", prop.name = "id"  →  "UserId"
-            ClassName(
-                packageName = packageName,
-                modelParameter.name + property.name.replaceFirstChar { it.uppercaseChar() }
-            )
+private fun baseImplSuffixFor(variant: Variant): String =
+    if (variant == Variant.BASE) BASE_IMPL_SUFFIX else variant.suffix
 
-        is Property.ForeignProperty ->
-            // e.g. prop.name = "message" → "Message"
-            ClassName(
-                packageName = packageName,
-                property.name.replaceFirstChar { it.uppercaseChar() } + suffix
-            )
+fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
+    val suffix = baseImplSuffixFor(variant)
+
+    val rawType = when (prop) {
+        is Property.Property -> ClassName(
+            packageName,
+            model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
+        )
+
+        is Property.ForeignProperty -> ClassName(
+            packageName,
+            prop.name.replaceFirstChar { it.uppercaseChar() } + suffix
+        )
     }
 
-    return if (property.optional) {
-        ClassName("arrow.core", "Option")
-            .parameterizedBy(type)
+    return if (prop.optional) {
+        ClassName("arrow.core", "Option").parameterizedBy(rawType)
     } else {
-        type
+        rawType
     }
 }
 
-fun dataClassBuilder(modelParameter: Model, propertyList: List<Property>, variant: Variant): TypeSpec {
-    val constructorBuilder = FunSpec.constructorBuilder().apply {
-        propertyList.forEach { propertyItem ->
-            addParameter(
-                propertyItem.name,
-                resolvedTypeName(modelParameter, propertyItem, variant)
-            )
+fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): TypeSpec {
+    val className = model.name + variant.suffix
+    val typeSpecBuilder = TypeSpec.classBuilder(className)
+        .addModifiers(KModifier.DATA)
+
+    val constructorBuilder = FunSpec.constructorBuilder()
+    props.forEach { prop ->
+        val propType = resolvedTypeName(model, prop, variant)
+        constructorBuilder.addParameter(prop.name, propType)
+    }
+    typeSpecBuilder.primaryConstructor(constructorBuilder.build())
+
+    val shouldImplementInterface = variant == Variant.BASE || variant == Variant.CREATE
+
+    props.forEach { prop ->
+        val propType = resolvedTypeName(model, prop, variant)
+        val propSpec = PropertySpec.builder(prop.name, propType)
+            .initializer(prop.name)
+
+        if (shouldImplementInterface) {
+            propSpec.addModifiers(KModifier.OVERRIDE)
         }
-    }.build()
 
-    val propertySpecs = propertyList.map { propertyItem ->
-        val typeName = resolvedTypeName(modelParameter, propertyItem, variant)
-        val propertyBuilder = PropertySpec.builder(
-            propertyItem.name,
-            typeName
-        ).initializer(propertyItem.name)
-
-        if (modelParameter.contextual && propertyItem.optional) {
-            propertyBuilder.addAnnotation(
+        if (model.contextual && prop.optional) {
+            propSpec.addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Contextual"))
                     .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
                     .build()
             )
         }
-
-        propertyBuilder.build()
+        typeSpecBuilder.addProperty(propSpec.build())
     }
 
-    val className = modelParameter.name + variant.suffix
-    val typeSpecBuilder = TypeSpec.classBuilder(className)
-        .addModifiers(KModifier.DATA)
-        .primaryConstructor(constructorBuilder)
-        .addProperties(propertySpecs)
+    if (shouldImplementInterface) {
+        val interfaceName = ClassName(packageName, "I${model.name}")
+        val typeArguments = props.map { resolvedTypeName(model, it, variant) }
+        typeSpecBuilder.addSuperinterface(interfaceName.parameterizedBy(typeArguments))
+    }
 
-    if (modelParameter.contextual) {
+    if (model.contextual) {
         typeSpecBuilder.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
     }
 
