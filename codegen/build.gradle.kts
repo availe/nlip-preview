@@ -16,7 +16,6 @@ kotlin {
     wasmJs(); macosX64(); macosArm64(); linuxX64()
     sourceSets {
         commonMain {
-            kotlin.srcDir("src/main/kotlin")
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
