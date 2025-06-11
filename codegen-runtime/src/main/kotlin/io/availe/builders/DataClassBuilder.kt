@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.models.Model
 import io.availe.models.Property
 import io.availe.models.Variant
+import kotlin.collections.map
 
 const val packageName: String = "io.availe.models"
 

@@ -2,7 +2,6 @@ package io.availe.utils
 
 import io.availe.Paths
 import io.availe.models.Model
-import io.availe.models.Module
 import io.availe.models.Property
 import io.availe.models.Replication
 import java.io.File

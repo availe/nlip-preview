@@ -1,3 +1,7 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
 }
@@ -8,7 +12,8 @@ version = "1.0.0"
 kotlin {
     jvmToolchain(21)
     jvm()
-
+    iosX64(); iosArm64(); iosSimulatorArm64()
+    wasmJs(); macosX64(); macosArm64(); linuxX64()
     sourceSets {
         commonMain {
             kotlin.srcDir("src/main/kotlin")
@@ -16,16 +21,6 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.arrow.core)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                implementation(libs.logback)
-                implementation(libs.kotlinpoet)
-                implementation(libs.kotlinpoet.metadata)
-                implementation(libs.kotlinpoet.metadata.specs)
-                implementation(libs.kotlinpoet.ksp)
             }
         }
     }
