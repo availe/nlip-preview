@@ -8,8 +8,14 @@ group = "io.availe"
 version = "1.0.0"
 
 kotlin {
-    // only a JVM target + the metadata target
     jvm()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+    wasmJs()
+    linuxX64()
+    macosX64()
+    macosArm64()
 
     sourceSets {
         val commonMain by getting {
@@ -31,5 +37,14 @@ kotlin {
                 ))
             }
         }
+
+        val iosX64Main by getting
+
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+        val wasmJsMain by getting
+        val linuxX64Main by getting
+        val macosX64Main by getting
+        val macosArm64Main by getting
     }
 }

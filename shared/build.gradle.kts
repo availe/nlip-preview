@@ -136,6 +136,10 @@ kotlin {
             }
         }
     }
+
+    commonMainKspDependencies(project) {
+        ksp(project(":model-ksp-processor"))
+    }
 }
 
 android {

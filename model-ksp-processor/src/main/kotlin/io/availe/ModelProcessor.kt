@@ -31,6 +31,16 @@ class ModelProcessor(
         val codeGen = env.codeGenerator
         val symbols = resolver.getSymbolsWithAnnotation(MODEL_ANNOTATION)
             .filterIsInstance<KSClassDeclaration>()
+
+        if (symbols.none()) {
+            env.logger.warn("No symbols with @ModelGen were found by KSP")
+        } else {
+            env.logger.warn("Found @ModelGen symbols:")
+            symbols.forEach {
+                env.logger.warn(" - ${it.qualifiedName?.asString()}")
+            }
+        }
+
         val models = mutableListOf<Model>()
         symbols.forEach { cls ->
             val name = cls.simpleName.asString()
