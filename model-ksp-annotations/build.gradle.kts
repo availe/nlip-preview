@@ -24,23 +24,13 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             // annotation definitions live here
-            kotlin.srcDir("src/main/kotlin")
             dependencies {
                 // common‐world users get the "runtimeElements" (metadata) variant
-                implementation(project(mapOf("path" to ":codegen", "configuration" to "jvmRuntimeElements")))
+                implementation(projects.codegen)
             }
         }
-        val jvmMain by getting {
-            dependencies {
-                // JVM users (and KSP processors) get the JVM‐specific artifact
-                implementation(project(
-                    mapOf(
-                        "path" to ":codegen",
-                        "configuration" to "jvmRuntimeElements"
-                    )
-                ))
-            }
-        }
+
+        val jvmMain by getting {}
 
         val iosX64Main by getting
 

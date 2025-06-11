@@ -17,7 +17,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":model-ksp-annotations"))
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.arrow.core)

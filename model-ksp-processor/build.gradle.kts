@@ -12,9 +12,9 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(mapOf("path" to ":codegen", "configuration" to "jvmRuntimeElements")))
-    implementation(project(mapOf("path" to ":model-ksp-annotations", "configuration" to "jvmRuntimeElements")))
-
+    implementation(projects.modelKspAnnotations)
+    implementation(projects.codegen)
+    implementation(projects.codegenRuntime)
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.metadata)
     implementation(libs.kotlinpoet.metadata.specs)
