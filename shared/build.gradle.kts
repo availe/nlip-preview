@@ -107,6 +107,7 @@ kotlin {
             kotlin.srcDir(layout.buildDirectory.dir("generated-src/kotlin-poet"))
             dependencies {
                 implementation(project(":model-ksp-annotations"))
+                implementation(projects.codegen)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)

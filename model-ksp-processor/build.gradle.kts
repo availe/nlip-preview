@@ -14,7 +14,6 @@ kotlin {
 dependencies {
     implementation(projects.modelKspAnnotations)
     implementation(projects.codegen)
-    implementation(projects.codegenRuntime)
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.metadata)
     implementation(libs.kotlinpoet.metadata.specs)

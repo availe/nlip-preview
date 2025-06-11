@@ -11,6 +11,7 @@ kotlin {
 
 dependencies {
     implementation(projects.codegen)
+    implementation(projects.modelKspProcessor)
     implementation(libs.logback)
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.metadata)

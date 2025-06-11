@@ -16,7 +16,7 @@ fun validateModelReplications(models: List<Model>) {
             model.properties
                 .filterIsInstance<Property.ForeignProperty>()
                 .forEach { fp ->
-                    val targetName = fp.name.replaceFirstChar { it.uppercaseChar() }
+                    val targetName = fp.foreignModelName
                     val targetReplication = repByName[targetName]
                         ?: error("Unknown referenced model '$targetName' in ${model.name}")
 
@@ -35,8 +35,8 @@ fun validateModelReplications(models: List<Model>) {
                               '$targetName' does not support the ${variant.name} variant.
                               Supported variants for '$targetName': { ${targetReplication.printAllowedVariants()} }
 
-                            → Because '$parentVariantClass' includes '${fp.name}',
-                              it depends on the existence of '$nestedVariantClass', which cannot be generated.
+                              → Because '$parentVariantClass' includes '${fp.name}',
+                                it depends on the existence of '$nestedVariantClass', which cannot be generated.
                         """.trimIndent()
                         error(errorMessage)
                     }
@@ -44,4 +44,3 @@ fun validateModelReplications(models: List<Model>) {
         }
     }
 }
-

@@ -14,6 +14,7 @@ sealed class Property {
 
     data class ForeignProperty(
         override val name: String,
+        val foreignModelName: String,
         val property: Property,
         override val optional: Boolean,
         override val replication: Replication,

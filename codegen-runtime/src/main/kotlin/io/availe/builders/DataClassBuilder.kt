@@ -23,7 +23,7 @@ fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
 
         is Property.ForeignProperty -> ClassName(
             packageName,
-            prop.name.replaceFirstChar { it.uppercaseChar() } + suffix
+            prop.foreignModelName + suffix
         )
     }
 
