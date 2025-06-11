@@ -3,7 +3,7 @@ package io.availe
 import io.availe.generators.generateDataClasses
 import io.availe.generators.generateValueClasses
 import io.availe.utils.validateModelReplications
-import io.definitions.definitions
+import io.availe.definitions.definitions
 import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
 

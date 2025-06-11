@@ -1,7 +1,5 @@
 package io.availe.models
 
-import com.squareup.kotlinpoet.TypeName
-
 sealed class Property {
     abstract val name: String
     abstract val optional: Boolean
@@ -9,7 +7,7 @@ sealed class Property {
 
     data class Property(
         override val name: String,
-        val underlyingType: TypeName,
+        val underlyingType: String,
         override val optional: Boolean,
         override val replication: Replication,
     ) : io.availe.models.Property()

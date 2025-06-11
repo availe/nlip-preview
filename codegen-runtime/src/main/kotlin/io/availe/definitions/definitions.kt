@@ -1,6 +1,5 @@
-package io.definitions
+package io.availe.definitions
 
-import com.squareup.kotlinpoet.typeNameOf
 import io.availe.models.Model
 import io.availe.models.Module
 import io.availe.models.Property
@@ -13,7 +12,7 @@ fun definitions(): List<Model> {
         properties = listOf(
             Property.Property(
                 name = "id",
-                underlyingType = typeNameOf<String>(),
+                underlyingType = "kotlin.String",
                 optional = false,
                 replication = Replication.BOTH,
             )
@@ -27,7 +26,8 @@ fun definitions(): List<Model> {
         properties = listOf(
             Property.Property(
                 name = "meta",
-                underlyingType = typeNameOf<String>(),
+                // Use the fully-qualified class name as a String
+                underlyingType = "kotlin.String",
                 optional = true,
                 replication = Replication.BOTH
             ),
@@ -35,7 +35,8 @@ fun definitions(): List<Model> {
                 name = "message",
                 property = Property.Property(
                     name = "id",
-                    underlyingType = typeNameOf<String>(),
+                    // Use the fully-qualified class name as a String
+                    underlyingType = "kotlin.String",
                     optional = false,
                     replication = Replication.BOTH
                 ),
