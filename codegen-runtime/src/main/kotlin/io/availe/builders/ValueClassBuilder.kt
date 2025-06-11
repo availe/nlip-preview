@@ -1,17 +1,20 @@
-// In ValueClassBuilder.kt
-
 package io.availe.builders
 
 import com.squareup.kotlinpoet.*
 import io.availe.models.Model
 import io.availe.models.Property
 
+private fun String.asClassName(): ClassName {
+    val clean = substringBefore('<').removeSuffix("?")
+    val pkg = clean.substringBeforeLast('.')
+    val type = clean.substringAfterLast('.')
+    return ClassName(pkg, type)
+}
+
 fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
     val className = model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
-
-    val underlyingTypeName = ClassName.bestGuess(prop.underlyingType)
-
-    val builder = TypeSpec.classBuilder(className)
+    val underlyingTypeName = prop.underlyingType.asClassName()
+    return TypeSpec.classBuilder(className)
         .addAnnotation(JvmInline::class)
         .addModifiers(KModifier.VALUE)
         .primaryConstructor(
@@ -24,10 +27,10 @@ fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
                 .initializer(prop.name)
                 .build()
         )
-
-    if (model.contextual) {
-        builder.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
-    }
-
-    return builder.build()
+        .apply {
+            if (model.contextual) {
+                addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+            }
+        }
+        .build()
 }
