@@ -1,14 +1,19 @@
-plugins { alias(libs.plugins.kotlinMultiplatform) }
+plugins {
+    alias(libs.plugins.kotlinMultiplatform)
+}
 
 group = "io.availe"
 version = "1.0.0"
 
 kotlin {
-    jvm()                      // publishes JVM byte-code
+    jvm()
     sourceSets {
         commonMain {
-            kotlin.srcDir("src/main/kotlin")   // or move file as shown above
+            kotlin.srcDir("src/main/kotlin")
+            dependencies {
+                implementation(project(":codegen"))
+            }
         }
-        jvmMain { }            // inherits code from commonMain
+        jvmMain { }
     }
 }

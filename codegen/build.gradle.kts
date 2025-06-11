@@ -1,30 +1,35 @@
 plugins {
-    alias(libs.plugins.kotlinJvm)
+    alias(libs.plugins.kotlinMultiplatform)
     application
-}
-
-
-kotlin {
-    jvmToolchain(21)
 }
 
 group = "io.availe"
 version = "1.0.0"
-application {
-    mainClass.set("io.availe.ApplicationKt")
-}
 
+kotlin {
+    jvmToolchain(21)
+    jvm()
 
-dependencies {
-    implementation(libs.logback)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.datetime)
-    implementation(libs.arrow.core)
+    sourceSets {
+        commonMain {
+            kotlin.srcDir("src/main/kotlin")
+            dependencies {
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.arrow.core)
+            }
+        }
 
-    implementation(libs.kotlinpoet)
-    implementation(libs.kotlinpoet.metadata)
-    implementation(libs.kotlinpoet.metadata.specs)
-    implementation(libs.kotlinpoet.ksp)
+        jvmMain {
+            dependencies {
+                implementation(libs.logback)
+                implementation(libs.kotlinpoet)
+                implementation(libs.kotlinpoet.metadata)
+                implementation(libs.kotlinpoet.metadata.specs)
+                implementation(libs.kotlinpoet.ksp)
+            }
+        }
+    }
 }
 
 application {
