@@ -155,7 +155,3 @@ tasks.withType<ComposeHotRun>().configureEach {
         }
     )
 }
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    dependsOn(project(":shared").tasks.named("openApiGenerate"))
-}

@@ -41,50 +41,34 @@ buildkonfig {
     }
 }
 
-dependencies {
-    ksp(project(":model-ksp-processor"))
-    implementation(project(":model-ksp-annotations"))
-}
-
 kotlin {
     jvmToolchain(21)
-
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
-
     iosX64()
     iosArm64()
     iosSimulatorArm64()
-
     jvm()
-
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                     static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDirPath)
-                        add(projectDirPath)
+                        add(rootProject.path)
+                        add(projectDir.path)
                     }
                 }
             }
         }
     }
-
     sourceSets {
         commonMain {
-            kotlin.srcDir(
-                layout.buildDirectory
-                    .dir("generated-src/kotlin-poet")
-            )
+            kotlin.srcDir(layout.buildDirectory.dir("generated-src/kotlin-poet"))
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)
@@ -93,34 +77,52 @@ kotlin {
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.arrow.core)
                 implementation(libs.kotlinx.datetime)
-
                 implementation(libs.kotlinx.rpc.core)
                 implementation(libs.kotlinx.rpc.krpc.client)
                 implementation(libs.kotlinx.rpc.krpc.serialization.json)
                 implementation(libs.kotlinx.rpc.krpc.ktor.client)
             }
         }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
+        jvmMain {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
+        wasmJsMain {
+            dependencies {
+                implementation(libs.ktor.client.js)
+            }
         }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+        iosMain {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
         }
     }
 }
 
+dependencies {
+    add("kspCommonMainMetadata", project(":model-ksp-processor"))
+    add("kspJvm",                project(":model-ksp-processor"))
+    add("kspAndroid",                project(":model-ksp-processor"))
+    add("kspIosX64",             project(":model-ksp-processor"))
+    add("kspIosArm64",           project(":model-ksp-processor"))
+    add("kspIosSimulatorArm64",  project(":model-ksp-processor"))
+    add("kspWasmJs",             project(":model-ksp-processor"))
+
+    implementation(project(":model-ksp-annotations"))
+}
+
+
 android {
     namespace = "io.availe.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }
 
