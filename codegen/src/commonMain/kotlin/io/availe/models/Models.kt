@@ -1,5 +1,8 @@
 package io.availe.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Model(
     val name: String,
     val module: Module,

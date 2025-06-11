@@ -6,11 +6,11 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.FileSpec
 import io.availe.models.Model
 import io.availe.models.Module
 import io.availe.models.Property
 import io.availe.models.Replication
+import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
 
 private val MODEL_ANNOTATION = ModelGen::class.qualifiedName!!
@@ -31,11 +31,14 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         }
 
         val models = parseModels(symbols, resolver)
-        val fileSpec = buildDefinitionsFile(models)
+        val json = Json { prettyPrint = true }
+        val jsonData = json.encodeToString(models)
+
         val sourceFiles = symbols.mapNotNull { it.containingFile }.toList().toTypedArray()
         val dependencies = Dependencies(true, *sourceFiles)
-        val file = env.codeGenerator.createNewFile(dependencies, "io.availe.definitions", "GeneratedModels")
-        OutputStreamWriter(file).use { fileSpec.writeTo(it) }
+
+        val file = env.codeGenerator.createNewFile(dependencies, "", "models", "json")
+        OutputStreamWriter(file, "UTF-8").use { it.write(jsonData) }
 
         invoked = true
         return emptyList()

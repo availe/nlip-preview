@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
+    application
 }
 
 group = "io.availe"
@@ -17,4 +18,9 @@ dependencies {
     implementation(libs.kotlinpoet.metadata)
     implementation(libs.kotlinpoet.metadata.specs)
     implementation(libs.kotlinpoet.ksp)
+    implementation(libs.kotlinx.serialization.json)
+}
+
+application {
+    mainClass.set("io.avale.x.codegen.runtime.MainKt")
 }

@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.kotlinpoet.metadata.specs)
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.ksp.symbol.processing.api)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.logback)
     implementation(libs.kotlinx.serialization.json)
