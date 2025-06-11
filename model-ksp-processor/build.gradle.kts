@@ -12,8 +12,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(projects.codegen)
-    implementation(projects.modelKspAnnotations)
+    implementation(project(mapOf("path" to ":codegen", "configuration" to "jvmRuntimeElements")))
+    implementation(project(mapOf("path" to ":model-ksp-annotations", "configuration" to "jvmRuntimeElements")))
 
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.metadata)
@@ -25,7 +25,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
     implementation(libs.arrow.core)
-
 }
 
 application {

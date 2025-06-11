@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    application
 }
 
 group = "io.availe"
@@ -30,8 +29,4 @@ kotlin {
             }
         }
     }
-}
-
-application {
-    mainClass.set("io.availe.ApplicationKt")
 }
