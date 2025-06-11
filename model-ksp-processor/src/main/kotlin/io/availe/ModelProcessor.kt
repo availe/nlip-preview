@@ -29,20 +29,24 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         val symbols = resolver.getSymbolsWithAnnotation(MODEL_ANNOTATION)
             .filterIsInstance<KSClassDeclaration>()
         println("Found ${symbols.count()} symbols with @ModelGen")
-
         val models = mutableListOf<Model>()
         symbols.forEach { cls ->
             println("Processing class: ${cls.qualifiedName?.asString()}")
             val ann = cls.annotations.firstOrNull { it.shortName.asString() == "ModelGen" }
             if (ann == null) {
-                println("No @ModelGen annotation found on ${cls.simpleName.asString()}, skipping")
+                println("No @ModelGen annotation on ${cls.simpleName.asString()}, skipping")
                 return@forEach
             }
             val name = cls.simpleName.asString()
-            val module = ann.arguments.first { it.name?.asString() == "module" }.value as Module
-            val classRep = ann.arguments.first { it.name?.asString() == "replication" }.value as Replication
-            println("  module = $module, classRep = $classRep")
-
+            val module = ann.arguments
+                .firstOrNull { it.name?.asString() == "module" }
+                ?.value as? Module
+                ?: Module.SHARED
+            val classRep = ann.arguments
+                .firstOrNull { it.name?.asString() == "replication" }
+                ?.value as? Replication
+                ?: Replication.BOTH
+            println("  module = $module, replication = $classRep")
             val props = cls.getAllProperties().map { prop ->
                 println("  Property: ${prop.simpleName.asString()}")
                 val raw = prop.type.resolve()
@@ -52,19 +56,18 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val targetDecl = if (isOption) raw.arguments.first().type!!.resolve() else raw
                 val fqcn = targetDecl.declaration.qualifiedName!!.asString()
                 println("    raw=${raw.declaration.qualifiedName?.asString()} isOption=$isOption isNullable=$isNullable fqcn=$fqcn")
-
                 val fieldRep = prop.annotations
                     .firstOrNull { it.shortName.asString() == FIELD_ANNOTATION }
-                    ?.arguments?.first { it.name?.asString() == "replication" }
-                    ?.value as? Replication ?: classRep
+                    ?.arguments
+                    ?.firstOrNull { it.name?.asString() == "replication" }
+                    ?.value as? Replication
+                    ?: classRep
                 println("    fieldRep = $fieldRep")
-
                 val isForeign = resolver
                     .getClassDeclarationByName(raw.declaration.qualifiedName!!)
                     ?.annotations
                     ?.any { it.shortName.asString() == "ModelGen" } == true
                 println("    isForeign = $isForeign")
-
                 if (isForeign) {
                     Property.ForeignProperty(
                         name = prop.simpleName.asString(),
@@ -89,11 +92,9 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             println("Built ${props.size} properties for $name")
             models += Model(name, module, props, classRep)
         }
-
         println("Validating model replications")
         validateModelReplications(models)
         println("Validation complete")
-
         models.groupBy { it.module }.forEach { (mod, list) ->
             println("Generating value classes for module $mod")
             val file = codeGen.createNewFile(Dependencies(false), TARGET_PACKAGE, IDENTIFIERS_PREFIX + mod.name)
@@ -107,7 +108,6 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 }.build().writeTo(w)
             }
         }
-
         models.forEach { model ->
             println("Generating data classes for model ${model.name}")
             val file = codeGen.createNewFile(Dependencies(false), TARGET_PACKAGE, model.name)
@@ -126,7 +126,6 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 }.build().writeTo(w)
             }
         }
-
         println("ModelProcessor finished")
         return emptyList()
     }
