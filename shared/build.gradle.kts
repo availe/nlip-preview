@@ -189,3 +189,7 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
         dependsOn(tasks.named("runCodegen"))
     }
 }
+
+kotlin.sourceSets.named("commonMain") {
+    kotlin.srcDir(layout.buildDirectory.dir("generated-src/kotlin-poet"))
+}
