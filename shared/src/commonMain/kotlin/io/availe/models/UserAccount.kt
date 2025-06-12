@@ -18,5 +18,5 @@ interface InternalUserAccount {
 interface Cat {
     val id: Long
     @FieldGen(Replication.PATCH)
-    val name: String
+    val user: UserAccount
 }
