@@ -102,8 +102,11 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val rawType = prop.type.resolve()
                 val isOption = rawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
                 val targetType = if (isOption) rawType.arguments.first().type!!.resolve() else rawType
-                val fqcn = targetType.declaration.qualifiedName!!.asString()
-                val shortName = targetType.declaration.simpleName.asString()
+
+                val targetTypeDeclaration = resolver.getClassDeclarationByName(targetType.declaration.qualifiedName!!)
+                val isForeign = targetTypeDeclaration
+                    ?.annotations
+                    ?.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME } == true
 
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
                 val fieldRep = fieldAnn?.let { annotation ->
@@ -120,22 +123,34 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val propAnnotationsFromDiscovery = getDiscoveredAnnotationModels(prop)
                 val fieldAnnotations = (propAnnotationsFromParam + propAnnotationsFromDiscovery).takeIf { it.isNotEmpty() }
 
-                val isForeign = resolver
-                    .getClassDeclarationByName(targetType.declaration.qualifiedName!!)
-                    ?.annotations?.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME } == true
-
                 if (isForeign) {
+                    val foreignClassDecl = targetTypeDeclaration!!
+
+                    val idProperty = foreignClassDecl.getAllProperties()
+                        .firstOrNull { it.simpleName.asString() == ID_PROPERTY }
+                        ?: error("Foreign model '${foreignClassDecl.simpleName.asString()}' must have an 'id' property.")
+
+                    val idRawType = idProperty.type.resolve()
+                    val idIsOption = idRawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
+                    val idUnderlyingType = if (idIsOption) idRawType.arguments.first().type!!.resolve() else idRawType
+                    val idUnderlyingTypeFqcn = idUnderlyingType.declaration.qualifiedName!!.asString()
+
                     Property.ForeignProperty(
                         name = propName,
-                        foreignModelName = shortName,
-                        property = Property.Property(name = ID_PROPERTY, underlyingType = "kotlin.Long", replication = Replication.BOTH, annotations = null),
+                        foreignModelName = foreignClassDecl.simpleName.asString(),
+                        property = Property.Property(
+                            name = ID_PROPERTY,
+                            underlyingType = idUnderlyingTypeFqcn,
+                            replication = Replication.BOTH,
+                            annotations = null
+                        ),
                         replication = fieldRep,
                         annotations = fieldAnnotations
                     )
                 } else {
                     Property.Property(
                         name = propName,
-                        underlyingType = fqcn,
+                        underlyingType = targetType.declaration.qualifiedName!!.asString(),
                         replication = fieldRep,
                         annotations = fieldAnnotations
                     )

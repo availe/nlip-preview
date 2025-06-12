@@ -11,19 +11,5 @@ import kotlin.uuid.ExperimentalUuidApi
     optInMarkers = [ExperimentalUuidApi::class]
 )
 interface UserAccount {
-    val id: Option<Long>
+    val id: Option<String>
 }
-//
-//@ModelGen
-//interface InternalUserAccount {
-//    val user: UserAccount
-//}
-//
-//@ModelGen
-//interface Cat {
-//    val id: Long
-//    @FieldGen(Replication.PATCH)
-//    val user: UserAccount
-//    @FieldGen(Replication.NONE)
-//    val hello: String
-//}
