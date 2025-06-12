@@ -205,7 +205,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             }.toMutableList()
 
             if (schemaVersionProperty != null) {
-                baseProps.add(0, schemaVersionProperty)
+                baseProps.add(schemaVersionProperty)
             }
 
             Model(
