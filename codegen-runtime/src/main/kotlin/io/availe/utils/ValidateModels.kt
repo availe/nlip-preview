@@ -3,9 +3,11 @@ package io.availe.utils
 import io.availe.models.Model
 import io.availe.models.Property
 import io.availe.models.Variant
+import io.availe.models.printAllowedVariants
 
 fun validateModelReplications(models: List<Model>) {
     val modelsByName = models.associateBy { it.name }
+    val validationErrors = mutableListOf<String>()
 
     models.forEach { model ->
         listOf(Variant.CREATE, Variant.PATCH).forEach { variant ->
@@ -30,22 +32,30 @@ fun validateModelReplications(models: List<Model>) {
                         val parentVariantClass = "${model.name}${variant.suffix}"
                         val nestedVariantClass = "${targetName}${variant.suffix}"
                         val errorMessage = """
+                        Cannot generate '$parentVariantClass': required nested model '$nestedVariantClass' cannot be generated.
 
-                        ERROR: Cannot generate '$parentVariantClass'.
-                        It has a dependency on '$nestedVariantClass', which cannot be generated because it would be empty.
+                        Details:
+                          Parent Model       : ${model.name}
+                          Variant Requested  : ${variant.name}
+                          Nested Property    : ${fp.name} (type: $targetName)
 
-                        DETAILS
-                        - Parent Model:         ${model.name} (Property '${fp.name}')
-                        - Required Dependency:  $targetName (as a ${variant.name} variant)
+                        Why:
+                          '$targetName' does not support generating a non-empty ${variant.name} variant.
+                          Supported variants for '$targetName': { ${targetModel.replication.printAllowedVariants()} }
 
-                        WHY?
-                        The model '$targetName' has no properties that are configured for replication in a '${variant.name}' context.
-                        To fix this, please update the @FieldGen annotations within the '$targetName' interface to include '${variant.name}' replication for at least one field.
+                          → Because '$parentVariantClass' includes '${fp.name}',
+                            it depends on the existence of '$nestedVariantClass', which cannot be generated.
                         """.trimIndent()
-                        error(errorMessage)
+                        validationErrors.add(errorMessage)
                     }
                 }
         }
+    }
+
+    if (validationErrors.isNotEmpty()) {
+        val finalReport = "Model validation failed with ${validationErrors.size} error(s):\n\n" +
+                validationErrors.joinToString("\n\n--------------------------------------------------\n\n")
+        error(finalReport)
     }
 }
 
