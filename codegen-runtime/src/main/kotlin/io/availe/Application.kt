@@ -9,8 +9,8 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 object Paths {
-    val sharedRoot = File("shared/build/generated-src/kotlin-poet")
-    val serverRoot = File("server/build/generated-src/kotlin-poet")
+    val sharedRoot = File("build/generated-src/kotlin-poet")
+    val serverRoot = File("build/generated-src/kotlin-poet")
 }
 
 fun main(args: Array<String>) {
