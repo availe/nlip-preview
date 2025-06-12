@@ -14,6 +14,8 @@ private fun String.asClassName(): ClassName {
 fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
     val className = model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
     val underlyingTypeName = prop.underlyingType.asClassName()
+    val isParentSerializable = model.annotations?.contains("kotlinx.serialization.Serializable") == true
+
     return TypeSpec.classBuilder(className)
         .addAnnotation(JvmInline::class)
         .addModifiers(KModifier.VALUE)
@@ -28,6 +30,9 @@ fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
                 .build()
         )
         .apply {
+            if (isParentSerializable) {
+                addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+            }
             prop.annotations?.forEach { annotation ->
                 addAnnotation(annotation.asClassName())
             }
