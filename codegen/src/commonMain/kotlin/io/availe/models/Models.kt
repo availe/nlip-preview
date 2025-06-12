@@ -11,16 +11,28 @@ data class Model(
     val optInMarkers: List<String>? = null,
 ) {
     init {
-        val invalidProperty = properties.firstOrNull {
+        require(properties.isNotEmpty()) {
+            "Model validation failed for '$name': Model interfaces cannot be empty and must contain at least one property."
+        }
+
+        val invalidProperties = properties.filter {
             !replication.allowedVariants(it.replication)
         }
-        require(invalidProperty == null) {
+        require(invalidProperties.isEmpty()) {
+            val count = invalidProperties.size
+            val pluralS = if (count == 1) "" else "s"
+            val noun = if (count == 1) "property" else "properties"
+            val verb = if (count == 1) "is" else "are"
+
+            val propertiesReport = invalidProperties.joinToString("\n") {
+                "  - Property: '${it.name}' (has replication '${it.replication}')"
+            }
             """
-            Invalid property replication in model '$name':
-              Property: '${invalidProperty?.name}'
-              Property Replication: ${invalidProperty?.replication}
-              Model Replication: $replication
-            Allowed replications for model '$name': { ${replication.printAllowedVariants()} }
+            Invalid property replication$pluralS found in model '$name':
+            The model's replication level is '$replication', which only allows properties with replication levels of { ${replication.printAllowedVariants()} }.
+
+            The following $noun $verb invalid:
+            $propertiesReport
             """.trimIndent()
         }
     }

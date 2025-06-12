@@ -1,15 +1,31 @@
 package io.availe.utils
 
-import io.availe.models.Model
-import io.availe.models.Property
-import io.availe.models.Variant
-import io.availe.models.printAllowedVariants
+import io.availe.models.*
 
 fun validateModelReplications(models: List<Model>) {
     val modelsByName = models.associateBy { it.name }
     val validationErrors = mutableListOf<String>()
 
     models.forEach { model ->
+        if (model.replication == Replication.CREATE || model.replication == Replication.BOTH) {
+            if (fieldsForCreate(model).isEmpty()) {
+                val errorMessage = """
+                Model '${model.name}' has invalid configuration.
+                It is declared to support the CREATE variant (model replication is '${model.replication}'), but it contains no properties marked for CREATE or BOTH replication. This would result in an empty '${model.name}CreateRequest' class.
+                """.trimIndent()
+                validationErrors.add(errorMessage)
+            }
+        }
+        if (model.replication == Replication.PATCH || model.replication == Replication.BOTH) {
+            if (fieldsForPatch(model).isEmpty()) {
+                val errorMessage = """
+                Model '${model.name}' has invalid configuration.
+                It is declared to support the PATCH variant (model replication is '${model.replication}'), but it contains no properties marked for PATCH or BOTH replication. This would result in an empty '${model.name}PatchRequest' class.
+                """.trimIndent()
+                validationErrors.add(errorMessage)
+            }
+        }
+
         listOf(Variant.CREATE, Variant.PATCH).forEach { variant ->
             if (fieldsForVariant(model, variant).isEmpty()) {
                 return@forEach
