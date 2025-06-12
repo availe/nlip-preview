@@ -5,7 +5,9 @@ import io.availe.ModelGen
 
 @ModelGen
 interface UserAccount {
+    @FieldGen(Replication.NONE)
     val id: Long
+    @FieldGen(Replication.NONE)
     val name: String
 }
 
