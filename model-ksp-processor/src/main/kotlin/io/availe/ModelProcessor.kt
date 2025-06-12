@@ -4,18 +4,18 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.*
 import io.availe.models.*
 import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
 
 private val MODEL_ANNOTATION_NAME = ModelGen::class.qualifiedName!!
+private val SCHEMA_VERSION_ANNOTATION_NAME = SchemaVersion::class.qualifiedName!!
 private val FIELD_ANNOTATION_NAME = FieldGen::class.qualifiedName!!
 private val HIDE_ANNOTATION_NAME = Hide::class.qualifiedName!!
 private const val ID_PROPERTY = "id"
+private const val SCHEMA_VERSION_PROPERTY = "schema_version"
+private val V_INT_REGEX = Regex("^V(\\d+)$")
 
 class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProcessor {
     private var invoked = false
@@ -64,7 +64,9 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
     private fun getDiscoveredAnnotationModels(annotated: KSAnnotated): List<AnnotationModel> {
         return annotated.annotations.mapNotNull { ann ->
             val fqName = ann.annotationType.resolve().declaration.qualifiedName?.asString() ?: return@mapNotNull null
-            if (fqName == MODEL_ANNOTATION_NAME || fqName == FIELD_ANNOTATION_NAME || fqName == HIDE_ANNOTATION_NAME) return@mapNotNull null
+            if (setOf(MODEL_ANNOTATION_NAME, FIELD_ANNOTATION_NAME, HIDE_ANNOTATION_NAME, SCHEMA_VERSION_ANNOTATION_NAME).contains(fqName)) {
+                return@mapNotNull null
+            }
 
             val args = ann.arguments.associate { arg ->
                 val name = arg.name?.asString() ?: "value"
@@ -103,6 +105,36 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             val modelAnn = cls.annotations.first { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME }
             val name = cls.simpleName.asString()
 
+            val baseModel = cls.superTypes
+                .map { it.resolve().declaration }
+                .filterIsInstance<KSClassDeclaration>()
+                .firstOrNull { superDecl ->
+                    superDecl.classKind == ClassKind.INTERFACE &&
+                            superDecl.annotations.none { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME }
+                }
+
+            var schemaVersion: Int? = null
+            if (baseModel != null) {
+                val schemaVersionAnn = cls.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == SCHEMA_VERSION_ANNOTATION_NAME }
+                if (schemaVersionAnn != null) {
+                    schemaVersion = schemaVersionAnn.arguments.first { it.name?.asString() == "number" }.value as Int
+                } else {
+                    val match = V_INT_REGEX.find(name)
+                    if (match != null) {
+                        schemaVersion = match.groupValues[1].toInt()
+                    } else {
+                        error("Model validation failed for '$name': Versioned models must either follow the 'V<Int>' naming convention or be annotated with '@SchemaVersion(number = ...)'.")
+                    }
+                }
+
+                val hasSchemaVersionProp = cls.getAllProperties().any { prop ->
+                    prop.simpleName.asString() == SCHEMA_VERSION_PROPERTY && prop.type.resolve().toTypeInfo().qualifiedName == "kotlin.Int"
+                }
+                if (!hasSchemaVersionProp) {
+                    error("Model validation failed for '$name': Versioned models must declare 'val $SCHEMA_VERSION_PROPERTY: Int' in the interface.")
+                }
+            }
+
             val classRep = modelAnn.arguments
                 .firstOrNull { it.name?.asString() == "replication" }
                 ?.value?.let { value ->
@@ -112,7 +144,6 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         null
                     }
                 } ?: Replication.BOTH
-
 
             val annotationsFromParam = getKClassListAnnotations(modelAnn)
             val annotationsFromDiscovery = getDiscoveredAnnotationModels(cls)
@@ -177,7 +208,9 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 properties = props,
                 replication = classRep,
                 annotations = modelAnnotations,
-                optInMarkers = optInMarkers
+                optInMarkers = optInMarkers,
+                isVersionOf = baseModel?.simpleName?.asString(),
+                schemaVersion = schemaVersion
             )
         }.toList()
 }

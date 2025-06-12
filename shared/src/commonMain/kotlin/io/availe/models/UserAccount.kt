@@ -1,29 +1,34 @@
 package io.availe.models
 
-import arrow.core.Option
-import io.availe.Hide
+import io.availe.FieldGen
 import io.availe.ModelGen
-import kotlinx.serialization.Contextual
+import io.availe.SchemaVersion
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
 
+public interface UserAccount
 
-@ModelGen(
-    replication = Replication.BOTH,
-    annotations = [Serializable::class],
-    optInMarkers = [ExperimentalUuidApi::class]
-)
-interface UserAccount {
-    @Contextual
-    val id: Option<String>
+@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
+public interface V1 : UserAccount {
+    public val schemaVersion: Int
+
+    @FieldGen(replication = Replication.BOTH)
+    public val id: String
 }
 
+@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
+public interface V2 : UserAccount {
+    public val schemaVersion: Int
 
-@Hide
-@ModelGen(
-    annotations = [Serializable::class]
-)
-interface Product {
-    val id: String
+    @FieldGen(replication = Replication.BOTH)
+    public val id: String
+
+    @FieldGen(replication = Replication.CREATE)
+    public val email: String
 }
 
+@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
+@SchemaVersion(number = 0)
+public interface Legacy : UserAccount {
+    public val schemaVersion: Int
+    public val legacyId: Int
+}

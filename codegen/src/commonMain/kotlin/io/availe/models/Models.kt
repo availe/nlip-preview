@@ -9,6 +9,8 @@ data class Model(
     val replication: Replication,
     val annotations: List<AnnotationModel>? = null,
     val optInMarkers: List<String>? = null,
+    val isVersionOf: String? = null,
+    val schemaVersion: Int? = null,
 ) {
     init {
         require(properties.isNotEmpty()) {
