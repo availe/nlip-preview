@@ -14,7 +14,7 @@ private val SCHEMA_VERSION_ANNOTATION_NAME = SchemaVersion::class.qualifiedName!
 private val FIELD_ANNOTATION_NAME = FieldGen::class.qualifiedName!!
 private val HIDE_ANNOTATION_NAME = Hide::class.qualifiedName!!
 private const val ID_PROPERTY = "id"
-private const val SCHEMA_VERSION_PROPERTY = "schema_version"
+private const val SCHEMA_VERSION_PROPERTY = "schemaVersion"
 private val V_INT_REGEX = Regex("^V(\\d+)$")
 
 class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProcessor {

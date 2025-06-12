@@ -25,11 +25,17 @@ private fun buildAnnotation(annModel: AnnotationModel): AnnotationSpec {
     return builder.build()
 }
 
-fun resolvedTypeName(prop: Property, variant: Variant, modelName: String): TypeName {
+fun resolvedTypeName(prop: Property, variant: Variant, model: Model): TypeName {
+    val baseName = model.isVersionOf ?: model.name
+
     val baseType = when (prop) {
         is Property.Property -> {
-            val valueClassName = modelName + prop.name.replaceFirstChar { it.uppercaseChar() }
-            ClassName(packageName, valueClassName)
+            val valueClassName = prop.name.replaceFirstChar { it.uppercaseChar() }
+            if (model.isVersionOf != null) {
+                ClassName(packageName, baseName, model.name, valueClassName)
+            } else {
+                ClassName(packageName, model.name + valueClassName)
+            }
         }
         is Property.ForeignProperty -> {
             val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
@@ -46,23 +52,51 @@ fun resolvedTypeName(prop: Property, variant: Variant, modelName: String): TypeN
 
 
 fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): TypeSpec {
-    val name = model.name + variant.suffix
+    val name = when(variant) {
+        Variant.BASE -> "Data"
+        Variant.CREATE -> "CreateRequest"
+        Variant.PATCH -> "PatchRequest"
+    }
+
     val typeSpec = TypeSpec.classBuilder(name).addModifiers(KModifier.DATA)
     model.annotations?.forEach {
         typeSpec.addAnnotation(buildAnnotation(it))
     }
+
+    val baseModelName = model.isVersionOf
+    if (variant == Variant.BASE && baseModelName != null) {
+        typeSpec.superclass(ClassName(packageName, baseModelName, model.name))
+    }
+
     val ctor = FunSpec.constructorBuilder()
+
+    val isVersioned = model.isVersionOf != null
     props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model.name)
+        val t = resolvedTypeName(p, variant, model)
         val param = ParameterSpec.builder(p.name, t)
-        if (variant == Variant.PATCH) param.defaultValue("%T.Unchanged", ClassName(packageName, "Patchable"))
+
+        if (isVersioned && p.name == "schemaVersion") {
+            if (variant != Variant.PATCH) {
+                param.defaultValue("%L", model.schemaVersion)
+            }
+        }
+
+        if (variant == Variant.PATCH) {
+            param.defaultValue("%T.Unchanged", ClassName(packageName, "Patchable"))
+        }
+
         ctor.addParameter(param.build())
     }
     typeSpec.primaryConstructor(ctor.build())
 
     props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model.name)
+        val t = resolvedTypeName(p, variant, model)
         val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
+
+        if (isVersioned && p.name == "schemaVersion") {
+            propSpec.addModifiers(KModifier.OVERRIDE)
+        }
+
         p.annotations?.forEach {
             propSpec.addAnnotation(buildAnnotation(it))
         }
