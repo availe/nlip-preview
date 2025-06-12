@@ -25,5 +25,5 @@ public interface V2 : UserAccount {
 @ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
 @SchemaVersion(number = 0)
 public interface Legacy : UserAccount {
-    public val legacyId: Int
+    public val id: Int
 }
