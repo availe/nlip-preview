@@ -25,12 +25,16 @@ private fun buildAnnotation(annModel: AnnotationModel): AnnotationSpec {
     return builder.build()
 }
 
-fun resolvedTypeName(prop: Property, variant: Variant, model: Model): TypeName {
-    val baseName = model.isVersionOf ?: model.name
-
+private fun resolvedTypeName(
+    prop: Property,
+    variant: Variant,
+    model: Model,
+    valueClassNames: Map<Pair<String, String>, String>
+): TypeName {
     val baseType = when (prop) {
         is Property.Property -> {
-            val valueClassName = "$baseName${model.name}${prop.name.replaceFirstChar { it.uppercaseChar() }}"
+            val valueClassName = valueClassNames[model.name to prop.name]
+                ?: error("Could not find value class name for ${model.name}.${prop.name}")
             ClassName(packageName, valueClassName)
         }
         is Property.ForeignProperty -> {
@@ -47,8 +51,13 @@ fun resolvedTypeName(prop: Property, variant: Variant, model: Model): TypeName {
 }
 
 
-fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): TypeSpec {
-    val name = when(variant) {
+fun dataClassBuilder(
+    model: Model,
+    props: List<Property>,
+    variant: Variant,
+    valueClassNames: Map<Pair<String, String>, String>
+): TypeSpec {
+    val name = when (variant) {
         Variant.BASE -> "Data"
         Variant.CREATE -> "CreateRequest"
         Variant.PATCH -> "PatchRequest"
@@ -67,12 +76,11 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
 
     val ctor = FunSpec.constructorBuilder()
 
-    val isVersioned = model.isVersionOf != null
     props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model)
+        val t = resolvedTypeName(p, variant, model, valueClassNames)
         val param = ParameterSpec.builder(p.name, t)
 
-        if (isVersioned && p.name == "schemaVersion") {
+        if (p.name == "schemaVersion") {
             if (variant != Variant.PATCH) {
                 param.defaultValue("%T(%L)", t, model.schemaVersion)
             }
@@ -87,7 +95,7 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
     typeSpec.primaryConstructor(ctor.build())
 
     props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model)
+        val t = resolvedTypeName(p, variant, model, valueClassNames)
         val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
 
         p.annotations?.forEach {

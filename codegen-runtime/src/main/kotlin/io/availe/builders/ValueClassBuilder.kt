@@ -3,7 +3,6 @@ package io.availe.builders
 import com.squareup.kotlinpoet.*
 import io.availe.models.AnnotationArgument
 import io.availe.models.AnnotationModel
-import io.availe.models.Model
 import io.availe.models.Property
 
 private fun String.asClassName(): ClassName {
@@ -25,12 +24,12 @@ private fun buildAnnotation(annModel: AnnotationModel): com.squareup.kotlinpoet.
     return builder.build()
 }
 
-fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
-    val baseName = model.isVersionOf ?: model.name
-    val className = "$baseName${model.name}${prop.name.replaceFirstChar { it.uppercaseChar() }}"
-
+fun buildValueClass(
+    className: String,
+    prop: Property.Property,
+    isSerializable: Boolean
+): TypeSpec {
     val underlyingTypeName = prop.typeInfo.toTypeName()
-    val isParentSerializable = model.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
 
     val ctorParamBuilder = ParameterSpec.builder("value", underlyingTypeName)
     prop.annotations?.forEach { annotation ->
@@ -51,7 +50,7 @@ fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
                 .build()
         )
         .apply {
-            if (isParentSerializable) {
+            if (isSerializable) {
                 addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
             }
         }
