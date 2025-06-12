@@ -6,14 +6,14 @@ import kotlinx.serialization.Serializable
 sealed class Property {
     abstract val name: String
     abstract val replication: Replication
-    abstract val annotations: List<String>?
+    abstract val annotations: List<AnnotationModel>?
 
     @Serializable
     data class Property(
         override val name: String,
         val underlyingType: String,
         override val replication: Replication,
-        override val annotations: List<String>? = null,
+        override val annotations: List<AnnotationModel>? = null,
     ) : io.availe.models.Property()
 
     @Serializable
@@ -22,6 +22,6 @@ sealed class Property {
         val foreignModelName: String,
         val property: Property,
         override val replication: Replication,
-        override val annotations: List<String>? = null,
+        override val annotations: List<AnnotationModel>? = null,
     ) : io.availe.models.Property()
 }

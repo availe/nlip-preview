@@ -7,7 +7,7 @@ data class Model(
     val name: String,
     val properties: List<Property>,
     val replication: Replication,
-    val annotations: List<String>? = null,
+    val annotations: List<AnnotationModel>? = null,
     val optInMarkers: List<String>? = null,
 ) {
     init {
