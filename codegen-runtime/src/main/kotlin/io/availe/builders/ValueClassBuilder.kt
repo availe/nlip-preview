@@ -25,13 +25,14 @@ private fun buildAnnotation(annModel: AnnotationModel): com.squareup.kotlinpoet.
     return builder.build()
 }
 
-fun buildValueClass(model: Model, prop: Property.Property, isVersioned: Boolean): TypeSpec {
-    val className = prop.name.replaceFirstChar { it.uppercaseChar() }
-    val underlyingTypeName = if(isVersioned) prop.typeInfo.toTypeName() else prop.typeInfo.toTypeName(model.name)
-    val propName = if (prop.name == "schema_version") "schemaVersion" else prop.name
+fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
+    val baseName = model.isVersionOf ?: model.name
+    val className = "$baseName${model.name}${prop.name.replaceFirstChar { it.uppercaseChar() }}"
+
+    val underlyingTypeName = prop.typeInfo.toTypeName()
     val isParentSerializable = model.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
 
-    val ctorParamBuilder = ParameterSpec.builder(propName, underlyingTypeName)
+    val ctorParamBuilder = ParameterSpec.builder("value", underlyingTypeName)
     prop.annotations?.forEach { annotation ->
         ctorParamBuilder.addAnnotation(buildAnnotation(annotation))
     }
@@ -45,8 +46,8 @@ fun buildValueClass(model: Model, prop: Property.Property, isVersioned: Boolean)
                 .build()
         )
         .addProperty(
-            PropertySpec.builder(propName, underlyingTypeName)
-                .initializer(propName)
+            PropertySpec.builder("value", underlyingTypeName)
+                .initializer("value")
                 .build()
         )
         .apply {

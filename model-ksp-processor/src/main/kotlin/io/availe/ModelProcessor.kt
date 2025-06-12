@@ -104,6 +104,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         symbols.map { cls ->
             val modelAnn = cls.annotations.first { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME }
             val name = cls.simpleName.asString()
+            val packageName = cls.packageName.asString()
 
             val baseModel = cls.superTypes
                 .map { it.resolve().declaration }
@@ -114,6 +115,8 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 }
 
             var schemaVersion: Int? = null
+            var schemaVersionProperty: Property.Property? = null
+
             if (baseModel != null) {
                 val schemaVersionAnn = cls.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == SCHEMA_VERSION_ANNOTATION_NAME }
                 if (schemaVersionAnn != null) {
@@ -126,13 +129,11 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         error("Model validation failed for '$name': Versioned models must either follow the 'V<Int>' naming convention or be annotated with '@SchemaVersion(number = ...)'.")
                     }
                 }
-
-                val hasSchemaVersionProp = cls.getAllProperties().any { prop ->
-                    prop.simpleName.asString() == SCHEMA_VERSION_PROPERTY && prop.type.resolve().toTypeInfo().qualifiedName == "kotlin.Int"
-                }
-                if (!hasSchemaVersionProp) {
-                    error("Model validation failed for '$name': Versioned models must declare 'val $SCHEMA_VERSION_PROPERTY: Int' in the interface.")
-                }
+                schemaVersionProperty = Property.Property(
+                    name = SCHEMA_VERSION_PROPERTY,
+                    typeInfo = TypeInfo("kotlin.Int"),
+                    replication = Replication.BOTH
+                )
             }
 
             val classRep = modelAnn.arguments
@@ -150,7 +151,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             val modelAnnotations = (annotationsFromParam + annotationsFromDiscovery).takeIf { it.isNotEmpty() }
             val optInMarkers = getOptInMarkers(modelAnn)
 
-            val props = cls.getAllProperties().map { prop ->
+            val baseProps = cls.getAllProperties().map { prop ->
                 val propName = prop.simpleName.asString()
                 val propTypeInfo = prop.type.resolve().toTypeInfo()
                 val leafTypeInfo = propTypeInfo.getLeafType()
@@ -201,11 +202,16 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         annotations = fieldAnnotations
                     )
                 }
-            }.toList()
+            }.toMutableList()
+
+            if (schemaVersionProperty != null) {
+                baseProps.add(0, schemaVersionProperty)
+            }
 
             Model(
                 name = name,
-                properties = props,
+                packageName = packageName,
+                properties = baseProps,
                 replication = classRep,
                 annotations = modelAnnotations,
                 optInMarkers = optInMarkers,

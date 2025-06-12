@@ -16,16 +16,25 @@ val filePath: File = File("build/generated-src/kotlin-poet")
 
 private fun generateVersionedModelFile(baseName: String, versions: List<Model>, out: File) {
     val sortedVersions = versions.sortedByDescending { it.schemaVersion }
-    val fileBuilder = FileSpec.builder(packageName, baseName)
+    val generatedClassName = baseName + "Schema"
+    val fileBuilder = FileSpec.builder(packageName, generatedClassName)
 
-    val topLevelClass = TypeSpec.classBuilder(baseName)
+    val allValueClasses = sortedVersions.flatMap { version ->
+        version.properties
+            .filterIsInstance<Property.Property>()
+            .map { prop -> buildValueClass(version, prop) }
+    }.distinctBy { it.name }
+
+    allValueClasses.forEach { fileBuilder.addType(it) }
+
+    val topLevelClass = TypeSpec.classBuilder(generatedClassName)
         .addModifiers(KModifier.SEALED)
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
 
     sortedVersions.forEach { version ->
         val versionClass = TypeSpec.classBuilder(version.name)
             .addModifiers(KModifier.SEALED)
-            .superclass(ClassName(packageName, baseName))
+            .superclass(ClassName(packageName, generatedClassName))
             .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
 
         val dtoSpecs = listOf(
@@ -36,12 +45,6 @@ private fun generateVersionedModelFile(baseName: String, versions: List<Model>, 
             if (fields.isNotEmpty()) dataClassBuilder(version, fields, variant) else null
         }
         dtoSpecs.forEach { versionClass.addType(it) }
-
-        val valueClassSpecs = version.properties
-            .filterIsInstance<Property.Property>()
-            .filter { it.name != "schemaVersion" }
-            .map { buildValueClass(version, it, isVersioned = true) }
-        valueClassSpecs.forEach { versionClass.addType(it) }
 
         topLevelClass.addType(versionClass.build())
     }
@@ -87,7 +90,7 @@ private fun generateStandaloneModel(model: Model, out: File) {
 
     val valueClassSpecs = model.properties
         .filterIsInstance<Property.Property>()
-        .map { buildValueClass(model, it, isVersioned = false) }
+        .map { buildValueClass(model, it) }
     valueClassSpecs.forEach { fileBuilder.addType(it) }
 
     fileBuilder.build().writeTo(out)

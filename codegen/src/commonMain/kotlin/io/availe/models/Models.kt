@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Model(
     val name: String,
+    val packageName: String,
     val properties: List<Property>,
     val replication: Replication,
     val annotations: List<AnnotationModel>? = null,

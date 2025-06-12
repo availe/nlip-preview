@@ -30,12 +30,8 @@ fun resolvedTypeName(prop: Property, variant: Variant, model: Model): TypeName {
 
     val baseType = when (prop) {
         is Property.Property -> {
-            val valueClassName = prop.name.replaceFirstChar { it.uppercaseChar() }
-            if (model.isVersionOf != null) {
-                ClassName(packageName, baseName, model.name, valueClassName)
-            } else {
-                ClassName(packageName, model.name + valueClassName)
-            }
+            val valueClassName = "$baseName${model.name}${prop.name.replaceFirstChar { it.uppercaseChar() }}"
+            ClassName(packageName, valueClassName)
         }
         is Property.ForeignProperty -> {
             val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
@@ -65,7 +61,8 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
 
     val baseModelName = model.isVersionOf
     if (variant == Variant.BASE && baseModelName != null) {
-        typeSpec.superclass(ClassName(packageName, baseModelName, model.name))
+        val schemaName = baseModelName + "Schema"
+        typeSpec.superclass(ClassName(packageName, schemaName, model.name))
     }
 
     val ctor = FunSpec.constructorBuilder()
@@ -77,7 +74,7 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
 
         if (isVersioned && p.name == "schemaVersion") {
             if (variant != Variant.PATCH) {
-                param.defaultValue("%L", model.schemaVersion)
+                param.defaultValue("%T(%L)", t, model.schemaVersion)
             }
         }
 
@@ -92,10 +89,6 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
     props.forEach { p ->
         val t = resolvedTypeName(p, variant, model)
         val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
-
-        if (isVersioned && p.name == "schemaVersion") {
-            propSpec.addModifiers(KModifier.OVERRIDE)
-        }
 
         p.annotations?.forEach {
             propSpec.addAnnotation(buildAnnotation(it))
