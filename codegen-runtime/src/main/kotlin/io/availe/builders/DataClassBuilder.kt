@@ -50,20 +50,16 @@ private fun resolvedTypeName(
     }
 }
 
-
 fun dataClassBuilder(
     model: Model,
     props: List<Property>,
     variant: Variant,
     valueClassNames: Map<Pair<String, String>, String>
 ): TypeSpec {
-    val name = when (variant) {
-        Variant.BASE -> "Data"
-        Variant.CREATE -> "CreateRequest"
-        Variant.PATCH -> "PatchRequest"
-    }
+    val name = model.name + variant.suffix
+    val typeSpec = TypeSpec.classBuilder(name)
+        .addModifiers(KModifier.DATA)
 
-    val typeSpec = TypeSpec.classBuilder(name).addModifiers(KModifier.DATA)
     model.annotations?.forEach {
         typeSpec.addAnnotation(buildAnnotation(it))
     }
