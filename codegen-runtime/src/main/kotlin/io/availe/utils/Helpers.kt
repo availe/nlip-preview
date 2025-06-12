@@ -1,27 +1,16 @@
 package io.availe.utils
 
-import io.availe.Paths
 import io.availe.models.Model
-import io.availe.models.Module
 import io.availe.models.Property
 import io.availe.models.Replication
-import java.io.File
 
-fun outputDirForModule(module: Module): File =
-    when (module) {
-        Module.SHARED -> Paths.sharedRoot
-        Module.SERVER -> Paths.serverRoot
-    }
+fun fieldsForBase(model: Model): List<Property> = model.properties
 
-fun fieldsForBase(modelParameter: Model): List<Property> =
-    modelParameter.properties
+fun fieldsForCreate(model: Model): List<Property> =
+    model.properties.filter { it.replication == Replication.CREATE || it.replication == Replication.BOTH }
 
-fun fieldsForCreate(modelParameter: Model): List<Property> =
-    modelParameter.properties.filter { propertyItem ->
-        propertyItem.replication == Replication.CREATE || propertyItem.replication == Replication.BOTH
-    }
+fun fieldsForPatch(model: Model): List<Property> =
+    model.properties.filter { it.replication == Replication.PATCH || it.replication == Replication.BOTH }
 
-fun fieldsForPatch(modelParameter: Model): List<Property> =
-    modelParameter.properties.filter { propertyItem ->
-        propertyItem.replication == Replication.PATCH || propertyItem.replication == Replication.BOTH
-    }
+fun fieldsForInterface(model: Model): List<Property> =
+    model.properties.filter { it.replication == Replication.BOTH }

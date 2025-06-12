@@ -1,40 +1,23 @@
 package io.availe
 
 import io.availe.generators.generateDataClasses
-import io.availe.generators.generateInterfaces
-import io.availe.generators.generateValueClasses
+import io.availe.generators.generatePatchable
 import io.availe.models.Model
 import io.availe.utils.validateModelReplications
 import kotlinx.serialization.json.Json
 import java.io.File
 
-object Paths {
-    val sharedRoot = File("build/generated-src/kotlin-poet")
-    val serverRoot = File("build/generated-src/kotlin-poet")
-}
-
 fun main(args: Array<String>) {
     println("Availe Codegen Runtime starting...")
-
-    val jsonFilePath = args.getOrNull(0)
-        ?: error("Codegen Error: Missing models.json file path argument.")
-
-    val jsonFile = File(jsonFilePath)
-    if (!jsonFile.exists()) {
-        error("Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}")
-    }
-
+    val jsonPath = args.getOrNull(0) ?: error("Codegen Error: Missing models.json file path argument.")
+    val jsonFile = File(jsonPath)
+    require(jsonFile.exists()) { "Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}" }
     println("Loading model definitions from: ${jsonFile.path}")
-    val jsonData = jsonFile.readText()
-    val modelDefinitions = Json.decodeFromString<List<Model>>(jsonData)
-
-    println("Loaded ${modelDefinitions.size} model definitions.")
-
-    validateModelReplications(modelDefinitions)
+    val models = Json.decodeFromString<List<Model>>(jsonFile.readText())
+    println("Loaded ${models.size} model definitions.")
+    validateModelReplications(models)
     println("Model definitions validated successfully.")
-
-    generateInterfaces(modelDefinitions)
-    generateValueClasses(modelDefinitions)
-    generateDataClasses(modelDefinitions)
+    generatePatchable()
+    generateDataClasses(models)
     println("Code generation complete.")
 }

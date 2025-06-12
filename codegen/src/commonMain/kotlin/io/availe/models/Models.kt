@@ -5,24 +5,20 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Model(
     val name: String,
-    val module: Module,
     val properties: List<Property>,
     val replication: Replication,
-    val contextual: Boolean = module.defaultContextual,
+    val contextual: Boolean = true
 ) {
     init {
         val invalidProperty = properties.firstOrNull {
             !replication.allowedVariants(it.replication)
         }
-
         require(invalidProperty == null) {
             """
             Invalid property replication in model '$name':
-            
               Property: '${invalidProperty?.name}'
               Property Replication: ${invalidProperty?.replication}
               Model Replication: $replication
-            
             Allowed replications for model '$name': { ${replication.printAllowedVariants()} }
             """.trimIndent()
         }
@@ -43,6 +39,3 @@ fun Replication.printAllowedVariants(): String = when (this) {
     Replication.CREATE -> "NONE, CREATE"
     Replication.BOTH -> "NONE, CREATE, PATCH, BOTH"
 }
-
-val Module.defaultContextual: Boolean
-    get() = this == Module.SHARED

@@ -3,9 +3,6 @@ package io.availe.models
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class Module { SHARED, SERVER }
-
-@Serializable
 enum class Replication { NONE, PATCH, CREATE, BOTH }
 
 @Serializable

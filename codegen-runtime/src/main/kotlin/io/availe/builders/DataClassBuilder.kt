@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.models.Model
 import io.availe.models.Property
+import io.availe.models.Replication
 import io.availe.models.Variant
 
 const val packageName: String = "io.availe.models"
@@ -12,70 +13,44 @@ private const val BASE_IMPL_SUFFIX = "Data"
 private fun baseImplSuffixFor(variant: Variant): String =
     if (variant == Variant.BASE) BASE_IMPL_SUFFIX else variant.suffix
 
-fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
+private fun coreType(model: Model, prop: Property, variant: Variant): TypeName {
     val suffix = baseImplSuffixFor(variant)
-
-    val rawType = when (prop) {
-        is Property.Property -> ClassName(
-            packageName,
-            model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
-        )
-
-        is Property.ForeignProperty -> ClassName(
-            packageName,
-            prop.foreignModelName + suffix
-        )
+    val raw = when (prop) {
+        is Property.Property -> ClassName(packageName, model.name + prop.name.replaceFirstChar { it.uppercaseChar() })
+        is Property.ForeignProperty -> ClassName(packageName, prop.foreignModelName + suffix)
     }
+    return if (prop.optional) ClassName("arrow.core", "Option").parameterizedBy(raw) else raw
+}
 
-    return if (prop.optional) {
-        ClassName("arrow.core", "Option").parameterizedBy(rawType)
-    } else {
-        rawType
-    }
+fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
+    val inner = coreType(model, prop, variant)
+    return if (variant == Variant.PATCH) ClassName(packageName, "Patchable").parameterizedBy(inner) else inner
 }
 
 fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): TypeSpec {
-    val className = model.name + variant.suffix
-    val typeSpecBuilder = TypeSpec.classBuilder(className)
-        .addModifiers(KModifier.DATA)
-
-    val constructorBuilder = FunSpec.constructorBuilder()
-    props.forEach { prop ->
-        val propType = resolvedTypeName(model, prop, variant)
-        constructorBuilder.addParameter(prop.name, propType)
+    val name = model.name + variant.suffix
+    val typeSpec = TypeSpec.classBuilder(name).addModifiers(KModifier.DATA)
+    if (model.contextual) typeSpec.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+    val ctor = FunSpec.constructorBuilder()
+    props.forEach { p ->
+        val t = resolvedTypeName(model, p, variant)
+        val param = ParameterSpec.builder(p.name, t)
+        if (variant == Variant.PATCH) param.defaultValue("%T.Unchanged", ClassName(packageName, "Patchable"))
+        ctor.addParameter(param.build())
     }
-    typeSpecBuilder.primaryConstructor(constructorBuilder.build())
-
-    val shouldImplementInterface = variant == Variant.BASE || variant == Variant.CREATE
-
-    props.forEach { prop ->
-        val propType = resolvedTypeName(model, prop, variant)
-        val propSpec = PropertySpec.builder(prop.name, propType)
-            .initializer(prop.name)
-
-        if (shouldImplementInterface) {
-            propSpec.addModifiers(KModifier.OVERRIDE)
-        }
-
-        if (model.contextual && prop.optional) {
-            propSpec.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Contextual"))
-                    .useSiteTarget(AnnotationSpec.UseSiteTarget.PROPERTY)
-                    .build()
-            )
-        }
-        typeSpecBuilder.addProperty(propSpec.build())
+    typeSpec.primaryConstructor(ctor.build())
+    val ifaceProps = model.properties.filter { it.replication == Replication.BOTH }
+    val implement = (variant == Variant.BASE || variant == Variant.CREATE) && ifaceProps.isNotEmpty()
+    props.forEach { p ->
+        val t = resolvedTypeName(model, p, variant)
+        val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
+        if (implement && ifaceProps.any { it.name == p.name }) propSpec.addModifiers(KModifier.OVERRIDE)
+        typeSpec.addProperty(propSpec.build())
     }
-
-    if (shouldImplementInterface) {
-        val interfaceName = ClassName(packageName, "I${model.name}")
-        val typeArguments = props.map { resolvedTypeName(model, it, variant) }
-        typeSpecBuilder.addSuperinterface(interfaceName.parameterizedBy(typeArguments))
+    if (implement) {
+        val iface = ClassName(packageName, "I${model.name}")
+        val args = ifaceProps.map { resolvedTypeName(model, it, variant) }
+        typeSpec.addSuperinterface(iface.parameterizedBy(args))
     }
-
-    if (model.contextual) {
-        typeSpecBuilder.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
-    }
-
-    return typeSpecBuilder.build()
+    return typeSpec.build()
 }
