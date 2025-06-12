@@ -1,46 +1,56 @@
 package io.availe.utils
 
-import io.availe.models.*
+import io.availe.models.Model
+import io.availe.models.Property
+import io.availe.models.Variant
 
 fun validateModelReplications(models: List<Model>) {
-    val repByName = models.associate { it.name to it.replication }
+    val modelsByName = models.associateBy { it.name }
 
     models.forEach { model ->
-        listOf(
-            Variant.BASE to Replication.NONE,
-            Variant.CREATE to Replication.CREATE,
-            Variant.PATCH to Replication.PATCH
-        ).forEach { (variant, needed) ->
-            if (!model.replication.allowedVariants(needed)) return@forEach
+        listOf(Variant.CREATE, Variant.PATCH).forEach { variant ->
+            if (fieldsForVariant(model, variant).isEmpty()) {
+                return@forEach
+            }
 
             model.properties
                 .filterIsInstance<Property.ForeignProperty>()
                 .forEach { fp ->
                     val targetName = fp.foreignModelName
-                    val targetReplication = repByName[targetName]
+                    val targetModel = modelsByName[targetName]
                         ?: error("Unknown referenced model '$targetName' in ${model.name}")
 
-                    if (!targetReplication.allowedVariants(needed)) {
+                    val isDependencySatisfied = when (variant) {
+                        Variant.CREATE -> fieldsForCreate(targetModel).isNotEmpty()
+                        Variant.PATCH -> fieldsForPatch(targetModel).isNotEmpty()
+                        else -> true
+                    }
+
+                    if (!isDependencySatisfied) {
                         val parentVariantClass = "${model.name}${variant.suffix}"
                         val nestedVariantClass = "${targetName}${variant.suffix}"
                         val errorMessage = """
-                            Cannot generate '$parentVariantClass': required nested model '$nestedVariantClass' cannot be generated.
 
-                            Details:
-                              Parent Model       : ${model.name}
-                              Variant Requested  : ${variant.name}
-                              Nested Property    : ${fp.name} (type: $targetName)
+                        ERROR: Cannot generate '$parentVariantClass'.
+                        It has a dependency on '$nestedVariantClass', which cannot be generated because it would be empty.
 
-                            Why:
-                              '$targetName' does not support the ${variant.name} variant.
-                              Supported variants for '$targetName': { ${targetReplication.printAllowedVariants()} }
+                        DETAILS
+                        - Parent Model:         ${model.name} (Property '${fp.name}')
+                        - Required Dependency:  $targetName (as a ${variant.name} variant)
 
-                              → Because '$parentVariantClass' includes '${fp.name}',
-                                it depends on the existence of '$nestedVariantClass', which cannot be generated.
+                        WHY?
+                        The model '$targetName' has no properties that are configured for replication in a '${variant.name}' context.
+                        To fix this, please update the @FieldGen annotations within the '$targetName' interface to include '${variant.name}' replication for at least one field.
                         """.trimIndent()
                         error(errorMessage)
                     }
                 }
         }
     }
+}
+
+private fun fieldsForVariant(model: Model, variant: Variant): List<Property> = when (variant) {
+    Variant.BASE -> model.properties
+    Variant.CREATE -> fieldsForCreate(model)
+    Variant.PATCH -> fieldsForPatch(model)
 }
