@@ -14,6 +14,7 @@ import java.io.OutputStreamWriter
 
 private val MODEL_ANNOTATION_NAME = ModelGen::class.qualifiedName!!
 private val FIELD_ANNOTATION_NAME = FieldGen::class.qualifiedName!!
+private val HIDE_ANNOTATION_NAME = Hide::class.qualifiedName!!
 private const val ID_PROPERTY = "id"
 
 class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProcessor {
@@ -24,6 +25,12 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
 
         val symbols = resolver.getSymbolsWithAnnotation(MODEL_ANNOTATION_NAME)
             .filterIsInstance<KSClassDeclaration>()
+            .filterNot { classDecl ->
+                classDecl.annotations.any { ann ->
+                    ann.annotationType.resolve().declaration.qualifiedName?.asString() == HIDE_ANNOTATION_NAME
+                }
+            }
+
         if (!symbols.iterator().hasNext()) return emptyList()
 
         val models = parseModels(symbols, resolver)
@@ -57,7 +64,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
     private fun getDiscoveredAnnotationModels(annotated: KSAnnotated): List<AnnotationModel> {
         return annotated.annotations.mapNotNull { ann ->
             val fqName = ann.annotationType.resolve().declaration.qualifiedName?.asString() ?: return@mapNotNull null
-            if (fqName == MODEL_ANNOTATION_NAME || fqName == FIELD_ANNOTATION_NAME) return@mapNotNull null
+            if (fqName == MODEL_ANNOTATION_NAME || fqName == FIELD_ANNOTATION_NAME || fqName == HIDE_ANNOTATION_NAME) return@mapNotNull null
 
             val args = ann.arguments.associate { arg ->
                 val name = arg.name?.asString() ?: "value"
