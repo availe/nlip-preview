@@ -1,5 +1,6 @@
 package io.availe.models
 
+import io.availe.FieldGen
 import io.availe.ModelGen
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
@@ -8,6 +9,7 @@ import kotlin.uuid.ExperimentalUuidApi
     annotations = [Serializable::class],
     optInMarkers = [ExperimentalUuidApi::class])
 interface UserAccount {
+    @FieldGen(Replication.NONE)
     val id: Long
 }
 //

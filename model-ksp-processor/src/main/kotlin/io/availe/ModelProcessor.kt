@@ -105,20 +105,9 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
 
                 val fieldRep = fieldAnn?.let { annotation ->
-                    val valueAsString = annotation.arguments
-                        .firstOrNull { it.name?.asString() == "replication" }
-                        ?.value?.toString()
-
-                    if (valueAsString != null) {
-                        val enumEntryName = valueAsString.substringAfterLast('.')
-                        try {
-                            Replication.valueOf(enumEntryName)
-                        } catch (e: IllegalArgumentException) {
-                            classRep
-                        }
-                    } else {
-                        classRep
-                    }
+                    annotation.arguments.firstOrNull()?.value?.toString()
+                        ?.substringAfterLast('.')
+                        ?.let { Replication.valueOf(it) }
                 } ?: classRep
 
                 val propAnnotationsFromParam = fieldAnn?.let { getKClassListAnnotations(it) } ?: emptyList()
