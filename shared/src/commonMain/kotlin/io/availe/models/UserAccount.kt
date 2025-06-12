@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 
 @ModelGen(annotations = [Serializable::class], optInMarkers = [ExperimentalUuidApi::class])
-@Deprecated("Use InternalUserAccount instead")
 interface UserAccount {
     @FieldGen(Replication.NONE)
     val id: Long
