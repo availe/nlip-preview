@@ -7,7 +7,8 @@ data class Model(
     val name: String,
     val properties: List<Property>,
     val replication: Replication,
-    val contextual: Boolean = true
+    val annotations: List<String>? = null,
+    val optInMarkers: List<String>? = null,
 ) {
     init {
         val invalidProperty = properties.firstOrNull {

@@ -5,7 +5,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import io.availe.models.Model
 import io.availe.models.Property
 import io.availe.models.Replication
@@ -39,38 +41,33 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         return emptyList()
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun KSAnnotation.getKClassListArgument(name: String): List<String>? {
+        val arg = this.arguments.firstOrNull { it.name?.asString() == name }?.value as? List<KSType>
+        return arg?.map { it.declaration.qualifiedName!!.asString() }?.takeIf { it.isNotEmpty() }
+    }
+
     private fun parseModels(symbols: Sequence<KSClassDeclaration>, resolver: Resolver): List<Model> =
         symbols.map { cls ->
-            val ann = cls.annotations.first { it.shortName.asString() == "ModelGen" }
+            val modelAnn = cls.annotations.first { it.shortName.asString() == "ModelGen" }
             val name = cls.simpleName.asString()
-            val classRep =
-                ann.arguments.firstOrNull { it.name?.asString() == "replication" }?.value as? Replication
-                    ?: Replication.BOTH
-            val contextual =
-                ann.arguments.firstOrNull { it.name?.asString() == "contextual" }?.value as? Boolean
-                    ?: true
+            val classRep = modelAnn.arguments.firstOrNull { it.name?.asString() == "replication" }?.value as? Replication ?: Replication.BOTH
+            val modelAnnotations = modelAnn.getKClassListArgument("annotations")
+            val optInMarkers = modelAnn.getKClassListArgument("optInMarkers")
 
             val props = cls.getAllProperties().map { prop ->
-                val raw = prop.type.resolve()
-                val isOption = raw.declaration.qualifiedName?.asString() == "arrow.core.Option"
-                val isNullable = raw.isMarkedNullable
-                val optional = isOption || isNullable
-                val target = if (isOption) raw.arguments.first().type!!.resolve() else raw
-                val fqcn = target.declaration.qualifiedName!!.asString()
-                val shortName = target.declaration.simpleName.asString()
+                val rawType = prop.type.resolve()
+                val isOption = rawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
+                val targetType = if (isOption) rawType.arguments.first().type!!.resolve() else rawType
+                val fqcn = targetType.declaration.qualifiedName!!.asString()
+                val shortName = targetType.declaration.simpleName.asString()
 
-                val repAny = prop.annotations
-                    .firstOrNull { it.shortName.asString() == FIELD_ANNOTATION }
-                    ?.arguments?.firstOrNull { it.name?.asString() == "replication" }?.value
-
-                val fieldRep = when (repAny) {
-                    is Replication -> repAny
-                    is Enum<*> -> Replication.valueOf(repAny.name)
-                    else -> classRep
-                }
+                val fieldAnn = prop.annotations.firstOrNull { it.shortName.asString() == FIELD_ANNOTATION }
+                val fieldRep = fieldAnn?.arguments?.firstOrNull { it.name?.asString() == "replication" }?.value as? Replication ?: classRep
+                val fieldAnnotations = fieldAnn?.getKClassListArgument("annotations")
 
                 val isForeign = resolver
-                    .getClassDeclarationByName(raw.declaration.qualifiedName!!)
+                    .getClassDeclarationByName(targetType.declaration.qualifiedName!!)
                     ?.annotations?.any { it.shortName.asString() == "ModelGen" } == true
 
                 if (isForeign) {
@@ -80,22 +77,28 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         property = Property.Property(
                             name = ID_PROPERTY,
                             underlyingType = "kotlin.Long",
-                            optional = false,
-                            replication = Replication.BOTH
+                            replication = Replication.BOTH,
+                            annotations = null
                         ),
-                        optional = optional,
-                        replication = fieldRep
+                        replication = fieldRep,
+                        annotations = fieldAnnotations
                     )
                 } else {
                     Property.Property(
                         name = prop.simpleName.asString(),
                         underlyingType = fqcn,
-                        optional = optional,
-                        replication = fieldRep
+                        replication = fieldRep,
+                        annotations = fieldAnnotations
                     )
                 }
             }.toList()
 
-            Model(name, props, classRep, contextual)
+            Model(
+                name = name,
+                properties = props,
+                replication = classRep,
+                annotations = modelAnnotations,
+                optInMarkers = optInMarkers
+            )
         }.toList()
 }

@@ -28,8 +28,8 @@ fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
                 .build()
         )
         .apply {
-            if (model.contextual) {
-                addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+            prop.annotations?.forEach { annotation ->
+                addAnnotation(annotation.asClassName())
             }
         }
         .build()

@@ -10,6 +10,13 @@ import io.availe.models.Variant
 const val packageName: String = "io.availe.models"
 private const val BASE_IMPL_SUFFIX = "Data"
 
+private fun String.asClassName(): ClassName {
+    val clean = substringBefore('<').removeSuffix("?")
+    val pkg = clean.substringBeforeLast('.')
+    val type = clean.substringAfterLast('.')
+    return ClassName(pkg, type)
+}
+
 private fun baseImplSuffixFor(variant: Variant): String =
     if (variant == Variant.BASE) BASE_IMPL_SUFFIX else variant.suffix
 
@@ -19,7 +26,7 @@ private fun coreType(model: Model, prop: Property, variant: Variant): TypeName {
         is Property.Property -> ClassName(packageName, model.name + prop.name.replaceFirstChar { it.uppercaseChar() })
         is Property.ForeignProperty -> ClassName(packageName, prop.foreignModelName + suffix)
     }
-    return if (prop.optional) ClassName("arrow.core", "Option").parameterizedBy(raw) else raw
+    return raw
 }
 
 fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
@@ -30,7 +37,9 @@ fun resolvedTypeName(model: Model, prop: Property, variant: Variant): TypeName {
 fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): TypeSpec {
     val name = model.name + variant.suffix
     val typeSpec = TypeSpec.classBuilder(name).addModifiers(KModifier.DATA)
-    if (model.contextual) typeSpec.addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+    model.annotations?.forEach {
+        typeSpec.addAnnotation(it.asClassName())
+    }
     val ctor = FunSpec.constructorBuilder()
     props.forEach { p ->
         val t = resolvedTypeName(model, p, variant)
@@ -44,6 +53,9 @@ fun dataClassBuilder(model: Model, props: List<Property>, variant: Variant): Typ
     props.forEach { p ->
         val t = resolvedTypeName(model, p, variant)
         val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
+        p.annotations?.forEach {
+            propSpec.addAnnotation(it.asClassName())
+        }
         if (implement && ifaceProps.any { it.name == p.name }) propSpec.addModifiers(KModifier.OVERRIDE)
         typeSpec.addProperty(propSpec.build())
     }
