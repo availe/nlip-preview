@@ -4,7 +4,10 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import io.availe.models.*
 import kotlinx.serialization.json.Json
 import java.io.OutputStreamWriter
@@ -12,7 +15,6 @@ import java.io.OutputStreamWriter
 private val MODEL_ANNOTATION_NAME = ModelGen::class.qualifiedName!!
 private val FIELD_ANNOTATION_NAME = FieldGen::class.qualifiedName!!
 private const val ID_PROPERTY = "id"
-private val REPLICATION_ENUM_FQN = Replication::class.qualifiedName!!
 
 class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProcessor {
     private var invoked = false
@@ -43,7 +45,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             if (fqName == MODEL_ANNOTATION_NAME || fqName == FIELD_ANNOTATION_NAME) return@mapNotNull null
 
             val args = ann.arguments.associate { arg ->
-                val name = arg.name!!.asString()
+                val name = arg.name?.asString() ?: "value"
                 val value = when (val v = arg.value) {
                     is String -> AnnotationArgument.StringValue(v)
                     else -> AnnotationArgument.LiteralValue(v.toString())
@@ -79,12 +81,13 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             val modelAnn = cls.annotations.first { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME }
             val name = cls.simpleName.asString()
 
-            val classRepArg = modelAnn.arguments.firstOrNull { it.name?.asString() == "replication" }?.value
-            val classRep = if (classRepArg is KSType) {
-                Replication.valueOf(classRepArg.declaration.simpleName.asString())
-            } else {
-                Replication.BOTH
-            }
+            val classRep = modelAnn.arguments
+                .firstOrNull { it.name?.asString() == "replication" }
+                ?.value?.toString()
+                ?.substringAfterLast('.')
+                ?.let { Replication.valueOf(it) }
+                ?: Replication.BOTH
+
 
             val annotationsFromParam = getKClassListAnnotations(modelAnn)
             val annotationsFromDiscovery = getDiscoveredAnnotationModels(cls)
@@ -92,6 +95,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             val optInMarkers = getOptInMarkers(modelAnn)
 
             val props = cls.getAllProperties().map { prop ->
+                val propName = prop.simpleName.asString()
                 val rawType = prop.type.resolve()
                 val isOption = rawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
                 val targetType = if (isOption) rawType.arguments.first().type!!.resolve() else rawType
@@ -101,17 +105,17 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
 
                 val fieldRep = fieldAnn?.let { annotation ->
-                    val repArg = annotation.arguments.firstOrNull {
-                        val value = it.value
-                        (value as? KSType)?.let { type ->
-                            (type.declaration as? KSClassDeclaration)?.classKind == ClassKind.ENUM_ENTRY &&
-                                    (type.declaration.parentDeclaration as? KSClassDeclaration)?.qualifiedName?.asString() == REPLICATION_ENUM_FQN
-                        } ?: false
-                    }
+                    val valueAsString = annotation.arguments
+                        .firstOrNull { it.name?.asString() == "replication" }
+                        ?.value?.toString()
 
-                    val repArgValue = repArg?.value
-                    if (repArgValue is KSType) {
-                        Replication.valueOf(repArgValue.declaration.simpleName.asString())
+                    if (valueAsString != null) {
+                        val enumEntryName = valueAsString.substringAfterLast('.')
+                        try {
+                            Replication.valueOf(enumEntryName)
+                        } catch (e: IllegalArgumentException) {
+                            classRep
+                        }
                     } else {
                         classRep
                     }
@@ -127,7 +131,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
 
                 if (isForeign) {
                     Property.ForeignProperty(
-                        name = prop.simpleName.asString(),
+                        name = propName,
                         foreignModelName = shortName,
                         property = Property.Property(name = ID_PROPERTY, underlyingType = "kotlin.Long", replication = Replication.BOTH, annotations = null),
                         replication = fieldRep,
@@ -135,7 +139,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                     )
                 } else {
                     Property.Property(
-                        name = prop.simpleName.asString(),
+                        name = propName,
                         underlyingType = fqcn,
                         replication = fieldRep,
                         annotations = fieldAnnotations
