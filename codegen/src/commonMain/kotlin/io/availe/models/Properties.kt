@@ -11,7 +11,7 @@ sealed class Property {
     @Serializable
     data class Property(
         override val name: String,
-        val underlyingType: String,
+        val typeInfo: TypeInfo,
         override val replication: Replication,
         override val annotations: List<AnnotationModel>? = null,
     ) : io.availe.models.Property()
@@ -19,6 +19,7 @@ sealed class Property {
     @Serializable
     data class ForeignProperty(
         override val name: String,
+        val typeInfo: TypeInfo,
         val foreignModelName: String,
         val property: Property,
         override val replication: Replication,

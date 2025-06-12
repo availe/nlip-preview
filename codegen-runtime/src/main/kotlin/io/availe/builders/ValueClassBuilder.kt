@@ -13,9 +13,9 @@ private fun String.asClassName(): ClassName {
     return ClassName(pkg, type)
 }
 
-private fun buildAnnotation(annModel: AnnotationModel): AnnotationSpec {
+private fun buildAnnotation(annModel: AnnotationModel): com.squareup.kotlinpoet.AnnotationSpec {
     val annClassName = annModel.qualifiedName.asClassName()
-    val builder = AnnotationSpec.builder(annClassName)
+    val builder = com.squareup.kotlinpoet.AnnotationSpec.builder(annClassName)
     annModel.arguments.forEach { (key, arg) ->
         when (arg) {
             is AnnotationArgument.StringValue -> builder.addMember("%L = %S", key, arg.value)
@@ -27,15 +27,20 @@ private fun buildAnnotation(annModel: AnnotationModel): AnnotationSpec {
 
 fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
     val className = model.name + prop.name.replaceFirstChar { it.uppercaseChar() }
-    val underlyingTypeName = prop.underlyingType.asClassName()
+    val underlyingTypeName = prop.typeInfo.toTypeName()
     val isParentSerializable = model.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
+
+    val ctorParamBuilder = ParameterSpec.builder(prop.name, underlyingTypeName)
+    prop.annotations?.forEach { annotation ->
+        ctorParamBuilder.addAnnotation(buildAnnotation(annotation))
+    }
 
     return TypeSpec.classBuilder(className)
         .addAnnotation(JvmInline::class)
         .addModifiers(KModifier.VALUE)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter(prop.name, underlyingTypeName)
+                .addParameter(ctorParamBuilder.build())
                 .build()
         )
         .addProperty(
@@ -46,9 +51,6 @@ fun buildValueClass(model: Model, prop: Property.Property): TypeSpec {
         .apply {
             if (isParentSerializable) {
                 addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
-            }
-            prop.annotations?.forEach { annotation ->
-                addAnnotation(buildAnnotation(annotation))
             }
         }
         .build()

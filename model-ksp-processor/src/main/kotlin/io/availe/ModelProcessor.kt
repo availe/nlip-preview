@@ -39,6 +39,21 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         return emptyList()
     }
 
+    private fun KSType.toTypeInfo(): TypeInfo {
+        val decl = this.declaration
+        val qualifiedName = decl.qualifiedName!!.asString()
+        val args = this.arguments.mapNotNull { it.type?.resolve()?.toTypeInfo() }
+        return TypeInfo(
+            qualifiedName = qualifiedName,
+            arguments = args,
+            isNullable = this.isMarkedNullable
+        )
+    }
+
+    private tailrec fun TypeInfo.getLeafType(): TypeInfo {
+        return if (this.arguments.isEmpty()) this else this.arguments.last().getLeafType()
+    }
+
     private fun getDiscoveredAnnotationModels(annotated: KSAnnotated): List<AnnotationModel> {
         return annotated.annotations.mapNotNull { ann ->
             val fqName = ann.annotationType.resolve().declaration.qualifiedName?.asString() ?: return@mapNotNull null
@@ -99,14 +114,11 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
 
             val props = cls.getAllProperties().map { prop ->
                 val propName = prop.simpleName.asString()
-                val rawType = prop.type.resolve()
-                val isOption = rawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
-                val targetType = if (isOption) rawType.arguments.first().type!!.resolve() else rawType
+                val propTypeInfo = prop.type.resolve().toTypeInfo()
+                val leafTypeInfo = propTypeInfo.getLeafType()
 
-                val targetTypeDeclaration = resolver.getClassDeclarationByName(targetType.declaration.qualifiedName!!)
-                val isForeign = targetTypeDeclaration
-                    ?.annotations
-                    ?.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME } == true
+                val targetTypeDeclaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString(leafTypeInfo.qualifiedName))
+                val isForeign = targetTypeDeclaration?.annotations?.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME } == true
 
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
                 val fieldRep = fieldAnn?.let { annotation ->
@@ -125,22 +137,18 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
 
                 if (isForeign) {
                     val foreignClassDecl = targetTypeDeclaration!!
-
                     val idProperty = foreignClassDecl.getAllProperties()
                         .firstOrNull { it.simpleName.asString() == ID_PROPERTY }
                         ?: error("Foreign model '${foreignClassDecl.simpleName.asString()}' must have an 'id' property.")
-
-                    val idRawType = idProperty.type.resolve()
-                    val idIsOption = idRawType.declaration.qualifiedName?.asString() == "arrow.core.Option"
-                    val idUnderlyingType = if (idIsOption) idRawType.arguments.first().type!!.resolve() else idRawType
-                    val idUnderlyingTypeFqcn = idUnderlyingType.declaration.qualifiedName!!.asString()
+                    val idPropTypeInfo = idProperty.type.resolve().toTypeInfo()
 
                     Property.ForeignProperty(
                         name = propName,
+                        typeInfo = propTypeInfo,
                         foreignModelName = foreignClassDecl.simpleName.asString(),
                         property = Property.Property(
                             name = ID_PROPERTY,
-                            underlyingType = idUnderlyingTypeFqcn,
+                            typeInfo = idPropTypeInfo,
                             replication = Replication.BOTH,
                             annotations = null
                         ),
@@ -150,7 +158,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 } else {
                     Property.Property(
                         name = propName,
-                        underlyingType = targetType.declaration.qualifiedName!!.asString(),
+                        typeInfo = propTypeInfo,
                         replication = fieldRep,
                         annotations = fieldAnnotations
                     )
