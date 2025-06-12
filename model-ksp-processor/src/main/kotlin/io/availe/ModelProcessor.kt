@@ -83,10 +83,13 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
 
             val classRep = modelAnn.arguments
                 .firstOrNull { it.name?.asString() == "replication" }
-                ?.value?.toString()
-                ?.substringAfterLast('.')
-                ?.let { Replication.valueOf(it) }
-                ?: Replication.BOTH
+                ?.value?.let { value ->
+                    try {
+                        Replication.valueOf(value.toString().substringAfterLast('.'))
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: Replication.BOTH
 
 
             val annotationsFromParam = getKClassListAnnotations(modelAnn)
@@ -103,11 +106,14 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val shortName = targetType.declaration.simpleName.asString()
 
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
-
                 val fieldRep = fieldAnn?.let { annotation ->
-                    annotation.arguments.firstOrNull()?.value?.toString()
-                        ?.substringAfterLast('.')
-                        ?.let { Replication.valueOf(it) }
+                    annotation.arguments.firstOrNull()?.value?.let { value ->
+                        try {
+                            Replication.valueOf(value.toString().substringAfterLast('.'))
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
                 } ?: classRep
 
                 val propAnnotationsFromParam = fieldAnn?.let { getKClassListAnnotations(it) } ?: emptyList()
