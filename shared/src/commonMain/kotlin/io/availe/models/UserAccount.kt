@@ -1,29 +1,37 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package io.availe.models
 
 import io.availe.FieldGen
 import io.availe.ModelGen
-import io.availe.SchemaVersion
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-public interface UserAccount
-
-@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
-public interface V1 : UserAccount {
-    @FieldGen(replication = Replication.BOTH)
-    public val id: String
+@ModelGen(annotations = [Serializable::class], optInMarkers = [ExperimentalUuidApi::class])
+interface UserAccount {
+    val id: Uuid
+    val username: String
+    val password: String
+    val salt: String
+    val md5: String
+    val sha1: String
+    val sha256: String
+    val role: String
+    val enabled: Boolean
+    val accountNonExpired: Boolean
 }
 
-@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
-public interface V2 : UserAccount {
-    @FieldGen(replication = Replication.BOTH)
-    public val id: String
+@ModelGen()
+interface InternalUserAccount {
+    val user: UserAccount
 
-    @FieldGen(replication = Replication.CREATE)
-    public val email: String
+    @FieldGen(Replication.CREATE)
+    val hash: String
 }
 
-@ModelGen(replication = Replication.BOTH, annotations = [Serializable::class])
-@SchemaVersion(number = 0)
-public interface Legacy : UserAccount {
-    public val id: Int
+@ModelGen()
+interface OuterUserClass {
+    val outerUser: InternalUserAccount
+    val innerUser: UserAccount
 }
