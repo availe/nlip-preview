@@ -1,3 +1,5 @@
+// file: /Users/rafaeldiaz/IdeaProjects/availe/codegen-runtime/src/main/kotlin/io/availe/generators/GeneratePatchable.kt
+
 package io.availe.generators
 
 import com.squareup.kotlinpoet.*
@@ -9,10 +11,12 @@ private const val pkg = "io.availe.models"
 fun generatePatchable() {
     val out: File = filePath
     val t = TypeVariableName("T", KModifier.OUT)
+
     val unchanged = TypeSpec.objectBuilder("Unchanged")
-        .addSuperinterface(ClassName(pkg, "Patchable").parameterizedBy(ClassName("kotlin", "Nothing")))
+        .superclass(ClassName(pkg, "Patchable").parameterizedBy(ClassName("kotlin", "Nothing")))
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
         .build()
+
     val setCls = TypeSpec.classBuilder("Set")
         .addModifiers(KModifier.DATA)
         .addTypeVariable(TypeVariableName("T"))
@@ -20,9 +24,10 @@ fun generatePatchable() {
             FunSpec.constructorBuilder().addParameter("value", TypeVariableName("T")).build()
         )
         .addProperty(PropertySpec.builder("value", TypeVariableName("T")).initializer("value").build())
-        .addSuperinterface(ClassName(pkg, "Patchable").parameterizedBy(TypeVariableName("T")))
+        .superclass(ClassName(pkg, "Patchable").parameterizedBy(TypeVariableName("T")))
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
         .build()
+
     val patchable = TypeSpec.classBuilder("Patchable")
         .addTypeVariable(t)
         .addModifiers(KModifier.SEALED)
@@ -30,5 +35,6 @@ fun generatePatchable() {
         .addType(unchanged)
         .addType(setCls)
         .build()
+
     FileSpec.builder(pkg, "Patchable").addType(patchable).build().writeTo(out)
 }
