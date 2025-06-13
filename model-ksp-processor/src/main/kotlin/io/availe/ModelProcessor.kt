@@ -4,10 +4,7 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.*
 import io.availe.helpers.*
 import io.availe.models.AnnotationModel
 import io.availe.models.Model
@@ -57,10 +54,20 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME
         }
 
-        val modelReplication = modelAnn.arguments
+        val modelReplication: Replication = modelAnn.arguments
             .firstOrNull { it.name?.asString() == REPLICATION_ARG }
-            ?.value?.toString()?.substringAfterLast('.')?.let(Replication::valueOf)
-            ?: Replication.BOTH
+            ?.value
+            ?.let { rawValue ->
+                when (rawValue) {
+                    is KSType -> Replication.valueOf(rawValue.declaration.simpleName.asString())
+                    is KSClassDeclaration -> Replication.valueOf(rawValue.simpleName.asString())
+                    is KSName -> Replication.valueOf(rawValue.asString().substringAfterLast('.'))
+                    else -> {
+                        env.logger.error("KSP Error: Invalid replication value for ${declaration.qualifiedName?.asString()}. Raw value: $rawValue (type: ${rawValue::class.qualifiedName}). Defaulting to BOTH.")
+                        Replication.BOTH
+                    }
+                }
+            } ?: Replication.BOTH
 
         val annotationModelsListedInModelGen = ((modelAnn.arguments
             .firstOrNull { it.name?.asString() == ANNOTATIONS_ARG }?.value) as? List<*>)
@@ -118,7 +125,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             inferred to Property.Property(
                 name = SCHEMA_VERSION_FIELD,
                 typeInfo = io.availe.models.TypeInfo("kotlin.Int", emptyList(), false),
-                replication = Replication.BOTH
+                replication = modelReplication
             )
         } else null to null
 
@@ -127,14 +134,23 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             val typeInfo = kspType.toModelTypeInfo()
             val leafName = kspType.leafType.qualifiedName
 
-            val fieldRep = prop.annotations
+            val fieldReplication = prop.annotations
                 .firstOrNull {
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME
                 }
                 ?.arguments
                 ?.firstOrNull { it.name?.asString() == REPLICATION_ARG }
-                ?.value?.toString()?.substringAfterLast('.')?.let(Replication::valueOf)
-                ?: modelReplication
+                ?.value?.let { value ->
+                    when (value) {
+                        is KSType -> Replication.valueOf(value.declaration.simpleName.asString())
+                        is KSClassDeclaration -> Replication.valueOf(value.simpleName.asString())
+                        is KSName -> Replication.valueOf(value.asString().substringAfterLast('.'))
+                        else -> {
+                            env.logger.error("KSP Error: Invalid field replication value for ${prop.simpleName.asString()}. Raw value: $value (type: ${value::class.qualifiedName}). Defaulting to BOTH.")
+                            Replication.BOTH
+                        }
+                    }
+                } ?: modelReplication
 
             val fieldAnnos = prop.annotations.toAnnotationModels(frameworkDecls)
 
@@ -155,14 +171,14 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         typeInfo = idType,
                         replication = Replication.BOTH
                     ),
-                    replication = fieldRep,
+                    replication = fieldReplication,
                     annotations = fieldAnnos
                 )
             } else {
                 Property.Property(
                     name = prop.simpleName.asString(),
                     typeInfo = typeInfo,
-                    replication = fieldRep,
+                    replication = fieldReplication,
                     annotations = fieldAnnos
                 )
             }

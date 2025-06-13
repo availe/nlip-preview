@@ -2,8 +2,6 @@
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
-// file: model-ksp-annotations/build.gradle.kts
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
 }
@@ -23,9 +21,7 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-            // annotation definitions live here
             dependencies {
-                // common‐world users get the "runtimeElements" (metadata) variant
                 implementation(projects.codegen)
             }
         }
