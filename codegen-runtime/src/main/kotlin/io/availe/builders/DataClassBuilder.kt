@@ -4,7 +4,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.models.*
 
-fun dataClassBuilder(
+fun buildDataTransferObjectClass(
     model: Model,
     properties: List<Property>,
     variant: Variant,
@@ -19,12 +19,11 @@ fun dataClassBuilder(
         .addModifiers(KModifier.DATA)
 
     model.annotations?.forEach { annotationModel ->
-        typeSpecBuilder.addAnnotation(buildAnnotationSpecForModel(annotationModel))
+        typeSpecBuilder.addAnnotation(buildModelAnnotationSpec(annotationModel))
     }
 
-    val baseModelName = model.isVersionOf
-    if (variant == Variant.BASE && baseModelName != null) {
-        val schemaName = baseModelName + "Schema"
+    if (variant == Variant.BASE && model.isVersionOf != null) {
+        val schemaName = model.isVersionOf + "Schema"
         typeSpecBuilder.superclass(ClassName(model.packageName, schemaName, model.name))
     }
 
@@ -43,12 +42,10 @@ fun dataClassBuilder(
         }
 
         constructorBuilder.addParameter(parameterBuilder.build())
-        val propertySpecBuilder = PropertySpec.builder(property.name, typeName).initializer(property.name)
-        typeSpecBuilder.addProperty(propertySpecBuilder.build())
+        typeSpecBuilder.addProperty(PropertySpec.builder(property.name, typeName).initializer(property.name).build())
     }
 
     typeSpecBuilder.primaryConstructor(constructorBuilder.build())
-
     return typeSpecBuilder.build()
 }
 
@@ -78,7 +75,7 @@ private fun resolveTypeNameForProperty(
     }
 }
 
-private fun buildAnnotationSpecForModel(annotationModel: AnnotationModel): AnnotationSpec {
+private fun buildModelAnnotationSpec(annotationModel: AnnotationModel): AnnotationSpec {
     val annotationClassName = ClassName(
         annotationModel.qualifiedName.substringBeforeLast('.'),
         annotationModel.qualifiedName.substringAfterLast('.')

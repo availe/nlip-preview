@@ -1,40 +1,37 @@
-// file: /Users/rafaeldiaz/IdeaProjects/availe/codegen-runtime/src/main/kotlin/io/availe/generators/GeneratePatchable.kt
-
 package io.availe.generators
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
 
-private const val pkg = "io.availe.models"
-
 fun generatePatchable() {
-    val out: File = filePath
-    val t = TypeVariableName("T", KModifier.OUT)
+    val outputDirectory: File = File("build/generated-src/kotlin-poet")
+    val packageName = "io.availe.models"
+    val typeVariable = TypeVariableName("T", KModifier.OUT)
 
-    val unchanged = TypeSpec.objectBuilder("Unchanged")
-        .superclass(ClassName(pkg, "Patchable").parameterizedBy(ClassName("kotlin", "Nothing")))
+    val unchangedObject = TypeSpec.objectBuilder("Unchanged")
+        .superclass(ClassName(packageName, "Patchable").parameterizedBy(ClassName("kotlin", "Nothing")))
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
         .build()
 
-    val setCls = TypeSpec.classBuilder("Set")
+    val setClass = TypeSpec.classBuilder("Set")
         .addModifiers(KModifier.DATA)
         .addTypeVariable(TypeVariableName("T"))
         .primaryConstructor(
             FunSpec.constructorBuilder().addParameter("value", TypeVariableName("T")).build()
         )
         .addProperty(PropertySpec.builder("value", TypeVariableName("T")).initializer("value").build())
-        .superclass(ClassName(pkg, "Patchable").parameterizedBy(TypeVariableName("T")))
+        .superclass(ClassName(packageName, "Patchable").parameterizedBy(TypeVariableName("T")))
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
         .build()
 
-    val patchable = TypeSpec.classBuilder("Patchable")
-        .addTypeVariable(t)
+    val patchableClass = TypeSpec.classBuilder("Patchable")
+        .addTypeVariable(typeVariable)
         .addModifiers(KModifier.SEALED)
         .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
-        .addType(unchanged)
-        .addType(setCls)
+        .addType(unchangedObject)
+        .addType(setClass)
         .build()
 
-    FileSpec.builder(pkg, "Patchable").addType(patchable).build().writeTo(out)
+    FileSpec.builder(packageName, "Patchable").addType(patchableClass).build().writeTo(outputDirectory)
 }

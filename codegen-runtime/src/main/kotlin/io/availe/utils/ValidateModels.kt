@@ -10,15 +10,11 @@ fun validateModelReplications(allModels: List<Model>) {
     val validationErrors = mutableListOf<String>()
 
     allModels.forEach { model ->
-        if (model.replication == Replication.CREATE || model.replication == Replication.BOTH) {
-            if (fieldsForCreate(model).isEmpty()) {
-                validationErrors.add(createEmptyVariantError(model, Variant.CREATE))
-            }
+        if (model.replication.supports(Variant.CREATE) && fieldsForCreate(model).isEmpty()) {
+            validationErrors.add(createEmptyVariantError(model, Variant.CREATE))
         }
-        if (model.replication == Replication.PATCH || model.replication == Replication.BOTH) {
-            if (fieldsForPatch(model).isEmpty()) {
-                validationErrors.add(createEmptyVariantError(model, Variant.PATCH))
-            }
+        if (model.replication.supports(Variant.PATCH) && fieldsForPatch(model).isEmpty()) {
+            validationErrors.add(createEmptyVariantError(model, Variant.PATCH))
         }
 
         model.properties
@@ -76,7 +72,7 @@ private fun createDependencyError(
       The parent model '${parentModel.name}' is configured to generate a '${variant.name}' variant.
       This variant includes the property '${violatingProperty.name}', which refers to the model '${targetModel.name}'.
       However, '${targetModel.name}' (replication: ${targetModel.replication}) does not support generating a non-empty '${variant.name}' variant.
-      
+
       To fix this, either change the replication of '${targetModel.name}' to support '${variant.name}', or adjust the replication of the '${violatingProperty.name}' property.
     """.trimIndent()
 }
