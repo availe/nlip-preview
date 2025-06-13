@@ -6,9 +6,6 @@ internal val OUTPUT_DIRECTORY = File("build/generated-src/kotlin-poet")
 internal const val MODELS_PACKAGE_NAME = "io.availe.models"
 
 internal const val SCHEMA_SUFFIX = "Schema"
-internal const val INTERFACE_PREFIX = "I"
-internal const val TYPE_VARIABLE_PREFIX = "T_"
-
 internal const val PATCHABLE_CLASS_NAME = "Patchable"
 internal const val UNCHANGED_OBJECT_NAME = "Unchanged"
 internal const val SET_CLASS_NAME = "Set"
