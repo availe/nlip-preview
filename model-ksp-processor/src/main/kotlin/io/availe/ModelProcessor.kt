@@ -13,6 +13,7 @@ private val MODEL_ANNOTATION_NAME = ModelGen::class.qualifiedName!!
 private val SCHEMA_VERSION_ANNOTATION_NAME = SchemaVersion::class.qualifiedName!!
 private val FIELD_ANNOTATION_NAME = FieldGen::class.qualifiedName!!
 private val HIDE_ANNOTATION_NAME = Hide::class.qualifiedName!!
+private const val ID_PROPERTY = "id"
 private const val SCHEMA_VERSION_PROPERTY = "schemaVersion"
 private val V_INT_REGEX = Regex("^V(\\d+)$")
 
@@ -66,6 +67,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
             if (setOf(MODEL_ANNOTATION_NAME, FIELD_ANNOTATION_NAME, HIDE_ANNOTATION_NAME, SCHEMA_VERSION_ANNOTATION_NAME).contains(fqName)) {
                 return@mapNotNull null
             }
+
             val args = ann.arguments.associate { arg ->
                 val name = arg.name?.asString() ?: "value"
                 val value = when (val v = arg.value) {
@@ -83,6 +85,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
         val kstypes = ann.arguments
             .firstOrNull { it.name?.asString() == "annotations" }
             ?.value as? List<KSType> ?: return emptyList()
+
         return kstypes.map { kstype ->
             AnnotationModel(
                 qualifiedName = kstype.declaration.qualifiedName!!.asString(),
@@ -153,6 +156,9 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val propTypeInfo = prop.type.resolve().toTypeInfo()
                 val leafTypeInfo = propTypeInfo.getLeafType()
 
+                val targetTypeDeclaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString(leafTypeInfo.qualifiedName))
+                val isForeign = targetTypeDeclaration?.annotations?.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME } == true
+
                 val fieldAnn = prop.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedName?.asString() == FIELD_ANNOTATION_NAME }
                 val fieldRep = fieldAnn?.let { annotation ->
                     annotation.arguments.firstOrNull()?.value?.let { value ->
@@ -168,12 +174,34 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                 val propAnnotationsFromDiscovery = getDiscoveredAnnotationModels(prop)
                 val fieldAnnotations = (propAnnotationsFromParam + propAnnotationsFromDiscovery).takeIf { it.isNotEmpty() }
 
-                Property.Property(
-                    name = propName,
-                    typeInfo = propTypeInfo,
-                    replication = fieldRep,
-                    annotations = fieldAnnotations
-                )
+                if (isForeign) {
+                    val foreignClassDecl = targetTypeDeclaration!!
+                    val idProperty = foreignClassDecl.getAllProperties()
+                        .firstOrNull { it.simpleName.asString() == ID_PROPERTY }
+                        ?: error("Foreign model '${foreignClassDecl.simpleName.asString()}' must have an 'id' property.")
+                    val idPropTypeInfo = idProperty.type.resolve().toTypeInfo()
+
+                    Property.ForeignProperty(
+                        name = propName,
+                        typeInfo = propTypeInfo,
+                        foreignModelName = foreignClassDecl.simpleName.asString(),
+                        property = Property.Property(
+                            name = ID_PROPERTY,
+                            typeInfo = idPropTypeInfo,
+                            replication = Replication.BOTH,
+                            annotations = null
+                        ),
+                        replication = fieldRep,
+                        annotations = fieldAnnotations
+                    )
+                } else {
+                    Property.Property(
+                        name = propName,
+                        typeInfo = propTypeInfo,
+                        replication = fieldRep,
+                        annotations = fieldAnnotations
+                    )
+                }
             }.toMutableList()
 
             if (schemaVersionProperty != null) {
