@@ -6,19 +6,19 @@ import io.availe.models.AnnotationModel
 import io.availe.models.Property
 
 private fun String.asClassName(): ClassName {
-    val clean = substringBefore('<').removeSuffix("?")
-    val pkg = clean.substringBeforeLast('.')
-    val type = clean.substringAfterLast('.')
-    return ClassName(pkg, type)
+    val cleanName = this.substringBefore('<').removeSuffix("?")
+    val packageName = cleanName.substringBeforeLast('.')
+    val simpleName = cleanName.substringAfterLast('.')
+    return ClassName(packageName, simpleName)
 }
 
-private fun buildAnnotation(annModel: AnnotationModel): com.squareup.kotlinpoet.AnnotationSpec {
-    val annClassName = annModel.qualifiedName.asClassName()
-    val builder = com.squareup.kotlinpoet.AnnotationSpec.builder(annClassName)
-    annModel.arguments.forEach { (key, arg) ->
-        when (arg) {
-            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", key, arg.value)
-            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", key, arg.value)
+private fun buildAnnotationSpec(annotationModel: AnnotationModel): AnnotationSpec {
+    val annotationClassName = annotationModel.qualifiedName.asClassName()
+    val builder = AnnotationSpec.builder(annotationClassName)
+    annotationModel.arguments.forEach { (argumentName, argumentValue) ->
+        when (argumentValue) {
+            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", argumentName, argumentValue.value)
+            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", argumentName, argumentValue.value)
         }
     }
     return builder.build()
@@ -26,14 +26,14 @@ private fun buildAnnotation(annModel: AnnotationModel): com.squareup.kotlinpoet.
 
 fun buildValueClass(
     className: String,
-    prop: Property.Property,
+    property: Property.Property,
     isSerializable: Boolean
 ): TypeSpec {
-    val underlyingTypeName = prop.typeInfo.toTypeName()
+    val underlyingTypeName = property.typeInfo.toTypeName()
+    val constructorParameterBuilder = ParameterSpec.builder("value", underlyingTypeName)
 
-    val ctorParamBuilder = ParameterSpec.builder("value", underlyingTypeName)
-    prop.annotations?.forEach { annotation ->
-        ctorParamBuilder.addAnnotation(buildAnnotation(annotation))
+    property.annotations?.forEach { annotation ->
+        constructorParameterBuilder.addAnnotation(buildAnnotationSpec(annotation))
     }
 
     return TypeSpec.classBuilder(className)
@@ -41,7 +41,7 @@ fun buildValueClass(
         .addModifiers(KModifier.VALUE)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter(ctorParamBuilder.build())
+                .addParameter(constructorParameterBuilder.build())
                 .build()
         )
         .addProperty(

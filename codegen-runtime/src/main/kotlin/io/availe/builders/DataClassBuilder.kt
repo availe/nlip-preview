@@ -4,106 +4,91 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.availe.models.*
 
-const val packageName: String = "io.availe.models"
-
-private fun String.asClassName(): ClassName {
-    val clean = substringBefore('<').removeSuffix("?")
-    val pkg = clean.substringBeforeLast('.')
-    val type = clean.substringAfterLast('.')
-    return ClassName(pkg, type)
-}
-
-private fun buildAnnotation(annModel: AnnotationModel): AnnotationSpec {
-    val annClassName = annModel.qualifiedName.asClassName()
-    val builder = AnnotationSpec.builder(annClassName)
-    annModel.arguments.forEach { (key, arg) ->
-        when (arg) {
-            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", key, arg.value)
-            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", key, arg.value)
-        }
-    }
-    return builder.build()
-}
-
-private fun resolvedTypeName(
-    prop: Property,
-    variant: Variant,
-    model: Model,
-    valueClassNames: Map<Pair<String, String>, String>
-): TypeName {
-    val baseType = when (prop) {
-        is Property.Property -> {
-            val valueClassName = valueClassNames[model.name to prop.name]
-                ?: error("Could not find value class name for ${model.name}.${prop.name}")
-            ClassName(packageName, valueClassName)
-        }
-
-        is Property.ForeignProperty -> {
-            val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
-            ClassName(packageName, prop.foreignModelName + suffix)
-        }
-    }
-
-    return if (variant == Variant.PATCH) {
-        ClassName(packageName, "Patchable").parameterizedBy(baseType)
-    } else {
-        baseType
-    }
-}
-
 fun dataClassBuilder(
     model: Model,
-    props: List<Property>,
+    properties: List<Property>,
     variant: Variant,
     valueClassNames: Map<Pair<String, String>, String>
 ): TypeSpec {
-    val name = if (model.isVersionOf != null) {
+    val generatedClassName = if (model.isVersionOf != null) {
         variant.suffix
     } else {
         model.name + variant.suffix
     }
-    val typeSpec = TypeSpec.classBuilder(name)
+    val typeSpecBuilder = TypeSpec.classBuilder(generatedClassName)
         .addModifiers(KModifier.DATA)
 
-    model.annotations?.forEach {
-        typeSpec.addAnnotation(buildAnnotation(it))
+    model.annotations?.forEach { annotationModel ->
+        typeSpecBuilder.addAnnotation(buildAnnotationSpecForModel(annotationModel))
     }
 
     val baseModelName = model.isVersionOf
     if (variant == Variant.BASE && baseModelName != null) {
         val schemaName = baseModelName + "Schema"
-        typeSpec.superclass(ClassName(packageName, schemaName, model.name))
+        typeSpecBuilder.superclass(ClassName(model.packageName, schemaName, model.name))
     }
 
-    val ctor = FunSpec.constructorBuilder()
+    val constructorBuilder = FunSpec.constructorBuilder()
 
-    props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model, valueClassNames)
-        val param = ParameterSpec.builder(p.name, t)
+    properties.forEach { property ->
+        val typeName = resolveTypeNameForProperty(property, variant, model, valueClassNames)
+        val parameterBuilder = ParameterSpec.builder(property.name, typeName)
 
-        if (p.name == "schemaVersion") {
-            if (variant != Variant.PATCH) {
-                param.defaultValue("%T(%L)", t, model.schemaVersion)
-            }
+        if (property.name == "schemaVersion" && variant != Variant.PATCH) {
+            parameterBuilder.defaultValue("%T(%L)", typeName, model.schemaVersion)
         }
 
         if (variant == Variant.PATCH) {
-            param.defaultValue("%T.Unchanged", ClassName(packageName, "Patchable"))
+            parameterBuilder.defaultValue("%T.Unchanged", ClassName(model.packageName, "Patchable"))
         }
 
-        ctor.addParameter(param.build())
+        constructorBuilder.addParameter(parameterBuilder.build())
+        val propertySpecBuilder = PropertySpec.builder(property.name, typeName).initializer(property.name)
+        typeSpecBuilder.addProperty(propertySpecBuilder.build())
     }
-    typeSpec.primaryConstructor(ctor.build())
 
-    props.forEach { p ->
-        val t = resolvedTypeName(p, variant, model, valueClassNames)
-        val propSpec = PropertySpec.builder(p.name, t).initializer(p.name)
+    typeSpecBuilder.primaryConstructor(constructorBuilder.build())
 
-        p.annotations?.forEach {
-            propSpec.addAnnotation(buildAnnotation(it))
+    return typeSpecBuilder.build()
+}
+
+private fun resolveTypeNameForProperty(
+    property: Property,
+    variant: Variant,
+    model: Model,
+    valueClassNames: Map<Pair<String, String>, String>
+): TypeName {
+    val baseType = when (property) {
+        is Property.Property -> {
+            val valueClassName = valueClassNames[model.name to property.name]
+                ?: error("Could not find value class name for ${model.name}.${property.name}")
+            ClassName(model.packageName, valueClassName)
         }
-        typeSpec.addProperty(propSpec.build())
+
+        is Property.ForeignProperty -> {
+            val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
+            ClassName(model.packageName, property.foreignModelName + suffix)
+        }
     }
 
-    return typeSpec.build()
+    return if (variant == Variant.PATCH) {
+        ClassName(model.packageName, "Patchable").parameterizedBy(baseType)
+    } else {
+        baseType
+    }
+}
+
+private fun buildAnnotationSpecForModel(annotationModel: AnnotationModel): AnnotationSpec {
+    val annotationClassName = ClassName(
+        annotationModel.qualifiedName.substringBeforeLast('.'),
+        annotationModel.qualifiedName.substringAfterLast('.')
+    )
+    val builder = AnnotationSpec.builder(annotationClassName)
+    annotationModel.arguments.forEach { (argumentName, argumentValue) ->
+        when (argumentValue) {
+            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", argumentName, argumentValue.value)
+            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", argumentName, argumentValue.value)
+        }
+    }
+    return builder.build()
 }

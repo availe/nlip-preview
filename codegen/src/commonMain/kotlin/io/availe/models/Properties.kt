@@ -21,7 +21,6 @@ sealed class Property {
         override val name: String,
         val typeInfo: TypeInfo,
         val foreignModelName: String,
-        val property: Property,
         override val replication: Replication,
         override val annotations: List<AnnotationModel>? = null,
     ) : io.availe.models.Property()
