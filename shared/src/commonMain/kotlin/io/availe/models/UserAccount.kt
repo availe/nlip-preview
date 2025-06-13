@@ -9,14 +9,14 @@ import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-public interface UserAccount
+private interface UserAccount
 
 @ModelGen(
     replication = Replication.PATCH,
     annotations = [Serializable::class],
     optInMarkers = [ExperimentalUuidApi::class]
 )
-public interface V1 : UserAccount {
+private interface V1 : UserAccount {
     @OptIn(ExperimentalUuidApi::class)
     public val id: Uuid
 
