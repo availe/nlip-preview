@@ -27,3 +27,9 @@ public interface V2 : UserAccount {
 public interface Legacy : UserAccount {
     public val id: Int
 }
+
+@ModelGen
+interface InternalUser {
+    val username: String
+    val user: UserAccountSchema.V1.V1Data
+}
