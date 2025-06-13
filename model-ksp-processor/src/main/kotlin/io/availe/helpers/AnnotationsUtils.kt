@@ -1,5 +1,6 @@
 package io.availe
 
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.*
 import io.availe.helpers.*
@@ -117,3 +118,18 @@ fun Sequence<KSAnnotation>.toAnnotationModels(
     }
         .toList()
         .takeIf { it.isNotEmpty() }
+
+internal fun isModelAnnotation(declaration: KSClassDeclaration): Boolean {
+    val isHidden = declaration.annotations.any {
+        it.annotationType.resolve().declaration.qualifiedName?.asString() == HIDE_ANNOTATION_NAME
+    }
+    return declaration.classKind == ClassKind.INTERFACE && !isHidden
+}
+
+internal fun getFrameworkDeclarations(resolver: Resolver): Set<KSClassDeclaration> {
+    return listOf(MODEL_ANNOTATION_NAME, FIELD_ANNOTATION_NAME, SCHEMA_VERSION_ANNOTATION_NAME)
+        .mapNotNull { fqName ->
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString(fqName))
+        }
+        .toSet()
+}
