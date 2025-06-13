@@ -2,6 +2,10 @@ package io.availe.builders
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.availe.MODELS_PACKAGE_NAME
+import io.availe.PATCHABLE_CLASS_NAME
+import io.availe.SCHEMA_VERSION_PROPERTY_NAME
+import io.availe.UNCHANGED_OBJECT_NAME
 import io.availe.models.*
 
 fun buildDataTransferObjectClass(
@@ -33,12 +37,16 @@ fun buildDataTransferObjectClass(
         val typeName = resolveTypeNameForProperty(property, variant, model, valueClassNames)
         val parameterBuilder = ParameterSpec.builder(property.name, typeName)
 
-        if (property.name == "schemaVersion" && variant != Variant.PATCH) {
+        if (property.name == SCHEMA_VERSION_PROPERTY_NAME && variant != Variant.PATCH) {
             parameterBuilder.defaultValue("%T(%L)", typeName, model.schemaVersion)
         }
 
         if (variant == Variant.PATCH) {
-            parameterBuilder.defaultValue("%T.Unchanged", ClassName(model.packageName, "Patchable"))
+            parameterBuilder.defaultValue(
+                "%T.%L",
+                ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME),
+                UNCHANGED_OBJECT_NAME
+            )
         }
 
         constructorBuilder.addParameter(parameterBuilder.build())
@@ -69,7 +77,7 @@ private fun resolveTypeNameForProperty(
     }
 
     return if (variant == Variant.PATCH) {
-        ClassName(model.packageName, "Patchable").parameterizedBy(baseType)
+        ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).parameterizedBy(baseType)
     } else {
         baseType
     }

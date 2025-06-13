@@ -14,5 +14,3 @@ fun fieldsForPatch(model: Model): List<Property> =
 
 fun fieldsForInterface(model: Model): List<Property> =
     model.properties.filter { it.replication == Replication.BOTH }
-
-const val packageName: String = "io.availe.models"

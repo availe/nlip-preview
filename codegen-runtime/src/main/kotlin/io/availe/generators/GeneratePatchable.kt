@@ -2,36 +2,48 @@ package io.availe.generators
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import java.io.File
+import io.availe.*
 
 fun generatePatchable() {
-    val outputDirectory: File = File("build/generated-src/kotlin-poet")
-    val packageName = "io.availe.models"
     val typeVariable = TypeVariableName("T", KModifier.OUT)
+    val serializableAnnotation = ClassName(
+        SERIALIZABLE_QUALIFIED_NAME.substringBeforeLast('.'),
+        SERIALIZABLE_QUALIFIED_NAME.substringAfterLast('.')
+    )
 
-    val unchangedObject = TypeSpec.objectBuilder("Unchanged")
-        .superclass(ClassName(packageName, "Patchable").parameterizedBy(ClassName("kotlin", "Nothing")))
-        .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+    val unchangedObject = TypeSpec.objectBuilder(UNCHANGED_OBJECT_NAME)
+        .superclass(
+            ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).parameterizedBy(
+                ClassName(
+                    "kotlin",
+                    "Nothing"
+                )
+            )
+        )
+        .addAnnotation(serializableAnnotation)
         .build()
 
-    val setClass = TypeSpec.classBuilder("Set")
+    val setClass = TypeSpec.classBuilder(SET_CLASS_NAME)
         .addModifiers(KModifier.DATA)
         .addTypeVariable(TypeVariableName("T"))
         .primaryConstructor(
-            FunSpec.constructorBuilder().addParameter("value", TypeVariableName("T")).build()
+            FunSpec.constructorBuilder().addParameter(VALUE_PROPERTY_NAME, TypeVariableName("T")).build()
         )
-        .addProperty(PropertySpec.builder("value", TypeVariableName("T")).initializer("value").build())
-        .superclass(ClassName(packageName, "Patchable").parameterizedBy(TypeVariableName("T")))
-        .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+        .addProperty(
+            PropertySpec.builder(VALUE_PROPERTY_NAME, TypeVariableName("T")).initializer(VALUE_PROPERTY_NAME).build()
+        )
+        .superclass(ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).parameterizedBy(TypeVariableName("T")))
+        .addAnnotation(serializableAnnotation)
         .build()
 
-    val patchableClass = TypeSpec.classBuilder("Patchable")
+    val patchableClass = TypeSpec.classBuilder(PATCHABLE_CLASS_NAME)
         .addTypeVariable(typeVariable)
         .addModifiers(KModifier.SEALED)
-        .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+        .addAnnotation(serializableAnnotation)
         .addType(unchangedObject)
         .addType(setClass)
         .build()
 
-    FileSpec.builder(packageName, "Patchable").addType(patchableClass).build().writeTo(outputDirectory)
+    FileSpec.builder(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).addType(patchableClass).build()
+        .writeTo(OUTPUT_DIRECTORY)
 }

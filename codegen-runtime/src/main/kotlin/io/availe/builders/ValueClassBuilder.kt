@@ -1,11 +1,12 @@
 package io.availe.builders
 
 import com.squareup.kotlinpoet.*
+import io.availe.OPT_IN_QUALIFIED_NAME
+import io.availe.SERIALIZABLE_QUALIFIED_NAME
+import io.availe.VALUE_PROPERTY_NAME
 import io.availe.models.AnnotationArgument
 import io.availe.models.AnnotationModel
 import io.availe.models.Property
-
-private const val OPT_IN_QUALIFIED_NAME = "kotlin.OptIn"
 
 private fun String.asClassName(): ClassName {
     val cleanName = this.substringBefore('<').removeSuffix("?")
@@ -32,7 +33,7 @@ fun buildValueClass(
     isSerializable: Boolean
 ): TypeSpec {
     val underlyingTypeName = property.typeInfo.toTypeName()
-    val constructorParameterBuilder = ParameterSpec.builder("value", underlyingTypeName)
+    val constructorParameterBuilder = ParameterSpec.builder(VALUE_PROPERTY_NAME, underlyingTypeName)
 
     property.annotations
         ?.filterNot { it.qualifiedName == OPT_IN_QUALIFIED_NAME }
@@ -49,13 +50,14 @@ fun buildValueClass(
                 .build()
         )
         .addProperty(
-            PropertySpec.builder("value", underlyingTypeName)
-                .initializer("value")
+            PropertySpec.builder(VALUE_PROPERTY_NAME, underlyingTypeName)
+                .initializer(VALUE_PROPERTY_NAME)
                 .build()
         )
         .apply {
             if (isSerializable) {
-                addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+                val serializableName = SERIALIZABLE_QUALIFIED_NAME.asClassName()
+                addAnnotation(serializableName)
             }
         }
         .build()

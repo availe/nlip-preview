@@ -1,6 +1,9 @@
 package io.availe.generators
 
 import com.squareup.kotlinpoet.*
+import io.availe.OUTPUT_DIRECTORY
+import io.availe.SCHEMA_SUFFIX
+import io.availe.SERIALIZABLE_QUALIFIED_NAME
 import io.availe.builders.*
 import io.availe.models.Model
 import io.availe.models.Property
@@ -8,21 +11,19 @@ import io.availe.models.Variant
 import io.availe.utils.fieldsForBase
 import io.availe.utils.fieldsForCreate
 import io.availe.utils.fieldsForPatch
-import java.io.File
 
 fun generateDataClasses(models: List<Model>) {
-    val outputDirectory = File("build/generated-src/kotlin-poet")
     val modelsByBaseName = models.groupBy { it.isVersionOf ?: it.name }
 
     modelsByBaseName.forEach { (baseName, versions) ->
-        generateSchemaFile(baseName, versions, outputDirectory)
+        generateSchemaFile(baseName, versions)
     }
 }
 
-private fun generateSchemaFile(baseName: String, versions: List<Model>, outputDirectory: File) {
+private fun generateSchemaFile(baseName: String, versions: List<Model>) {
     val isVersioned = versions.first().isVersionOf != null
     val representativeModel = versions.first()
-    val schemaFileName = if (isVersioned) baseName + "Schema" else representativeModel.name + "Schema"
+    val schemaFileName = (if (isVersioned) baseName else representativeModel.name) + SCHEMA_SUFFIX
 
     val fileBuilder = FileSpec.builder(representativeModel.packageName, schemaFileName)
         .addFileComment(FILE_HEADER_COMMENT)
@@ -33,7 +34,12 @@ private fun generateSchemaFile(baseName: String, versions: List<Model>, outputDi
     val topLevelClassBuilder = if (isVersioned) {
         TypeSpec.classBuilder(schemaFileName)
             .addModifiers(KModifier.SEALED)
-            .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+            .addAnnotation(
+                ClassName(
+                    SERIALIZABLE_QUALIFIED_NAME.substringBeforeLast('.'),
+                    SERIALIZABLE_QUALIFIED_NAME.substringAfterLast('.')
+                )
+            )
             .addKdoc(TOP_LEVEL_CLASS_KDOC, baseName)
     } else {
         null
@@ -45,7 +51,12 @@ private fun generateSchemaFile(baseName: String, versions: List<Model>, outputDi
             val versionClass = TypeSpec.classBuilder(version.name)
                 .addModifiers(KModifier.SEALED)
                 .superclass(ClassName(version.packageName, schemaFileName))
-                .addAnnotation(ClassName("kotlinx.serialization", "Serializable"))
+                .addAnnotation(
+                    ClassName(
+                        SERIALIZABLE_QUALIFIED_NAME.substringBeforeLast('.'),
+                        SERIALIZABLE_QUALIFIED_NAME.substringAfterLast('.')
+                    )
+                )
                 .addKdoc(generateVersionBoxKdoc(version.name, version.schemaVersion!!))
                 .addTypes(dtos)
                 .build()
@@ -59,7 +70,7 @@ private fun generateSchemaFile(baseName: String, versions: List<Model>, outputDi
 
     generateAndAddValueClasses(fileBuilder, baseName, versions, valueClassNames)
 
-    fileBuilder.build().writeTo(outputDirectory)
+    fileBuilder.build().writeTo(OUTPUT_DIRECTORY)
 }
 
 private fun generateDataTransferObjects(
@@ -129,8 +140,7 @@ private fun generateAndAddValueClasses(
     val isStandalone = versions.size == 1 && versions.first().isVersionOf == null
     if (isStandalone) {
         val valueClassSpecs = allValueClassData.map { (property, version, className) ->
-            val isSerializable =
-                version.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
+            val isSerializable = version.annotations?.any { it.qualifiedName == SERIALIZABLE_QUALIFIED_NAME } == true
             buildValueClass(className, property, isSerializable)
         }.sortedBy { it.name }
         fileBuilder.addTypesWithHeader(valueClassSpecs, STANDALONE_VALUE_CLASSES_KDOC)
@@ -147,7 +157,7 @@ private fun generateAndAddValueClasses(
         if (sharedData.isNotEmpty()) {
             val sharedValueClasses = sharedData.map { (property, version, className) ->
                 val isSerializable =
-                    version.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
+                    version.annotations?.any { it.qualifiedName == SERIALIZABLE_QUALIFIED_NAME } == true
                 buildValueClass(className, property, isSerializable)
             }.sortedBy { it.name }
             fileBuilder.addTypesWithHeader(sharedValueClasses, SHARED_VALUE_CLASSES_KDOC)
@@ -156,7 +166,7 @@ private fun generateAndAddValueClasses(
         if (conflictedData.isNotEmpty()) {
             val conflictedValueClasses = conflictedData.map { (property, version, className) ->
                 val isSerializable =
-                    version.annotations?.any { it.qualifiedName == "kotlinx.serialization.Serializable" } == true
+                    version.annotations?.any { it.qualifiedName == SERIALIZABLE_QUALIFIED_NAME } == true
                 buildValueClass(className, property, isSerializable)
             }.sortedBy { it.name }
             fileBuilder.addTypesWithHeader(conflictedValueClasses, CONFLICTED_VALUE_CLASSES_KDOC)
