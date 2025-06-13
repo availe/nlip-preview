@@ -17,7 +17,9 @@ public interface V1 : UserAccount {
     public val id: Uuid
 }
 
-@ModelGen
+@ModelGen(
+    Replication.NONE,
+)
 interface Cat {
     val id: String
 }
