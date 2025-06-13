@@ -5,6 +5,8 @@ import io.availe.models.AnnotationArgument
 import io.availe.models.AnnotationModel
 import io.availe.models.Property
 
+private const val OPT_IN_QUALIFIED_NAME = "kotlin.OptIn"
+
 private fun String.asClassName(): ClassName {
     val cleanName = this.substringBefore('<').removeSuffix("?")
     val packageName = cleanName.substringBeforeLast('.')
@@ -32,9 +34,11 @@ fun buildValueClass(
     val underlyingTypeName = property.typeInfo.toTypeName()
     val constructorParameterBuilder = ParameterSpec.builder("value", underlyingTypeName)
 
-    property.annotations?.forEach { annotation ->
-        constructorParameterBuilder.addAnnotation(buildAnnotationSpec(annotation))
-    }
+    property.annotations
+        ?.filterNot { it.qualifiedName == OPT_IN_QUALIFIED_NAME }
+        ?.forEach { annotation ->
+            constructorParameterBuilder.addAnnotation(buildAnnotationSpec(annotation))
+        }
 
     return TypeSpec.classBuilder(className)
         .addAnnotation(JvmInline::class)

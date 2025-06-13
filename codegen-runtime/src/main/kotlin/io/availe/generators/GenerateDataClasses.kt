@@ -158,17 +158,23 @@ private fun FileSpec.Builder.addTypesWithHeader(specs: List<TypeSpec>, header: S
     specs.drop(1).forEach { addType(it) }
 }
 
-private fun FileSpec.Builder.addOptInMarkersForModels(models: List<Model>): FileSpec.Builder = apply {
-    models.flatMap { it.optInMarkers ?: emptyList() }
-        .distinct()
-        .forEach { fullyQualifiedName ->
+private fun FileSpec.Builder.addOptInMarkersForModels(models: List<Model>): FileSpec.Builder {
+    val distinctMarkers = models.flatMap { it.optInMarkers ?: emptyList() }.distinct()
+
+    if (distinctMarkers.isNotEmpty()) {
+        val format = distinctMarkers.joinToString(", ") { "%T::class" }
+        val arguments = distinctMarkers.map { fullyQualifiedName ->
             val packageName = fullyQualifiedName.substringBeforeLast('.')
             val simpleName = fullyQualifiedName.substringAfterLast('.')
-            val markerClass = ClassName(packageName, simpleName)
-            addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-                    .addMember("%T::class", markerClass)
-                    .build()
-            )
-        }
+            ClassName(packageName, simpleName)
+        }.toTypedArray()
+
+        addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                .addMember(format, *arguments)
+                .build()
+        )
+    }
+
+    return this
 }

@@ -16,3 +16,5 @@ const val OPT_IN_MARKERS_ARG: String = "optInMarkers"
 const val SCHEMA_VERSION_ARG: String = "number"
 const val ID_PROPERTY: String = "id"
 const val SCHEMA_VERSION_FIELD: String = "schemaVersion"
+
+const val OPT_IN_ANNOTATION_NAME: String = "kotlin.OptIn"

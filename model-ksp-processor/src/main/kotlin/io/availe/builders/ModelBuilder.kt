@@ -11,15 +11,16 @@ import io.availe.models.Property
 internal fun buildModel(
     declaration: KSClassDeclaration,
     resolver: Resolver,
-    frameworkDecls: Set<KSClassDeclaration>,
-    env: SymbolProcessorEnvironment
+    frameworkDeclarations: Set<KSClassDeclaration>,
+    environment: SymbolProcessorEnvironment
 ): Model {
-    val modelAnn = declaration.annotations.first { it.isAnnotation(MODEL_ANNOTATION_NAME) }
-    val modelReplication = extractReplication(modelAnn, "model '${declaration.simpleName.asString()}'", env)
-    val versioningInfo = determineVersioningInfo(declaration, env)
+    val modelAnnotation = declaration.annotations.first { it.isAnnotation(MODEL_ANNOTATION_NAME) }
+    val modelReplication =
+        extractReplication(modelAnnotation, "model '${declaration.simpleName.asString()}'", environment)
+    val versioningInfo = determineVersioningInfo(declaration, environment)
 
-    val properties = declaration.getAllProperties().map { prop ->
-        processProperty(prop, modelReplication, resolver, frameworkDecls, env)
+    val properties = declaration.getAllProperties().map { property ->
+        processProperty(property, modelReplication, resolver, frameworkDeclarations, environment)
     }.toMutableList()
 
     if (versioningInfo != null) {
@@ -31,13 +32,17 @@ internal fun buildModel(
         properties.add(schemaVersionProperty)
     }
 
+    val optInMarkersFromModelGen = extractOptInMarkersFromModelGen(modelAnnotation)
+    val optInMarkersFromProperties = extractOptInMarkersFromProperties(declaration)
+    val allOptInMarkers = (optInMarkersFromModelGen + optInMarkersFromProperties).distinct().takeIf { it.isNotEmpty() }
+
     return Model(
         name = declaration.simpleName.asString(),
         packageName = declaration.packageName.asString(),
         properties = properties,
         replication = modelReplication,
-        annotations = extractAnnotations(declaration, modelAnn, frameworkDecls),
-        optInMarkers = extractOptInMarkers(modelAnn),
+        annotations = extractAnnotations(declaration, modelAnnotation, frameworkDeclarations),
+        optInMarkers = allOptInMarkers,
         isVersionOf = versioningInfo?.baseModelName,
         schemaVersion = versioningInfo?.schemaVersion
     )

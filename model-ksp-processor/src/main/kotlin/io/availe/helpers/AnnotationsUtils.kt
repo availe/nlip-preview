@@ -10,8 +10,8 @@ import io.availe.models.Replication
 
 private val V_INT_REGEX = Regex("^V(\\d+)$")
 
-internal fun fail(env: SymbolProcessorEnvironment, message: String): Nothing {
-    env.logger.error(message)
+internal fun fail(environment: SymbolProcessorEnvironment, message: String): Nothing {
+    environment.logger.error(message)
     error(message)
 }
 
@@ -22,12 +22,15 @@ internal fun KSAnnotation.isAnnotation(qualifiedName: String): Boolean {
 internal fun extractReplication(
     annotation: KSAnnotation,
     context: String,
-    env: SymbolProcessorEnvironment
+    environment: SymbolProcessorEnvironment
 ): Replication {
-    val replicationArg = annotation.arguments.firstOrNull { it.name?.asString() == REPLICATION_ARG }
-        ?: fail(env, "The @${annotation.shortName.asString()} on $context is missing the 'replication' argument.")
+    val replicationArgument = annotation.arguments.firstOrNull { it.name?.asString() == REPLICATION_ARG }
+        ?: fail(
+            environment,
+            "The @${annotation.shortName.asString()} on $context is missing the 'replication' argument."
+        )
 
-    val value = replicationArg.value ?: fail(env, "Value for 'replication' on $context is null.")
+    val value = replicationArgument.value ?: fail(environment, "Value for 'replication' on $context is null.")
 
     val enumName = when (value) {
         is KSType -> value.declaration.simpleName.asString()
@@ -37,9 +40,9 @@ internal fun extractReplication(
 
     return try {
         Replication.valueOf(enumName)
-    } catch (e: IllegalArgumentException) {
+    } catch (exception: IllegalArgumentException) {
         fail(
-            env,
+            environment,
             "Invalid value for 'replication' on $context. Expected a valid Replication enum, but got '$enumName'."
         )
     }
@@ -47,35 +50,49 @@ internal fun extractReplication(
 
 internal fun extractAnnotations(
     declaration: KSClassDeclaration,
-    modelAnn: KSAnnotation,
-    frameworkDecls: Set<KSClassDeclaration>
+    modelAnnotation: KSAnnotation,
+    frameworkDeclarations: Set<KSClassDeclaration>
 ): List<AnnotationModel>? {
-    val directAnnotations = declaration.annotations.toAnnotationModels(frameworkDecls) ?: emptyList()
+    val directAnnotations = declaration.annotations.toAnnotationModels(frameworkDeclarations) ?: emptyList()
 
-    val listedAnnotations = (modelAnn.arguments.find { it.name?.asString() == ANNOTATIONS_ARG }?.value as? List<*>)
-        ?.mapNotNull { (it as? KSType)?.declaration?.qualifiedName?.asString() }
-        ?.map { AnnotationModel(it) } ?: emptyList()
+    val listedAnnotations =
+        (modelAnnotation.arguments.find { it.name?.asString() == ANNOTATIONS_ARG }?.value as? List<*>)
+            ?.mapNotNull { (it as? KSType)?.declaration?.qualifiedName?.asString() }
+            ?.map { AnnotationModel(it) } ?: emptyList()
 
     return (directAnnotations + listedAnnotations).takeIf { it.isNotEmpty() }
 }
 
-internal fun extractOptInMarkers(modelAnn: KSAnnotation): List<String>? {
-    return (modelAnn.arguments.find { it.name?.asString() == OPT_IN_MARKERS_ARG }?.value as? List<*>)
+internal fun extractOptInMarkersFromModelGen(modelAnnotation: KSAnnotation): List<String> {
+    return (modelAnnotation.arguments.find { it.name?.asString() == OPT_IN_MARKERS_ARG }?.value as? List<*>)
         ?.mapNotNull { (it as? KSType)?.declaration?.qualifiedName?.asString() }
-        ?.takeIf { it.isNotEmpty() }
+        ?: emptyList()
 }
+
+internal fun extractOptInMarkersFromProperties(declaration: KSClassDeclaration): List<String> {
+    return declaration.getAllProperties()
+        .flatMap { property -> property.annotations }
+        .filter { annotation -> annotation.isAnnotation(OPT_IN_ANNOTATION_NAME) }
+        .flatMap { optInAnnotation ->
+            (optInAnnotation.arguments.first().value as? List<*>)?.mapNotNull {
+                (it as? KSType)?.declaration?.qualifiedName?.asString()
+            } ?: emptyList()
+        }
+        .toList()
+}
+
 
 internal data class VersioningInfo(val baseModelName: String, val schemaVersion: Int)
 
 internal fun determineVersioningInfo(
     declaration: KSClassDeclaration,
-    env: SymbolProcessorEnvironment
+    environment: SymbolProcessorEnvironment
 ): VersioningInfo? {
     val baseInterface = declaration.superTypes
         .mapNotNull { it.resolve().declaration as? KSClassDeclaration }
         .firstOrNull {
-            it.classKind == ClassKind.INTERFACE && !it.annotations.any { ann ->
-                ann.isAnnotation(
+            it.classKind == ClassKind.INTERFACE && !it.annotations.any { annotation ->
+                annotation.isAnnotation(
                     MODEL_ANNOTATION_NAME
                 )
             }
@@ -91,7 +108,7 @@ internal fun determineVersioningInfo(
     val inferredVersion = V_INT_REGEX.find(declaration.simpleName.asString())?.groupValues?.get(1)?.toIntOrNull()
 
     val version = explicitVersion ?: inferredVersion ?: fail(
-        env,
+        environment,
         "Versioned model '${declaration.simpleName.asString()}' must either be named 'V<N>' (e.g., V1) " +
                 "or be annotated with @SchemaVersion(number = N)."
     )
@@ -100,21 +117,21 @@ internal fun determineVersioningInfo(
 }
 
 fun Sequence<KSAnnotation>.toAnnotationModels(
-    frameworkDecls: Set<KSClassDeclaration>
+    frameworkDeclarations: Set<KSClassDeclaration>
 ): List<AnnotationModel>? =
-    mapNotNull { ann ->
-        val decl = ann.annotationType.resolve().declaration as? KSClassDeclaration
+    mapNotNull { annotation ->
+        val declaration = annotation.annotationType.resolve().declaration as? KSClassDeclaration
             ?: return@mapNotNull null
-        if (decl in frameworkDecls) return@mapNotNull null
-        val args = ann.arguments.associate { arg ->
-            val key = arg.name?.asString() ?: "value"
-            val raw = arg.value
-            key to when (raw) {
-                is String -> AnnotationArgument.StringValue(raw)
-                else -> AnnotationArgument.LiteralValue(raw.toString())
+        if (declaration in frameworkDeclarations) return@mapNotNull null
+        val arguments = annotation.arguments.associate { argument ->
+            val key = argument.name?.asString() ?: "value"
+            val rawValue = argument.value
+            key to when (rawValue) {
+                is String -> AnnotationArgument.StringValue(rawValue)
+                else -> AnnotationArgument.LiteralValue(rawValue.toString())
             }
         }
-        AnnotationModel(decl.qualifiedName!!.asString(), args)
+        AnnotationModel(declaration.qualifiedName!!.asString(), arguments)
     }
         .toList()
         .takeIf { it.isNotEmpty() }
@@ -128,8 +145,8 @@ internal fun isModelAnnotation(declaration: KSClassDeclaration): Boolean {
 
 internal fun getFrameworkDeclarations(resolver: Resolver): Set<KSClassDeclaration> {
     return listOf(MODEL_ANNOTATION_NAME, FIELD_ANNOTATION_NAME, SCHEMA_VERSION_ANNOTATION_NAME)
-        .mapNotNull { fqName ->
-            resolver.getClassDeclarationByName(resolver.getKSNameFromString(fqName))
+        .mapNotNull { fullyQualifiedName ->
+            resolver.getClassDeclarationByName(resolver.getKSNameFromString(fullyQualifiedName))
         }
         .toSet()
 }
