@@ -9,3 +9,8 @@ public interface UserAccount
 public interface V1 : UserAccount {
     public val id: String
 }
+
+@ModelGen
+interface Cat {
+    val id: String
+}

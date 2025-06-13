@@ -37,6 +37,7 @@ private fun resolvedTypeName(
                 ?: error("Could not find value class name for ${model.name}.${prop.name}")
             ClassName(packageName, valueClassName)
         }
+
         is Property.ForeignProperty -> {
             val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
             ClassName(packageName, prop.foreignModelName + suffix)
@@ -56,7 +57,11 @@ fun dataClassBuilder(
     variant: Variant,
     valueClassNames: Map<Pair<String, String>, String>
 ): TypeSpec {
-    val name = model.name + variant.suffix
+    val name = if (model.isVersionOf != null) {
+        variant.suffix
+    } else {
+        model.name + variant.suffix
+    }
     val typeSpec = TypeSpec.classBuilder(name)
         .addModifiers(KModifier.DATA)
 
