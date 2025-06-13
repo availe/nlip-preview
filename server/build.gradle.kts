@@ -77,6 +77,8 @@ application {
 
 dependencies {
     ksp(project(":model-ksp-processor"))
+    ksp(project(":model-ksp-annotations"))
+    ksp(project(":codegen"))
     implementation(project(":model-ksp-annotations"))
     implementation(projects.shared)
     implementation(libs.logback)

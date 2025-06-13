@@ -1,5 +1,3 @@
-
-
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,12 +7,18 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-interface KspDependencies { fun ksp(dep: Any) }
+interface KspDependencies {
+    fun ksp(dep: Any)
+}
 
 fun KotlinTarget.kspDependencies(block: KspDependencies.() -> Unit) {
     val configurationName = "ksp${targetName.replaceFirstChar { it.uppercaseChar() }}"
     project.dependencies {
-        object : KspDependencies { override fun ksp(dep: Any) { add(configurationName, dep) } }.block()
+        object : KspDependencies {
+            override fun ksp(dep: Any) {
+                add(configurationName, dep)
+            }
+        }.block()
     }
 }
 
@@ -27,7 +31,17 @@ fun KotlinMultiplatformExtension.commonMainKspDependencies(
     block: KspDependencies.() -> Unit
 ) {
     project.dependencies {
-        object : KspDependencies { override fun ksp(dep: Any) { add("kspCommonMainMetadata", dep) } }.block()
+        add("kspCommonMainMetadata", project(":model-ksp-processor"))
+        add("kspCommonMainMetadata", project(":model-ksp-annotations"))
+        add("kspCommonMainMetadata", project(":codegen"))
+    }
+
+    project.dependencies {
+        object : KspDependencies {
+            override fun ksp(dep: Any) {
+                add("kspCommonMainMetadata", dep)
+            }
+        }.block()
     }
 
     sourceSets.named("commonMain").configure {

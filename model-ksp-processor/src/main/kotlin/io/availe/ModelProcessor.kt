@@ -50,10 +50,14 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
     }
 
     private fun buildModel(declaration: KSClassDeclaration, resolver: Resolver): Model {
+        print("fISJIOJRIOGN")
+        print(declaration.qualifiedName?.asString())
         val modelAnn = declaration.annotations.first {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == MODEL_ANNOTATION_NAME
         }
 
+        print("HELLO")
+        print("MODEL NAME:" + modelAnn.arguments.firstOrNull()?.value?.toString() ?: "null\n")
         val modelReplication: Replication = modelAnn.arguments
             .firstOrNull { it.name?.asString() == REPLICATION_ARG }
             ?.value
