@@ -152,7 +152,7 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                     }
                 } ?: modelReplication
 
-            val fieldAnnos = prop.annotations.toAnnotationModels(frameworkDecls)
+            val fieldAnnotations = prop.annotations.toAnnotationModels(frameworkDecls)
 
             val foreign = resolver.getClassDeclarationByName(resolver.getKSNameFromString(leafName))
 
@@ -172,14 +172,14 @@ class ModelProcessor(private val env: SymbolProcessorEnvironment) : SymbolProces
                         replication = Replication.BOTH
                     ),
                     replication = fieldReplication,
-                    annotations = fieldAnnos
+                    annotations = fieldAnnotations
                 )
             } else {
                 Property.Property(
                     name = prop.simpleName.asString(),
                     typeInfo = typeInfo,
                     replication = fieldReplication,
-                    annotations = fieldAnnos
+                    annotations = fieldAnnotations
                 )
             }
         }
