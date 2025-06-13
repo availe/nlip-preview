@@ -2,12 +2,19 @@ package io.availe.models
 
 import io.availe.ModelGen
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 public interface UserAccount
 
-@ModelGen(replication = Replication.PATCH, annotations = [Serializable::class])
+@ModelGen(
+    replication = Replication.PATCH,
+    annotations = [Serializable::class],
+    optInMarkers = [ExperimentalUuidApi::class]
+)
 public interface V1 : UserAccount {
-    public val id: String
+    @OptIn(ExperimentalUuidApi::class)
+    public val id: Uuid
 }
 
 @ModelGen
