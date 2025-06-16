@@ -1,4 +1,3 @@
-// file: /Users/rafaeldiaz/IdeaProjects/availe/model-ksp-processor/src/main/kotlin/io/availe/helpers/KSTypeInfo.kt
 package io.availe.helpers
 
 import com.google.devtools.ksp.symbol.ClassKind
@@ -11,7 +10,8 @@ data class KSTypeInfo(
     val arguments: List<KSTypeInfo>,
     val isNullable: Boolean,
     val isEnum: Boolean,
-    val isValueClass: Boolean
+    val isValueClass: Boolean,
+    val isDataClass: Boolean
 ) {
     val leafType: KSTypeInfo
         get() = if (arguments.isEmpty()) this else arguments.last().leafType
@@ -25,15 +25,16 @@ data class KSTypeInfo(
             val args = ksType.arguments.mapNotNull { it.type?.resolve()?.let(::from) }
             val nullable = ksType.isMarkedNullable
             val isEnum = decl.classKind == ClassKind.ENUM_CLASS
-            
+            val isData = decl.modifiers.contains(Modifier.DATA)
+
             val isValueByModifier = decl.modifiers.contains(Modifier.VALUE)
             val isValueByAnnotation = decl.annotations.any {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == JVM_INLINE_ANNOTATION_FQN
             }
             val isValue = isValueByModifier || isValueByAnnotation
 
-            println("KSTypeInfo.from qualifiedName=$qualified isEnum=$isEnum isValueClass=$isValue")
-            return KSTypeInfo(qualified, args, nullable, isEnum, isValue)
+            println("KSTypeInfo.from qualifiedName=$qualified isEnum=$isEnum isValueClass=$isValue isDataClass=$isData")
+            return KSTypeInfo(qualified, args, nullable, isEnum, isValue, isData)
         }
     }
 }
@@ -44,5 +45,6 @@ fun KSTypeInfo.toModelTypeInfo(): io.availe.models.TypeInfo =
         arguments = arguments.map { it.toModelTypeInfo() },
         isNullable = isNullable,
         isEnum = isEnum,
-        isValueClass = isValueClass
+        isValueClass = isValueClass,
+        isDataClass = isDataClass
     )

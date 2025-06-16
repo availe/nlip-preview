@@ -8,5 +8,6 @@ data class TypeInfo(
     val arguments: List<TypeInfo> = emptyList(),
     val isNullable: Boolean = false,
     val isEnum: Boolean = false,
-    val isValueClass: Boolean = false
+    val isValueClass: Boolean = false,
+    val isDataClass: Boolean = false
 )

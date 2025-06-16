@@ -14,11 +14,9 @@ import io.availe.utils.fieldsForPatch
 
 fun generateDataClasses(models: List<Model>) {
     val modelsByBaseName = models.groupBy { it.isVersionOf ?: it.name }
-
     val valueClassNamesByBase = modelsByBaseName.mapValues { (base, versions) ->
         determineValueClassNames(base, versions)
     }
-
     val globalValueClasses: Set<String> = valueClassNamesByBase.values.flatMap { it.values }.toSet()
 
     modelsByBaseName.forEach { (baseName, versions) ->
@@ -36,7 +34,6 @@ private fun generateSchemaFile(
     val isVersioned = versions.first().isVersionOf != null
     val representativeModel = versions.first()
     val schemaFileName = (if (isVersioned) baseName else representativeModel.name) + SCHEMA_SUFFIX
-
     val fileBuilder = FileSpec.builder(representativeModel.packageName, schemaFileName)
         .addFileComment(FILE_HEADER_COMMENT)
         .addOptInMarkersForModels(versions)
@@ -108,8 +105,6 @@ private fun generateDataTransferObjects(
         } else null
     }
 
-/* ---------- helpers ---------- */
-
 private fun determineValueClassNames(
     baseName: String,
     versions: List<Model>
@@ -165,12 +160,15 @@ private fun generateAndAddValueClasses(
                 .filterNot { prop ->
                     val skip = prop.typeInfo.isEnum ||
                             prop.typeInfo.isValueClass ||
+                            prop.typeInfo.isDataClass ||
                             existingValueClasses.contains(prop.typeInfo.qualifiedName) ||
                             prop.typeInfo.qualifiedName.startsWith("kotlin.collections.") ||
                             prop is Property.ForeignProperty
                     println(
                         "evaluate property=${prop.name} qualified=${prop.typeInfo.qualifiedName} " +
+                                "isEnum=${prop.typeInfo.isEnum} " +
                                 "isValueClass=${prop.typeInfo.isValueClass} " +
+                                "isDataClass=${prop.typeInfo.isDataClass} " +
                                 "globalSkip=${existingValueClasses.contains(prop.typeInfo.qualifiedName)} skip=$skip"
                     )
                     skip
@@ -183,7 +181,6 @@ private fun generateAndAddValueClasses(
         }.distinctBy { it.third }
 
     println("allValueClassData size=${allValueClassData.size}")
-
     if (allValueClassData.isEmpty()) return
 
     val isStandalone = versions.size == 1 && versions.first().isVersionOf == null
