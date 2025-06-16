@@ -19,15 +19,19 @@ fun main(args: Array<String>) {
     val shouldGeneratePatchable = flags.contains("--generate-patchable")
 
     println("Loading model definitions from: ${jsonPaths.joinToString()}")
-    val models = jsonPaths.flatMap { path ->
+
+    val primaryJsonPath = jsonPaths.first()
+    val primaryModels = Json.decodeFromString<List<Model>>(File(primaryJsonPath).readText())
+
+    val allModels = jsonPaths.flatMap { path ->
         val jsonFile = File(path)
         require(jsonFile.exists()) { "Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}" }
         Json.decodeFromString<List<Model>>(jsonFile.readText())
     }.distinctBy { it.packageName + "." + it.name }
 
-    println("Loaded ${models.size} total model definitions.")
+    println("Loaded ${allModels.size} total model definitions. Will generate sources for ${primaryModels.size} primary models.")
 
-    validateModelReplications(models)
+    validateModelReplications(allModels)
     println("Model definitions validated successfully.")
 
     if (shouldGeneratePatchable) {
@@ -35,6 +39,6 @@ fun main(args: Array<String>) {
         generatePatchable()
     }
 
-    generateDataClasses(models)
+    generateDataClasses(primaryModels, allModels)
     println("Code generation complete.")
 }

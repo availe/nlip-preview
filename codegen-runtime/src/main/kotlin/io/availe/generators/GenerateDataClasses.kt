@@ -12,14 +12,16 @@ import io.availe.utils.fieldsForBase
 import io.availe.utils.fieldsForCreate
 import io.availe.utils.fieldsForPatch
 
-fun generateDataClasses(models: List<Model>) {
-    val modelsByBaseName = models.groupBy { it.isVersionOf ?: it.name }
-    val valueClassNamesByBase = modelsByBaseName.mapValues { (base, versions) ->
+fun generateDataClasses(primaryModels: List<Model>, allModels: List<Model>) {
+    val allModelsByBaseName = allModels.groupBy { it.isVersionOf ?: it.name }
+    val valueClassNamesByBase = allModelsByBaseName.mapValues { (base, versions) ->
         determineValueClassNames(base, versions)
     }
     val globalValueClasses: Set<String> = valueClassNamesByBase.values.flatMap { it.values }.toSet()
 
-    modelsByBaseName.forEach { (baseName, versions) ->
+    val primaryModelsByBaseName = primaryModels.groupBy { it.isVersionOf ?: it.name }
+
+    primaryModelsByBaseName.forEach { (baseName, versions) ->
         val mapForBase = valueClassNamesByBase[baseName]!!
         generateSchemaFile(baseName, versions, mapForBase, globalValueClasses)
     }
