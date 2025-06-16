@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -7,6 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 interface KspDependencies {
     fun ksp(dep: Any)
@@ -106,7 +105,6 @@ kotlin {
     jvm()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        nodejs()
         browser {
             commonWebpackConfig {
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
@@ -171,24 +169,35 @@ android {
     }
 }
 
+tasks.withType<KotlinCompile>().configureEach {
+    dependsOn(tasks.named("generateBuildKonfig"))
+}
+
 val codegen by configurations.creating
 
 dependencies {
+    // Add the codegen-runtime project to our new configuration
     codegen(project(":codegen-runtime"))
 }
 
+// The task that will execute our code generator
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
+    // This task only needs to run after the KSP task creates the json file
+    dependsOn(tasks.named("kspCommonMainKotlinMetadata"))
 
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
 
+    // Define the path to the generated json file
     val modelsJsonFile = layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
 
+    // Pass the absolute path of the file to the main function as an argument
     args(modelsJsonFile.get().asFile.absolutePath, "--generate-patchable")
 }
 
+// All compilation tasks must wait for the codegen to finish generating sources
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     if (name.startsWith("compile")) {
         dependsOn(tasks.named("runCodegen"))
@@ -197,24 +206,4 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 
 kotlin.sourceSets.named("commonMain") {
     kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin-poet"))
-}
-
-val modelJsonElements by configurations.creating {
-    isCanBeConsumed = true
-    isCanBeResolved = false
-    attributes {
-        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class.java, "model-definition"))
-    }
-}
-
-tasks.matching { it.name == "kspCommonMainKotlinMetadata" }.all {
-    outputs.files.asFileTree.forEach { file ->
-        if (file.name == "models.json") {
-            artifacts {
-                add(modelJsonElements.name, file) {
-                    builtBy(tasks.named("kspCommonMainKotlinMetadata"))
-                }
-            }
-        }
-    }
 }
