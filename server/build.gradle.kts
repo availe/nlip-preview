@@ -79,7 +79,6 @@ application {
 val modelJsonProducer by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
-    extendsFrom(configurations.getByName("implementation"))
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class.java, "model-definition"))
     }
@@ -261,12 +260,17 @@ tasks.register<JavaExec>("runCodegen") {
     classpath = codegen
 
     val localModelsJsonProvider = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
-    val importedModelsJson = configurations.getByName("modelJsonProducer").files
+    val importedModelsConfiguration = configurations.getByName("modelJsonProducer")
 
-    val localModelFile = localModelsJsonProvider.get().asFile
-    val allModelFiles = (importedModelsJson + localModelFile).filter { it.exists() }
+    inputs.files(localModelsJsonProvider, importedModelsConfiguration).withPathSensitivity(PathSensitivity.NONE)
 
-    args = allModelFiles.map { it.absolutePath }
+    doFirst {
+        val localFile = localModelsJsonProvider.get().asFile
+        val importedFiles = importedModelsConfiguration.files
+        val allFiles = (importedFiles + localFile).filter { it.exists() }
+
+        args = allFiles.map { it.absolutePath }
+    }
 }
 
 tasks.withType<KotlinCompilationTask<*>>().configureEach {

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -5,7 +7,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 interface KspDependencies {
     fun ksp(dep: Any)
@@ -105,6 +106,7 @@ kotlin {
     jvm()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
+        nodejs()
         browser {
             commonWebpackConfig {
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
@@ -169,10 +171,6 @@ android {
     }
 }
 
-tasks.withType<KotlinCompile>().configureEach {
-    dependsOn(tasks.named("generateBuildKonfig"))
-}
-
 val codegen by configurations.creating
 
 dependencies {
@@ -182,7 +180,6 @@ dependencies {
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
-    dependsOn(tasks.named("kspCommonMainKotlinMetadata"))
 
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
