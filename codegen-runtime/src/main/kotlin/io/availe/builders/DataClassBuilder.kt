@@ -38,7 +38,8 @@ fun buildDataTransferObjectClass(
         val parameterBuilder = ParameterSpec.builder(property.name, typeName)
 
         if (property.name == SCHEMA_VERSION_PROPERTY_NAME && variant != Variant.PATCH) {
-            parameterBuilder.defaultValue("%T(%L)", typeName, model.schemaVersion)
+            val unwrappedType = if (typeName is ParameterizedTypeName) typeName.typeArguments.first() else typeName
+            parameterBuilder.defaultValue("%T(%L)", unwrappedType, model.schemaVersion)
         }
 
         if (variant == Variant.PATCH) {
@@ -63,16 +64,14 @@ private fun resolveTypeNameForProperty(
     model: Model,
     valueClassNames: Map<Pair<String, String>, String>
 ): TypeName {
-    val baseType = when (property) {
-        is Property.Property -> {
+    val baseType: TypeName = when {
+        property.typeInfo.isEnum -> property.typeInfo.toTypeName()
+        property.typeInfo.qualifiedName.startsWith("kotlin.collections.") -> property.typeInfo.toTypeName()
+        property is Property.ForeignProperty -> property.typeInfo.toTypeName()
+        else -> {
             val valueClassName = valueClassNames[model.name to property.name]
-                ?: error("Could not find value class name for ${model.name}.${property.name}")
+                ?: return property.typeInfo.toTypeName()
             ClassName(model.packageName, valueClassName)
-        }
-
-        is Property.ForeignProperty -> {
-            val suffix = if (variant == Variant.BASE) "Data" else variant.suffix
-            ClassName(model.packageName, property.foreignModelName + suffix)
         }
     }
 
@@ -82,6 +81,7 @@ private fun resolveTypeNameForProperty(
         baseType
     }
 }
+
 
 private fun buildModelAnnotationSpec(annotationModel: AnnotationModel): AnnotationSpec {
     val annotationClassName = ClassName(

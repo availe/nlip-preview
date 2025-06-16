@@ -194,7 +194,7 @@ tasks.register<JavaExec>("runCodegen") {
     val modelsJsonFile = layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
 
     // Pass the absolute path of the file to the main function as an argument
-    args(modelsJsonFile.get().asFile.absolutePath)
+    args(modelsJsonFile.get().asFile.absolutePath, "--generate-patchable")
 }
 
 // All compilation tasks must wait for the codegen to finish generating sources

@@ -12,12 +12,21 @@ fun main(args: Array<String>) {
     val jsonPath = args.getOrNull(0) ?: error("Codegen Error: Missing models.json file path argument.")
     val jsonFile = File(jsonPath)
     require(jsonFile.exists()) { "Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}" }
+
+    val shouldGeneratePatchable = args.contains("--generate-patchable")
+
     println("Loading model definitions from: ${jsonFile.path}")
     val models = Json.decodeFromString<List<Model>>(jsonFile.readText())
     println("Loaded ${models.size} model definitions.")
+
     validateModelReplications(models)
     println("Model definitions validated successfully.")
-    generatePatchable()
+
+    if (shouldGeneratePatchable) {
+        println("Generating Patchable utility...")
+        generatePatchable()
+    }
+
     generateDataClasses(models)
     println("Code generation complete.")
 }

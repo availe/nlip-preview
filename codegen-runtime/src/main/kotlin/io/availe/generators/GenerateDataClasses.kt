@@ -62,7 +62,7 @@ private fun generateSchemaFile(baseName: String, versions: List<Model>) {
                 .build()
             topLevelClassBuilder?.addType(versionClass)
         } else {
-            fileBuilder.addTypes(dtos)
+            dtos.forEach { fileBuilder.addType(it) }
         }
     }
 
@@ -130,9 +130,18 @@ private fun generateAndAddValueClasses(
     valueClassNames: Map<Pair<String, String>, String>
 ) {
     val allValueClassData = versions.flatMap { version ->
-        version.properties.filterIsInstance<Property.Property>().map { property ->
-            Triple(property, version, valueClassNames[version.name to property.name]!!)
-        }
+        version.properties
+            .filterIsInstance<Property.Property>()
+            .filterNot { prop ->
+                prop.typeInfo.isEnum ||
+                        prop.typeInfo.qualifiedName.startsWith("kotlin.collections.") ||
+                        prop is Property.ForeignProperty
+            }
+            .mapNotNull { property ->
+                valueClassNames[version.name to property.name]?.let { className ->
+                    Triple(property, version, className)
+                }
+            }
     }.distinctBy { it.third }
 
     if (allValueClassData.isEmpty()) return
@@ -176,10 +185,14 @@ private fun generateAndAddValueClasses(
 
 private fun FileSpec.Builder.addTypesWithHeader(specs: List<TypeSpec>, header: String) {
     if (specs.isEmpty()) return
-    val firstSpecWithHeader = specs.first().toBuilder().addKdoc(header).build()
-    addType(firstSpecWithHeader)
+    val firstSpecBuilder = specs.first().toBuilder()
+    firstSpecBuilder.kdoc.clear()
+    firstSpecBuilder.addKdoc(header)
+
+    addType(firstSpecBuilder.build())
     specs.drop(1).forEach { addType(it) }
 }
+
 
 private fun FileSpec.Builder.addOptInMarkersForModels(models: List<Model>): FileSpec.Builder {
     val distinctMarkers = models.flatMap { it.optInMarkers ?: emptyList() }.distinct()
