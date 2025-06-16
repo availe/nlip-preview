@@ -1,4 +1,5 @@
 import nu.studer.gradle.jooq.JooqEdition
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jooq.meta.jaxb.Logging
 
 @Suppress("UNCHECKED_CAST")
@@ -75,18 +76,12 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
-val sharedModels = configurations.create("sharedModels") {
-    isCanBeResolved = true
-    isCanBeConsumed = false
-}
-
 dependencies {
     ksp(project(":model-ksp-processor"))
     ksp(project(":model-ksp-annotations"))
     ksp(project(":codegen"))
     implementation(projects.codegen)
     implementation(project(":model-ksp-annotations"))
-    sharedModels(project(":shared", configuration = "modelJsonElements"))
     implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
@@ -244,27 +239,34 @@ tasks.named("generateJooq") {
 val codegen by configurations.creating
 
 dependencies {
+    // Add the codegen-runtime project to our new configuration
     codegen(project(":codegen-runtime"))
 }
 
+// The task that will execute our code generator
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
-    dependsOn("kspKotlin")
-    dependsOn(sharedModels)
-    inputs.files(sharedModels)
+    // This task only needs to run after the KSP task creates the json file
+    dependsOn(tasks.named("kspKotlin"))
+
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
-    doFirst {
-        val localFile = layout.buildDirectory
-            .file("generated/ksp/main/resources/models.json")
-            .get()
-            .asFile
-        val all = (sharedModels.files + localFile).filter { it.exists() }
-        args = all.map { it.absolutePath }
+
+    // Define the path to the generated json file
+    val modelsJsonFile = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+
+    // Pass the absolute path of the file to the main function as an argument
+    args(modelsJsonFile.get().asFile.absolutePath)
+}
+
+// All compilation tasks must wait for the codegen to finish generating sources
+tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    if (name == "compileKotlin") {
+        dependsOn(tasks.named("runCodegen"))
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
-    if (name == "compileKotlin") dependsOn(tasks.named("runCodegen"))
+kotlin.sourceSets.named("main") {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin-poet"))
 }
