@@ -1,5 +1,4 @@
 import nu.studer.gradle.jooq.JooqEdition
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jooq.meta.jaxb.Logging
 
 @Suppress("UNCHECKED_CAST")
@@ -76,14 +75,10 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
-val modelJsonProducer by configurations.creating {
-    isCanBeConsumed = false
+val sharedModels = configurations.create("sharedModels") {
     isCanBeResolved = true
-    attributes {
-        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class.java, "model-definition"))
-    }
+    isCanBeConsumed = false
 }
-
 
 dependencies {
     ksp(project(":model-ksp-processor"))
@@ -91,6 +86,7 @@ dependencies {
     ksp(project(":codegen"))
     implementation(projects.codegen)
     implementation(project(":model-ksp-annotations"))
+    sharedModels(project(":shared", configuration = "modelJsonElements"))
     implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
@@ -254,31 +250,21 @@ dependencies {
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
-    dependsOn(tasks.named("kspKotlin"))
-
+    dependsOn("kspKotlin")
+    dependsOn(sharedModels)
+    inputs.files(sharedModels)
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
-
-    val localModelsJsonProvider = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
-    val importedModelsConfiguration = configurations.getByName("modelJsonProducer")
-
-    inputs.files(localModelsJsonProvider, importedModelsConfiguration).withPathSensitivity(PathSensitivity.NONE)
-
     doFirst {
-        val localFile = localModelsJsonProvider.get().asFile
-        val importedFiles = importedModelsConfiguration.files
-        val allFiles = (importedFiles + localFile).filter { it.exists() }
-
-        args = allFiles.map { it.absolutePath }
+        val localFile = layout.buildDirectory
+            .file("generated/ksp/main/resources/models.json")
+            .get()
+            .asFile
+        val all = (sharedModels.files + localFile).filter { it.exists() }
+        args = all.map { it.absolutePath }
     }
 }
 
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    if (name == "compileKotlin") {
-        dependsOn(tasks.named("runCodegen"))
-    }
-}
-
-kotlin.sourceSets.named("main") {
-    kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin-poet"))
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+    if (name == "compileKotlin") dependsOn(tasks.named("runCodegen"))
 }

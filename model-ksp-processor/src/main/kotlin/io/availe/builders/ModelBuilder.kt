@@ -3,6 +3,7 @@ package io.availe
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import io.availe.builders.processProperty
 import io.availe.helpers.MODEL_ANNOTATION_NAME
 import io.availe.helpers.SCHEMA_VERSION_FIELD
 import io.availe.models.Model

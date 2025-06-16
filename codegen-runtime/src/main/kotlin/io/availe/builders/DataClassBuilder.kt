@@ -12,19 +12,15 @@ fun buildDataTransferObjectClass(
     model: Model,
     properties: List<Property>,
     variant: Variant,
-    valueClassNames: Map<Pair<String, String>, String>
+    valueClassNames: Map<Pair<String, String>, String>,
+    existingValueClasses: Set<String>
 ): TypeSpec {
-    val generatedClassName = if (model.isVersionOf != null) {
-        variant.suffix
-    } else {
-        model.name + variant.suffix
-    }
+    val generatedClassName = if (model.isVersionOf != null) variant.suffix else model.name + variant.suffix
+
     val typeSpecBuilder = TypeSpec.classBuilder(generatedClassName)
         .addModifiers(KModifier.DATA)
 
-    model.annotations?.forEach { annotationModel ->
-        typeSpecBuilder.addAnnotation(buildModelAnnotationSpec(annotationModel))
-    }
+    model.annotations?.forEach { ann -> typeSpecBuilder.addAnnotation(buildModelAnnotationSpec(ann)) }
 
     if (variant == Variant.BASE && model.isVersionOf != null) {
         val schemaName = model.isVersionOf + "Schema"
@@ -34,23 +30,24 @@ fun buildDataTransferObjectClass(
     val constructorBuilder = FunSpec.constructorBuilder()
 
     properties.forEach { property ->
-        val typeName = resolveTypeNameForProperty(property, variant, model, valueClassNames)
-        val parameterBuilder = ParameterSpec.builder(property.name, typeName)
+        val typeName = resolveTypeNameForProperty(property, variant, model, valueClassNames, existingValueClasses)
+
+        val paramBuilder = ParameterSpec.builder(property.name, typeName)
 
         if (property.name == SCHEMA_VERSION_PROPERTY_NAME && variant != Variant.PATCH) {
-            val unwrappedType = if (typeName is ParameterizedTypeName) typeName.typeArguments.first() else typeName
-            parameterBuilder.defaultValue("%T(%L)", unwrappedType, model.schemaVersion)
+            val unwrapped = if (typeName is ParameterizedTypeName) typeName.typeArguments.first() else typeName
+            paramBuilder.defaultValue("%T(%L)", unwrapped, model.schemaVersion)
         }
 
         if (variant == Variant.PATCH) {
-            parameterBuilder.defaultValue(
+            paramBuilder.defaultValue(
                 "%T.%L",
                 ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME),
                 UNCHANGED_OBJECT_NAME
             )
         }
 
-        constructorBuilder.addParameter(parameterBuilder.build())
+        constructorBuilder.addParameter(paramBuilder.build())
         typeSpecBuilder.addProperty(PropertySpec.builder(property.name, typeName).initializer(property.name).build())
     }
 
@@ -62,37 +59,37 @@ private fun resolveTypeNameForProperty(
     property: Property,
     variant: Variant,
     model: Model,
-    valueClassNames: Map<Pair<String, String>, String>
+    valueClassNames: Map<Pair<String, String>, String>,
+    existingValueClasses: Set<String>
 ): TypeName {
+    val skipWrapping = property.typeInfo.isValueClass || existingValueClasses.contains(property.typeInfo.qualifiedName)
+
     val baseType: TypeName = when {
+        skipWrapping -> property.typeInfo.toTypeName()
         property.typeInfo.isEnum -> property.typeInfo.toTypeName()
         property.typeInfo.qualifiedName.startsWith("kotlin.collections.") -> property.typeInfo.toTypeName()
         property is Property.ForeignProperty -> property.typeInfo.toTypeName()
         else -> {
-            val valueClassName = valueClassNames[model.name to property.name]
-                ?: return property.typeInfo.toTypeName()
-            ClassName(model.packageName, valueClassName)
+            val vcName = valueClassNames[model.name to property.name] ?: return property.typeInfo.toTypeName()
+            ClassName(model.packageName, vcName)
         }
     }
 
     return if (variant == Variant.PATCH) {
         ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).parameterizedBy(baseType)
-    } else {
-        baseType
-    }
+    } else baseType
 }
 
-
 private fun buildModelAnnotationSpec(annotationModel: AnnotationModel): AnnotationSpec {
-    val annotationClassName = ClassName(
+    val className = ClassName(
         annotationModel.qualifiedName.substringBeforeLast('.'),
         annotationModel.qualifiedName.substringAfterLast('.')
     )
-    val builder = AnnotationSpec.builder(annotationClassName)
-    annotationModel.arguments.forEach { (argumentName, argumentValue) ->
-        when (argumentValue) {
-            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", argumentName, argumentValue.value)
-            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", argumentName, argumentValue.value)
+    val builder = AnnotationSpec.builder(className)
+    annotationModel.arguments.forEach { (argName, argVal) ->
+        when (argVal) {
+            is AnnotationArgument.StringValue -> builder.addMember("%L = %S", argName, argVal.value)
+            is AnnotationArgument.LiteralValue -> builder.addMember("%L = %L", argName, argVal.value)
         }
     }
     return builder.build()

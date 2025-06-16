@@ -1,17 +1,20 @@
-package io.availe
+package io.availe.builders
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import io.availe.extractReplication
 import io.availe.helpers.FIELD_ANNOTATION_NAME
 import io.availe.helpers.KSTypeInfo
 import io.availe.helpers.MODEL_ANNOTATION_NAME
 import io.availe.helpers.toModelTypeInfo
+import io.availe.isAnnotation
 import io.availe.models.AnnotationModel
 import io.availe.models.Property
 import io.availe.models.Replication
 import io.availe.models.TypeInfo
+import io.availe.toAnnotationModels
 
 internal fun processProperty(
     propertyDeclaration: KSPropertyDeclaration,
@@ -21,30 +24,37 @@ internal fun processProperty(
     environment: SymbolProcessorEnvironment
 ): Property {
     val fieldAnnotation = propertyDeclaration.annotations.firstOrNull { it.isAnnotation(FIELD_ANNOTATION_NAME) }
-    val propertyReplication = fieldAnnotation?.let { annotation ->
-        extractReplication(annotation, "property '${propertyDeclaration.simpleName.asString()}'", environment)
+    val propertyReplication = fieldAnnotation?.let { ann ->
+        extractReplication(ann, "property '${propertyDeclaration.simpleName.asString()}'", environment)
     } ?: modelReplication
 
-    val ksTypeInformation = KSTypeInfo.from(propertyDeclaration.type.resolve())
-    val typeInformation = ksTypeInformation.toModelTypeInfo()
-    val propertyAnnotations = propertyDeclaration.annotations.toAnnotationModels(frameworkDeclarations)
+    val ksTypeInfo = KSTypeInfo.from(propertyDeclaration.type.resolve())
+    val typeInfo: TypeInfo = ksTypeInfo.toModelTypeInfo()
+    val propertyAnnotations: List<AnnotationModel>? =
+        propertyDeclaration.annotations.toAnnotationModels(frameworkDeclarations)
 
-    val foreignModelDeclaration =
-        resolver.getClassDeclarationByName(resolver.getKSNameFromString(ksTypeInformation.leafType.qualifiedName))
-    val isForeignModel = foreignModelDeclaration?.annotations?.any { it.isAnnotation(MODEL_ANNOTATION_NAME) } == true
+    val foreignDecl = resolver.getClassDeclarationByName(
+        resolver.getKSNameFromString(ksTypeInfo.leafType.qualifiedName)
+    )
+    val isForeignModel = foreignDecl?.annotations?.any { it.isAnnotation(MODEL_ANNOTATION_NAME) } == true
+
+    println(
+        "processProperty name=${propertyDeclaration.simpleName.asString()} " +
+                "qualified=${typeInfo.qualifiedName} isValueClass=${typeInfo.isValueClass} foreign=$isForeignModel"
+    )
 
     return if (isForeignModel) {
         createForeignProperty(
             propertyDeclaration,
-            typeInformation,
-            foreignModelDeclaration,
+            typeInfo,
+            foreignDecl,
             propertyReplication,
             propertyAnnotations
         )
     } else {
         Property.Property(
             name = propertyDeclaration.simpleName.asString(),
-            typeInfo = typeInformation,
+            typeInfo = typeInfo,
             replication = propertyReplication,
             annotations = propertyAnnotations
         )
