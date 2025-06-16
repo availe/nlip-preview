@@ -6,5 +6,5 @@ import io.availe.ModelGen
 interface InternalUserAccount {
     val username: String
     val conversationId: ConversationId
-    val conversation: ConversationSchema.V1.Data
+    val conversation: ConversationSchema.V1
 }

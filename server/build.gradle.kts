@@ -243,21 +243,19 @@ dependencies {
     codegen(project(":codegen-runtime"))
 }
 
-// The task that will execute our code generator
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
-    // This task only needs to run after the KSP task creates the json file
-    dependsOn(tasks.named("kspKotlin"))
+    dependsOn(tasks.named("kspKotlin"), project(":shared").tasks.named("kspCommonMainKotlinMetadata"))
 
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
 
-    // Define the path to the generated json file
-    val modelsJsonFile = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+    val serverJsonFile = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+    val sharedJsonFile =
+        project(":shared").layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
 
-    // Pass the absolute path of the file to the main function as an argument
-    args(modelsJsonFile.get().asFile.absolutePath)
+    args(serverJsonFile.get().asFile.absolutePath, sharedJsonFile.get().asFile.absolutePath)
 }
 
 // All compilation tasks must wait for the codegen to finish generating sources

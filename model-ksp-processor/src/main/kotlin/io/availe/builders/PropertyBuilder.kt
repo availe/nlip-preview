@@ -4,6 +4,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.Modifier
 import io.availe.extractReplication
 import io.availe.helpers.FIELD_ANNOTATION_NAME
 import io.availe.helpers.KSTypeInfo
@@ -15,6 +16,17 @@ import io.availe.models.Property
 import io.availe.models.Replication
 import io.availe.models.TypeInfo
 import io.availe.toAnnotationModels
+
+private fun isGeneratedVariantContainer(declaration: KSClassDeclaration?): Boolean {
+    if (declaration == null || Modifier.SEALED !in declaration.modifiers) return false
+    val nestedDecls = declaration.declarations
+        .filterIsInstance<KSClassDeclaration>()
+        .map { it.simpleName.asString() }
+        .toSet()
+    return nestedDecls.contains("Data") &&
+            nestedDecls.contains("CreateRequest") &&
+            nestedDecls.contains("PatchRequest")
+}
 
 internal fun processProperty(
     propertyDeclaration: KSPropertyDeclaration,
@@ -36,14 +48,17 @@ internal fun processProperty(
     val foreignDecl = resolver.getClassDeclarationByName(
         resolver.getKSNameFromString(ksTypeInfo.leafType.qualifiedName)
     )
-    val isForeignModel = foreignDecl?.annotations?.any { it.isAnnotation(MODEL_ANNOTATION_NAME) } == true
+
+    val isSourceForeignModel = foreignDecl?.annotations?.any { it.isAnnotation(MODEL_ANNOTATION_NAME) } == true
+    val isGeneratedForeignModel = isGeneratedVariantContainer(foreignDecl)
+    val isForeignModel = isSourceForeignModel || isGeneratedForeignModel
 
     println(
         "processProperty name=${propertyDeclaration.simpleName.asString()} " +
                 "qualified=${typeInfo.qualifiedName} isValueClass=${typeInfo.isValueClass} foreign=$isForeignModel"
     )
 
-    return if (isForeignModel) {
+    return if (isForeignModel && foreignDecl != null) {
         createForeignProperty(
             propertyDeclaration,
             typeInfo,

@@ -62,12 +62,27 @@ private fun resolveTypeNameForProperty(
     valueClassNames: Map<Pair<String, String>, String>,
     existingValueClasses: Set<String>
 ): TypeName {
+    if (property is Property.ForeignProperty) {
+        val baseTypeNameString = property.typeInfo.toTypeName().toString()
+        val variantSuffix = when (variant) {
+            Variant.BASE -> ".Data"
+            Variant.CREATE -> ".CreateRequest"
+            Variant.PATCH -> ".PatchRequest"
+        }
+        val finalTypeName = ClassName.bestGuess("$baseTypeNameString$variantSuffix")
+
+        return if (variant == Variant.PATCH) {
+            ClassName(MODELS_PACKAGE_NAME, PATCHABLE_CLASS_NAME).parameterizedBy(finalTypeName)
+        } else {
+            finalTypeName
+        }
+    }
+
     val skipWrapping = property.typeInfo.isEnum ||
             property.typeInfo.isValueClass ||
             property.typeInfo.isDataClass ||
             existingValueClasses.contains(property.typeInfo.qualifiedName) ||
-            property.typeInfo.qualifiedName.startsWith("kotlin.collections.") ||
-            property is Property.ForeignProperty
+            property.typeInfo.qualifiedName.startsWith("kotlin.collections.")
 
     val baseType: TypeName = if (skipWrapping) {
         property.typeInfo.toTypeName()
