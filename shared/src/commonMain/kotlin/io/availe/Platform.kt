@@ -1,7 +1,0 @@
-package io.availe
-
-interface Platform {
-    val name: String
-}
-
-expect fun getPlatform(): Platform
