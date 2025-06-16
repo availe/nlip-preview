@@ -9,15 +9,23 @@ import java.io.File
 
 fun main(args: Array<String>) {
     println("Availe Codegen Runtime starting...")
-    val jsonPath = args.getOrNull(0) ?: error("Codegen Error: Missing models.json file path argument.")
-    val jsonFile = File(jsonPath)
-    require(jsonFile.exists()) { "Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}" }
 
-    val shouldGeneratePatchable = args.contains("--generate-patchable")
+    val (flags, jsonPaths) = args.partition { it.startsWith("--") }
 
-    println("Loading model definitions from: ${jsonFile.path}")
-    val models = Json.decodeFromString<List<Model>>(jsonFile.readText())
-    println("Loaded ${models.size} model definitions.")
+    if (jsonPaths.isEmpty()) {
+        error("Codegen Error: Missing one or more models.json file path arguments.")
+    }
+
+    val shouldGeneratePatchable = flags.contains("--generate-patchable")
+
+    println("Loading model definitions from: ${jsonPaths.joinToString()}")
+    val models = jsonPaths.flatMap { path ->
+        val jsonFile = File(path)
+        require(jsonFile.exists()) { "Codegen Error: Specified models.json file does not exist: ${jsonFile.absolutePath}" }
+        Json.decodeFromString<List<Model>>(jsonFile.readText())
+    }.distinctBy { it.packageName + "." + it.name }
+
+    println("Loaded ${models.size} total model definitions.")
 
     validateModelReplications(models)
     println("Model definitions validated successfully.")

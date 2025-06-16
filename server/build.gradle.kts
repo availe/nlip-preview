@@ -76,6 +76,16 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
+val modelJsonProducer by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    extendsFrom(configurations.getByName("implementation"))
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class.java, "model-definition"))
+    }
+}
+
+
 dependencies {
     ksp(project(":model-ksp-processor"))
     ksp(project(":model-ksp-annotations"))
@@ -239,28 +249,26 @@ tasks.named("generateJooq") {
 val codegen by configurations.creating
 
 dependencies {
-    // Add the codegen-runtime project to our new configuration
     codegen(project(":codegen-runtime"))
 }
 
-// The task that will execute our code generator
 tasks.register<JavaExec>("runCodegen") {
     group = "build"
     description = "Runs the KSP-based code generator"
-    // This task only needs to run after the KSP task creates the json file
     dependsOn(tasks.named("kspKotlin"))
 
     mainClass.set("io.availe.ApplicationKt")
     classpath = codegen
 
-    // Define the path to the generated json file
-    val modelsJsonFile = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+    val localModelsJsonProvider = layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+    val importedModelsJson = configurations.getByName("modelJsonProducer").files
 
-    // Pass the absolute path of the file to the main function as an argument
-    args(modelsJsonFile.get().asFile.absolutePath)
+    val localModelFile = localModelsJsonProvider.get().asFile
+    val allModelFiles = (importedModelsJson + localModelFile).filter { it.exists() }
+
+    args = allModelFiles.map { it.absolutePath }
 }
 
-// All compilation tasks must wait for the codegen to finish generating sources
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     if (name == "compileKotlin") {
         dependsOn(tasks.named("runCodegen"))
