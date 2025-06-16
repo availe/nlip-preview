@@ -32,10 +32,9 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp")
-include(":server")
-include(":shared")
 include(":codegen")
 include(":codegen-runtime")
 include(":model-ksp-processor")
 include(":model-ksp-annotations")
+include(":gradle-plugin")
+include(":gradle-plugin")
