@@ -131,3 +131,4 @@ composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "com
 buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
 kotlinx-rpc-plugin = { id = "org.jetbrains.kotlinx.rpc.plugin", version.ref = "kotlinx-rpc" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kreplica = { id = "io.availe.kreplica", version = "1.0.0" }

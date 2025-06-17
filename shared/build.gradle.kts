@@ -6,54 +6,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-interface KspDependencies {
-    fun ksp(dep: Any)
-}
-
-fun KotlinTarget.kspDependencies(block: KspDependencies.() -> Unit) {
-    val configurationName = "ksp${targetName.replaceFirstChar { it.uppercaseChar() }}"
-    project.dependencies {
-        object : KspDependencies {
-            override fun ksp(dep: Any) {
-                add(configurationName, dep)
-            }
-        }.block()
-    }
-}
-
-fun KotlinMultiplatformExtension.kspDependenciesForAllTargets(block: KspDependencies.() -> Unit) {
-    targets.configureEach { if (targetName != "metadata") kspDependencies(block) }
-}
-
-fun KotlinMultiplatformExtension.commonMainKspDependencies(
-    project: Project,
-    block: KspDependencies.() -> Unit
-) {
-    project.dependencies {
-        add("kspCommonMainMetadata", project(":model-ksp-processor"))
-        add("kspCommonMainMetadata", project(":model-ksp-annotations"))
-        add("kspCommonMainMetadata", project(":codegen"))
-    }
-
-    project.dependencies {
-        object : KspDependencies {
-            override fun ksp(dep: Any) {
-                add("kspCommonMainMetadata", dep)
-            }
-        }.block()
-    }
-
-    sourceSets.named("commonMain").configure {
-        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-    }
-
-    project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
-        if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-
-
 @Suppress("UNCHECKED_CAST")
 val secrets = rootProject.extra["secrets"] as Map<String, String>
 
@@ -70,6 +22,7 @@ plugins {
     alias(libs.plugins.buildKonfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinx.rpc.plugin)
+    alias(libs.plugins.kreplica)
 }
 
 buildkonfig {
@@ -151,10 +104,6 @@ kotlin {
             }
         }
     }
-
-    commonMainKspDependencies(project) {
-        ksp(project(":model-ksp-processor"))
-    }
 }
 
 android {
@@ -171,39 +120,4 @@ android {
 
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn(tasks.named("generateBuildKonfig"))
-}
-
-val codegen by configurations.creating
-
-dependencies {
-    // Add the codegen-runtime project to our new configuration
-    codegen(project(":codegen-runtime"))
-}
-
-// The task that will execute our code generator
-tasks.register<JavaExec>("runCodegen") {
-    group = "build"
-    description = "Runs the KSP-based code generator"
-    // This task only needs to run after the KSP task creates the json file
-    dependsOn(tasks.named("kspCommonMainKotlinMetadata"))
-
-    mainClass.set("io.availe.ApplicationKt")
-    classpath = codegen
-
-    // Define the path to the generated json file
-    val modelsJsonFile = layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
-
-    // Pass the absolute path of the file to the main function as an argument
-    args(modelsJsonFile.get().asFile.absolutePath, "--generate-patchable")
-}
-
-// All compilation tasks must wait for the codegen to finish generating sources
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    if (name.startsWith("compile")) {
-        dependsOn(tasks.named("runCodegen"))
-    }
-}
-
-kotlin.sourceSets.named("commonMain") {
-    kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin-poet"))
 }
