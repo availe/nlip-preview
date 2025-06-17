@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
     `java-gradle-plugin`
+    `kotlin-dsl`
     `maven-publish`
 }
 
@@ -21,6 +22,7 @@ dependencies {
     implementation(projects.modelKspProcessor)
     implementation(projects.codegenRuntime)
     implementation(projects.modelKspAnnotations)
+    compileOnly(libs.kotlin.gradle.plugin)
 }
 
 publishing {
