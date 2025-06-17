@@ -1,7 +1,7 @@
 package io.availe
 
-import io.availe.conventions.applyJvmConvention
-import io.availe.conventions.applyKmpConvention
+import io.availe.gradle.applyJvmConvention
+import io.availe.gradle.applyKmpConvention
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

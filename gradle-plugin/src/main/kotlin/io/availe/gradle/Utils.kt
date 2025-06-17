@@ -1,4 +1,4 @@
-package io.availe.conventions
+package io.availe.gradle
 
 import io.availe.KReplicaExtension
 import org.gradle.api.GradleException

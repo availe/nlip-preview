@@ -12,7 +12,7 @@ gradlePlugin {
     plugins {
         create("kreplica") {
             id = "io.availe.kreplica"
-            implementationClass = "KReplicaPlugin"
+            implementationClass = "io.availe.KReplicaPlugin"
         }
     }
 }
