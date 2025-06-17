@@ -14,10 +14,15 @@ kotlin {
     iosX64()
     iosArm64()
     iosSimulatorArm64()
-    wasmJs()
     linuxX64()
     macosX64()
     macosArm64()
+    wasmJs {
+        browser {
+            binaries.executable()
+        }
+        nodejs()
+    }
 
     sourceSets {
         val commonMain by getting {

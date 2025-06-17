@@ -14,7 +14,13 @@ kotlin {
     jvmToolchain(21)
     jvm()
     iosX64(); iosArm64(); iosSimulatorArm64()
-    wasmJs(); macosX64(); macosArm64(); linuxX64()
+    macosX64(); macosArm64(); linuxX64()
+    wasmJs {
+        browser {
+            binaries.executable()
+        }
+        nodejs()
+    }
     sourceSets {
         commonMain {
             dependencies {
