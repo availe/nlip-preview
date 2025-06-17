@@ -29,6 +29,7 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.google")
             }
         }
+        mavenLocal()
         mavenCentral()
     }
 }
@@ -36,7 +37,3 @@ dependencyResolutionManagement {
 include(":composeApp")
 include(":server")
 include(":shared")
-include(":codegen")
-include(":codegen-runtime")
-include(":model-ksp-processor")
-include(":model-ksp-annotations")
