@@ -44,6 +44,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.kotlinx.rpc.plugin)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kreplica)
     id("org.jetbrains.kotlin.kapt")
     application
 }
@@ -229,4 +230,13 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 tasks.named("generateJooq") {
     dependsOn("compileJooqKotlin")
     dependsOn("flywayMigrate")
+}
+
+kreplica {
+    modelJsonSources.from(
+        layout.buildDirectory.file("generated/ksp/main/resources/models.json")
+    )
+    modelJsonSources.from(
+        project(":shared").layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
+    )
 }
