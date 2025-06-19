@@ -120,7 +120,5 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 kreplica {
-    modelJsonSources.from(
-        layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
-    )
+
 }

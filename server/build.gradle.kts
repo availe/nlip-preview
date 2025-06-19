@@ -233,10 +233,5 @@ tasks.named("generateJooq") {
 }
 
 kreplica {
-    modelJsonSources.from(
-        layout.buildDirectory.file("generated/ksp/main/resources/models.json")
-    )
-    modelJsonSources.from(
-        project(":shared").layout.buildDirectory.file("generated/ksp/metadata/commonMain/resources/models.json")
-    )
+    fromContext(project(projects.shared.path))
 }
