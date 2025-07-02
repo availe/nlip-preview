@@ -1,5 +1,4 @@
 import nu.studer.gradle.jooq.JooqEdition
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jooq.meta.jaxb.Logging
 
 @Suppress("UNCHECKED_CAST")
@@ -232,6 +231,6 @@ tasks.named("generateJooq") {
     dependsOn("flywayMigrate")
 }
 
-kreplica {
-    fromContext(project(projects.shared.path))
-}
+//kreplica {
+//    fromContext(project(projects.shared.path))
+//}

@@ -1,11 +1,9 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 @Suppress("UNCHECKED_CAST")
 val secrets = rootProject.extra["secrets"] as Map<String, String>
 
@@ -22,7 +20,7 @@ plugins {
     alias(libs.plugins.buildKonfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinx.rpc.plugin)
-    alias(libs.plugins.kreplica)
+//    alias(libs.plugins.kreplica)
 }
 
 buildkonfig {
@@ -117,8 +115,4 @@ android {
 
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn(tasks.named("generateBuildKonfig"))
-}
-
-kreplica {
-
 }
