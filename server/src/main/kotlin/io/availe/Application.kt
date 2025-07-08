@@ -45,7 +45,7 @@ fun Application.module() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             call.respond(
-                io.ktor.http.HttpStatusCode.InternalServerError,
+                HttpStatusCode.InternalServerError,
                 mapOf("error" to "Internal server error", "message" to (cause.message ?: "Unknown error"))
             )
         }
