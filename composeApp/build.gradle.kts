@@ -139,17 +139,6 @@ compose.desktop {
     }
 }
 
-tasks.withType<ComposeHotRun>().configureEach {
-    mainClass.set("io.availe.MainKt")
-
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
-            vendor.set(JvmVendorSpec.JETBRAINS)
-        }
-    )
-}
-
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn(project(":shared").tasks.named("openApiGenerate"))
 }
